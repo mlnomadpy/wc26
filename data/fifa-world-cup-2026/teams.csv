@@ -1,0 +1,49 @@
+id,team_name,fifa_code,group_letter,is_placeholder,confederation,head_coach,fifa_ranking,qualification_method,squad_size
+1,Mexico,MEX,A,False,CONCACAF,Javier Aguirre,15,host,26
+2,South Africa,RSA,A,False,CAF,Hugo Broos,60,CAF Group C winner,26
+3,South Korea,KOR,A,False,AFC,Hong Myung-bo,25,AFC qualifying (third round group winner),26
+4,Czechia,CZE,A,False,UEFA,Miroslav Koubek,41,UEFA play-off,26
+5,Canada,CAN,B,False,CONCACAF,Jesse Marsch,30,host,26
+6,Bosnia and Herzegovina,BIH,B,False,UEFA,Sergej Barbarez,65,"UEFA play-off (Path winner, beat Italy in final)",26
+7,Qatar,QAT,B,False,AFC,Julen Lopetegui,55,AFC qualifying (third round group winner),26
+8,Switzerland,SUI,B,False,UEFA,Murat Yakin,19,UEFA group winner,26
+9,Brazil,BRA,C,False,CONMEBOL,Carlo Ancelotti,6,CONMEBOL qualifying,26
+10,Morocco,MAR,C,False,CAF,Mohamed Ouahbi,8,CAF qualifying (Group E winner),26
+11,Haiti,HAI,C,False,CONCACAF,Sébastien Migné,83,CONCACAF qualifying (third round Group C winner),26
+12,Scotland,SCO,C,False,UEFA,Steve Clarke,43,UEFA Group C winner,26
+13,USA,USA,D,False,CONCACAF,Mauricio Pochettino,16,host,26
+14,Paraguay,PAR,D,False,CONMEBOL,Gustavo Alfaro,40,CONMEBOL qualifying,26
+15,Australia,AUS,D,False,AFC,Tony Popovic,27,AFC third round Group C runner-up (direct qualification),26
+16,Türkiye,TUR,D,False,UEFA,Vincenzo Montella,22,UEFA play-off,26
+17,Germany,GER,E,False,UEFA,Julian Nagelsmann,10,UEFA Group A winner,26
+18,Curaçao,CUR,E,False,CONCACAF,Dick Advocaat,82,CONCACAF qualifying (Round 3 Group B winner),26
+19,Côte d'Ivoire,CIV,E,False,CAF,Emerse Faé,34,CAF Group F winner,26
+20,Ecuador,ECU,E,False,CONMEBOL,Sebastián Beccacece,23,CONMEBOL qualifying,26
+21,Netherlands,NED,F,False,UEFA,Ronald Koeman,7,UEFA Group G winner,26
+22,Japan,JPN,F,False,AFC,Hajime Moriyasu,18,AFC qualifying (third round group winner),26
+23,Sweden,SWE,F,False,UEFA,Graham Potter,,UEFA play-off (Path winner via Nations League access),26
+24,Tunisia,TUN,F,False,CAF,Sabri Lamouchi,44,CAF Group H winner,26
+25,Belgium,BEL,G,False,UEFA,Rudi Garcia,9,UEFA Group J winner,26
+26,Egypt,EGY,G,False,CAF,Hossam Hassan,29,CAF qualifying Group A winner,26
+27,IR Iran,IRN,G,False,AFC,Amir Ghalenoei,21,AFC qualifying (third round group winner),26
+28,New Zealand,NZL,G,False,OFC,Darren Bazeley,85,OFC qualifying winner,26
+29,Spain,ESP,H,False,UEFA,Luis de la Fuente,2,UEFA Group E winner,26
+30,Cabo Verde,CPV,H,False,CAF,Pedro Leitao Brito (Bubista),69,CAF qualifying Group D winner,26
+31,Saudi Arabia,KSA,H,False,AFC,Georgios Donis,61,AFC qualifying (third round group runner-up / fourth round),26
+32,Uruguay,URU,H,False,CONMEBOL,Marcelo Bielsa,17,CONMEBOL qualifying,26
+33,France,FRA,I,False,UEFA,Didier Deschamps,1,UEFA Group D winner,26
+34,Senegal,SEN,I,False,CAF,Pape Thiaw,19,CAF Group B winner,26
+35,Iraq,IRQ,I,False,AFC,Graham Arnold,57,Inter-confederation play-off (beat Bolivia),26
+36,Norway,NOR,I,False,UEFA,Ståle Solbakken,31,UEFA Group I winner,26
+37,Argentina,ARG,J,False,CONMEBOL,Lionel Scaloni,1,CONMEBOL qualifying,26
+38,Algeria,ALG,J,False,CAF,Vladimir Petkovic,28,CAF qualifying Group G winner,26
+39,Austria,AUT,J,False,UEFA,Ralf Rangnick,24,UEFA Group H winner,25
+40,Jordan,JOR,J,False,AFC,Jamal Sellami,63,AFC third round group winner,26
+41,Portugal,POR,K,False,UEFA,Roberto Martínez,5,UEFA Group F winner,26
+42,DR Congo,COD,K,False,CAF,Sebastien Desabre,46,Inter-confederation play-off winner (CAF play-off path),26
+43,Uzbekistan,UZB,K,False,AFC,Fabio Cannavaro,50,AFC third round - 2nd in Group A (first World Cup qualification),26
+44,Colombia,COL,K,False,CONMEBOL,Néstor Lorenzo,13,CONMEBOL qualifying,26
+45,England,ENG,L,False,UEFA,Thomas Tuchel,4,UEFA Group K winner,26
+46,Croatia,CRO,L,False,UEFA,Zlatko Dalic,11,UEFA Group L winner,26
+47,Ghana,GHA,L,False,CAF,Carlos Queiroz,74,CAF Group I winner,26
+48,Panama,PAN,L,False,CONCACAF,Thomas Christiansen,33,CONCACAF qualifying (Third Round Group A winner),26
