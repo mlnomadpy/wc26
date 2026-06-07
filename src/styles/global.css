@@ -1,18 +1,26 @@
 :root{
-  --bg:#080b10; --bg1:#0c1119; --bg2:#10161f; --bg3:#151c28; --line:#1e2735; --line2:#2a3647;
-  --fg:#eaf0f7; --fg-dim:#93a1b5; --fg-mute:#5f6e82;
-  --accent:#34e29b; --accent2:#5aa2ff; --warn:#ffb454; --pink:#ff6b9d; --violet:#b48cff;
-  --radius:14px; --sh:0 8px 30px rgba(0,0,0,.4);
-  --fdisp:'Archivo',system-ui,sans-serif; --fmono:'IBM Plex Mono',ui-monospace,monospace;
+  /* warm graduated darks (never pure black) */
+  --bg:#0a0a0d; --bg1:#101016; --bg2:#17171f; --bg3:#1f1f2a; --line:#27272f; --line2:#37373f;
+  --fg:#f5f1e9; --fg-dim:#a59e90; --fg-mute:#6d665b;
+  /* trophy gold = primary accent (WC2026 brand); host tri-colour CAN red / MEX green / USA blue */
+  --gold:#e9bb4c; --gold2:#f6d77e;
+  --accent:#e9bb4c; --accent2:#5b9cff; --on-accent:#1c1503;
+  --can:#e4572e; --mex:#36d27a; --usa:#5b9cff;
+  --warn:#ffb454; --pink:#ff6b9d; --violet:#b48cff;
+  --radius:14px; --sh:0 10px 34px rgba(0,0,0,.5);
+  --glow:0 0 28px -8px rgba(233,187,76,.55);
+  --fdisp:'Archivo',system-ui,sans-serif; --fdisp2:'Anton','Archivo',system-ui,sans-serif;
+  --fmono:'IBM Plex Mono',ui-monospace,monospace;
   --fbody:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
 }
 html[data-theme="light"]{
-  --bg:#f4f6fa; --bg1:#ffffff; --bg2:#f0f3f8; --bg3:#e9eef5; --line:#dde4ee; --line2:#cdd7e6;
-  --fg:#16202e; --fg-dim:#52617a; --fg-mute:#8493a8; --sh:0 8px 26px rgba(20,40,80,.10);
+  --bg:#f6f4ee; --bg1:#ffffff; --bg2:#f1eee5; --bg3:#e8e4d8; --line:#e2ddd0; --line2:#cfc9b8;
+  --fg:#1a1813; --fg-dim:#5c564a; --fg-mute:#8a8373; --sh:0 8px 26px rgba(60,50,20,.10);
+  --gold:#b8860b; --accent:#b8860b; --on-accent:#fff8e7; --glow:0 0 24px -10px rgba(184,134,11,.45);
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:var(--fbody);color:var(--fg);background:
-  radial-gradient(1200px 560px at 86% -10%,rgba(52,226,155,.06),transparent 60%),
+  radial-gradient(1200px 560px at 86% -10%,rgba(233,187,76,.07),transparent 60%),
   radial-gradient(900px 500px at 0% 0%,rgba(90,162,255,.06),transparent 55%),
   linear-gradient(var(--bg),var(--bg));
   background-attachment:fixed;-webkit-font-smoothing:antialiased;line-height:1.55;font-size:14px}
@@ -26,7 +34,7 @@ h1{font-family:var(--fdisp);font-weight:800;letter-spacing:-.02em;margin:.1em 0;
 h2.sec{font-family:var(--fdisp);font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.14em;color:var(--fg-dim);margin:26px 2px 12px}
 h3{font-family:var(--fdisp);font-weight:600;font-size:14.5px;margin:0 0 13px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .tag{font-family:var(--fbody);font-size:11px;color:var(--fg-mute);font-weight:400}
-.skip{position:fixed;left:-999px;top:8px;z-index:200;background:var(--accent);color:#04241a;padding:8px 14px;border-radius:8px}
+.skip{position:fixed;left:-999px;top:8px;z-index:200;background:var(--accent);color:var(--on-accent);padding:8px 14px;border-radius:8px}
 .skip:focus{left:8px}
 /* topbar */
 .topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;padding:11px 22px;
@@ -46,7 +54,7 @@ main{position:relative;z-index:1;max-width:1320px;margin:0 auto;padding:18px 22p
 .btn{display:inline-flex;align-items:center;gap:7px;background:var(--bg2);border:1px solid var(--line2);color:var(--fg);
   padding:9px 14px;border-radius:10px;font-size:13px;cursor:pointer;font-family:var(--fbody);transition:.15s cubic-bezier(.22,.61,.36,1)}
 .btn:hover{border-color:var(--accent2);transform:translateY(-1px)}
-.btn.primary{background:var(--accent);color:#04241a;border-color:var(--accent);font-weight:700}
+.btn.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:700}
 .btn.ghost{background:transparent}
 .btn.back{margin-bottom:14px}
 .kbtn{font-family:var(--fmono)}
@@ -95,7 +103,7 @@ input{min-width:210px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{background:var(--bg2);border:1px solid var(--line2);color:var(--fg-dim);padding:6px 12px;border-radius:999px;cursor:pointer;font-size:12px;transition:.12s}
 .chip:hover{color:var(--fg)}
-.chip.on{background:var(--accent);color:#04241a;border-color:var(--accent);font-weight:700}
+.chip.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:700}
 .count{color:var(--fg-mute);font-size:12px;margin-left:auto;font-family:var(--fmono)}
 .pill{display:inline-block;padding:2px 7px;border-radius:6px;font-size:10.5px;font-weight:700;letter-spacing:.3px}
 .pill.GK{background:#3a2e10;color:#ffd479}.pill.DF{background:#10233a;color:#7fb6ff}
@@ -107,7 +115,7 @@ input{min-width:210px}
 .thflag{font-size:46px;line-height:1}
 .subtabs{display:flex;gap:7px;margin:14px 0}
 .subtab{background:var(--bg2);border:1px solid var(--line2);color:var(--fg-dim);padding:7px 17px;border-radius:999px;cursor:pointer;font-size:13px}
-.subtab.on{background:var(--accent);color:#04241a;border-color:var(--accent);font-weight:700}
+.subtab.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:700}
 .kv{display:grid;grid-template-columns:150px 1fr;gap:7px 12px;font-size:13px}
 .kv .k{color:var(--fg-dim)}
 .sublabel{margin:16px 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent)}
@@ -237,7 +245,7 @@ img{max-width:100%}
 
 .lhero{position:relative;display:grid;grid-template-columns:1.18fr .82fr;gap:34px;align-items:center;padding:48px 4px 26px}
 .lhero .glow{position:absolute;inset:-60px -120px auto auto;width:560px;height:420px;pointer-events:none;z-index:-1;
-  background:radial-gradient(circle at 72% 30%,rgba(52,226,155,.16),transparent 58%),radial-gradient(circle at 30% 75%,rgba(90,162,255,.13),transparent 60%),radial-gradient(circle at 90% 90%,rgba(255,107,157,.08),transparent 55%)}
+  background:radial-gradient(circle at 72% 30%,rgba(233,187,76,.18),transparent 58%),radial-gradient(circle at 30% 75%,rgba(90,162,255,.13),transparent 60%),radial-gradient(circle at 90% 90%,rgba(228,87,46,.12),transparent 55%)}
 .l-eyebrow{font-family:var(--fmono);font-size:12.5px;letter-spacing:.16em;color:var(--accent);text-transform:uppercase}
 .lhero h1{font-size:clamp(2.2rem,6vw,4.1rem);max-width:13ch;margin:12px 0;line-height:1.02}
 .lhero h1 .accent{color:var(--accent)}
@@ -315,7 +323,7 @@ img{max-width:100%}
 .phead{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
   padding:30px 4px 20px;margin-bottom:4px;border-bottom:1px solid var(--line)}
 .phead::before{content:"";position:absolute;inset:-20px -40px auto auto;width:380px;height:200px;z-index:-1;pointer-events:none;
-  background:radial-gradient(circle at 75% 30%,rgba(52,226,155,.10),transparent 60%),radial-gradient(circle at 40% 80%,rgba(90,162,255,.08),transparent 60%)}
+  background:radial-gradient(circle at 75% 30%,rgba(233,187,76,.12),transparent 60%),radial-gradient(circle at 40% 80%,rgba(90,162,255,.08),transparent 60%)}
 .phead .pe{font-family:var(--fmono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
 .phead h1{font-size:clamp(1.8rem,4vw,2.7rem);margin:6px 0 0}
 .phead .psub{color:var(--fg-dim);font-size:14px;margin-top:6px;max-width:62ch}
@@ -334,3 +342,19 @@ img{max-width:100%}
 
 /* page entrance */
 main > .phead, main > .reveal{animation:fadeUp .5s cubic-bezier(.22,.61,.36,1) both}
+
+/* ===== Identity refresh: gold + host tri-colour, poster display ===== */
+/* host tri-colour hairline (Canada red · Mexico green · USA blue) */
+.topbar{border-top:3px solid transparent;border-image:linear-gradient(90deg,var(--can),var(--mex),var(--usa)) 1}
+/* poster / vintage display for the biggest moments */
+.cdunit b,.statbar .s b,.cdlive,.cdmatch .vs{font-family:var(--fdisp2);font-weight:400;letter-spacing:.02em}
+.brand b{color:var(--gold)}
+/* micro-glow on primary actions + active states (2026 neon-accent, restrained) */
+.btn.primary{box-shadow:var(--glow)}
+.btn.primary:hover{box-shadow:0 0 34px -6px rgba(233,187,76,.7)}
+#nav a.on{box-shadow:inset 0 -2px 0 var(--gold)}
+.chip.on,.subtab.on{box-shadow:var(--glow)}
+.token .sh,.cdcard,.bchamp{box-shadow:var(--sh)}
+/* gold accent text where green used to read */
+.eyebrow,.l-eyebrow,.pe,.gh,.sublabel,.ms,.cdcard .lab{color:var(--gold)}
+.bchamp{border-color:var(--gold);box-shadow:0 0 30px -10px var(--gold)}
