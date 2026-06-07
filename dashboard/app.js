@@ -349,17 +349,56 @@ PAGES.groups=(app)=>{
       <div class="sublabel">${ms.length} fixtures</div></div>`;}).join('')+`</div>`;
 };
 
-/* ---------- BRACKET ---------- */
+/* ---------- BRACKET (connected tournament tree) ---------- */
+// Official knockout tree (data's match #100 label has a W96->W100 typo; corrected here).
+const BTREE={104:[101,102],101:[97,98],102:[99,100],97:[89,90],98:[93,94],99:[91,92],100:[95,96],
+  89:[73,75],90:[74,77],91:[76,78],92:[79,80],93:[83,84],94:[81,82],95:[86,88],96:[85,87]};
+const STAGE_R={'Round of 32':0,'Round of 16':1,'Quarterfinals':2,'Semifinals':3,'Final':4};
+const groupColor=L=>`hsl(${(L.charCodeAt(0)-65)*30},44%,30%)`;
+function decodeSlot(s){let m;s=(s||'').trim();
+  if(m=s.match(/^W(\d+)$/))  return {code:'W'+m[1],label:'Winner · M'+m[1],color:'#26406b',feed:+m[1]};
+  if(m=s.match(/^RU(\d+)$/)) return {code:'RU'+m[1],label:'Runner-up · M'+m[1],color:'#5a2740',feed:+m[1]};
+  if(m=s.match(/^(\d)([A-L])$/)) return {code:m[2],label:(m[1]==='1'?'Winner Grp ':m[1]==='2'?'Runner-up Grp ':m[1]+'rd Grp ')+m[2],color:groupColor(m[2])};
+  if(m=s.match(/^3([A-L]+)$/)) return {code:'3rd',label:'Best 3rd · '+m[1].split('').join('/'),color:'#3b3320'};
+  return {code:'·',label:esc(s),color:'#2a3647'};
+}
+function brow(s){const d=decodeSlot(s);return `<div class="brow"><span class="bchip" style="background:${d.color}">${d.code}</span><span class="blabel">${d.label}</span></div>`;}
 PAGES.bracket=(app)=>{
-  const order=['Round of 32','Round of 16','Quarterfinals','Semifinals','Final'];
-  const byStage={}; DB.matches.forEach(m=>{if(order.includes(m.stage))(byStage[m.stage]=byStage[m.stage]||[]).push(m);});
-  app.innerHTML=`<h2 class="sec">Road to the final <span class="tag">slot codes from the official schedule · click a match</span></h2>
-   <div class="bracket">${order.map(st=>`<div class="bcol"><div class="bch">${st}</div>${
-     (byStage[st]||[]).sort((a,b)=>a.match_number-b.match_number).map(m=>{
-       const [l,r]=(m.match_label||'').split(/\s+vs\s+/);
-       return `<div class="bmatch" onclick="go('match/${m.match_number}')"><div class="bteam">${esc(l||'')}</div><div class="bvs">vs</div><div class="bteam">${esc(r||'')}</div><div class="bmeta faint">#${m.match_number} · ${esc((m.city||'').split('/')[0])}</div></div>`;
-     }).join('')}</div>`).join('')}</div>
-   <p class="faint">Slot codes: <b>1A</b>=Group A winner, <b>2B</b>=Group B runner-up, <b>3ABCDF</b>=a best third-placed team, <b>W73</b>=winner of match 73, <b>RU101</b>=runner-up of match 101.</p>`;
+  const byNum={}; DB.matches.forEach(m=>byNum[m.match_number]=m);
+  const roundOf=n=>{const m=byNum[n];return m?(STAGE_R[m.stage]||0):0;};
+  const leaves=[]; (function dfs(n){const ch=BTREE[n];if(!ch){leaves.push(n);return;}ch.forEach(dfs);})(104);
+  const Y={}; leaves.forEach((n,i)=>Y[n]=i);
+  Object.keys(BTREE).map(Number).sort((a,b)=>roundOf(a)-roundOf(b))
+    .forEach(n=>{const ch=BTREE[n];Y[n]=ch.reduce((s,c)=>s+Y[c],0)/ch.length;});
+  const cardW=164,cardH=60,colGap=78,rowUnit=74,padT=44,headers=['Round of 32','Round of 16','Quarterfinals','Semifinals','Final'];
+  const colX=r=>r*(cardW+colGap);
+  const H=leaves.length*rowUnit+padT+18, W=colX(5)+186;
+  const yc=n=>Y[n]*rowUnit+padT+cardH/2;
+  let lines='';
+  Object.entries(BTREE).forEach(([p,ch])=>{const px=colX(roundOf(+p)),pyc=yc(+p);
+    ch.forEach(c=>{const cr=colX(roundOf(c))+cardW,cy=yc(c),mid=(cr+px)/2;
+      lines+=`<path d="M${cr} ${cy} H${mid} V${pyc} H${px}" class="bcon"/>`;});});
+  lines+=`<path d="M${colX(4)+cardW} ${yc(104)} H${colX(5)}" class="bcon win"/>`;
+  const node=n=>{const m=byNum[n];if(!m)return'';const r=roundOf(n),[a,b]=(m.match_label||'').split(/\s+vs\s+/);
+    return `<button class="bnode r${r}" style="left:${colX(r)}px;top:${Y[n]*rowUnit+padT}px;width:${cardW}px;height:${cardH}px" onclick="go('match/${n}')" aria-label="Match ${n}">
+      ${brow(a)}<div class="bvs"><span>vs</span></div>${brow(b)}<div class="bnum">#${n} · ${esc((m.city||'').split('/')[0])}</div></button>`;};
+  const heads=headers.map((h,r)=>`<div class="bhead" style="left:${colX(r)}px;width:${cardW}px">${h}</div>`).join('')
+    +`<div class="bhead" style="left:${colX(5)}px;width:170px">Champion</div>`;
+  const champ=`<div class="bchamp" style="left:${colX(5)}px;top:${Y[104]*rowUnit+padT-6}px"><div class="trophy">🏆</div><div class="ct">Champion 2026</div><div class="faint cs">Lifts the trophy<br>Jul 19 · New York</div></div>`;
+  const tp=byNum[103];
+  app.innerHTML=`<div class="brkhead"><h2 class="sec" style="margin:0">Road to the final</h2><span class="tag">48 → 1 · click any match for its head-to-head</span></div>
+    <div class="bktwrap"><div class="bktree" style="width:${W}px;height:${H}px">
+      <svg class="bcons" width="${W}" height="${H}" aria-hidden="true">${lines}</svg>
+      ${heads}${[...leaves,...Object.keys(BTREE).map(Number)].map(node).join('')}${champ}</div></div>
+    <div class="grid2">
+      ${tp?`<div class="panel"><h3>🥉 Third-place playoff</h3><div class="brow">${brow((tp.match_label||'').split(/\s+vs\s+/)[0])}</div><div class="brow">${brow((tp.match_label||'').split(/\s+vs\s+/)[1])}</div><div class="faint" style="margin-top:8px">Match #103 · ${esc(tp.venue)}, ${esc(tp.city)}</div></div>`:''}
+      <div class="panel"><h3>How to read the slots</h3><div class="kv">
+        <span class="bchip" style="background:${groupColor('A')}">A</span><span>Group A winner / runner-up</span>
+        <span class="bchip" style="background:#3b3320">3rd</span><span>One of the best third-placed teams</span>
+        <span class="bchip" style="background:#26406b">W</span><span>Winner of an earlier match</span>
+        <span class="bchip" style="background:#5a2740">RU</span><span>Runner-up (third-place playoff)</span></div>
+        <div class="faint" style="margin-top:10px">Teams are filled in once the group stage and each knockout round finish.</div></div>
+    </div>`;
 };
 
 /* ---------- MATCHES list + MATCH page ---------- */
