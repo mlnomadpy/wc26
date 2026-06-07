@@ -1,0 +1,23 @@
+---
+import '../styles/global.css';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '') + '/'; // guarantee trailing slash: "/wc26/" prod, "/" dev
+---
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WC26 Matchday — FIFA World Cup 2026 Data Explorer</title>
+  <meta name="description" content="Explore every squad, lineup, club and match of the 2026 FIFA World Cup — 1,247 players, 48 teams, 104 matches." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script is:inline src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <noscript>This dashboard needs JavaScript.</noscript>
+  <div class="boot">Loading WC26 Matchday…</div>
+  <script is:inline define:vars={{ base }}>window.__BASE__ = base;</script>
+  <script is:inline src={base + 'app.js'}></script>
+</body>
+</html>

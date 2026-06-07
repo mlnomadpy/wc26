@@ -1,15 +1,3 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>WC26 Matchday — FIFA World Cup 2026 Data Explorer</title>
-<meta name="description" content="Explore every squad, lineup, club and match of the 2026 FIFA World Cup — 1,247 players, 48 teams, 104 matches."/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<style>
 :root{
   --bg:#080b10; --bg1:#0c1119; --bg2:#10161f; --bg3:#151c28; --line:#1e2735; --line2:#2a3647;
   --fg:#eaf0f7; --fg-dim:#93a1b5; --fg-mute:#5f6e82;
@@ -198,7 +186,6 @@ input{min-width:210px}
 .bchamp .trophy{font-size:30px}.bchamp .ct{font-family:var(--fdisp);font-weight:700;margin-top:4px}.bchamp .cs{font-size:11px;margin-top:4px}
 .kv .bchip{align-self:center}
 /* match page */
-/* match page */
 .matchhead{text-align:center;padding:20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg1)}
 .ms{font-family:var(--fmono);font-size:12px;color:var(--accent)}
 .mscore{font-family:var(--fdisp);font-weight:700;font-size:clamp(1.2rem,3vw,1.8rem);margin:6px 0;display:flex;gap:14px;justify-content:center;align-items:center;flex-wrap:wrap}
@@ -235,12 +222,5 @@ input{min-width:210px}
 .palfoot{padding:9px 16px;border-top:1px solid var(--line);font-size:11px;font-family:var(--fmono)}
 .meth{margin:0;padding-left:18px;font-size:13px;color:var(--fg-dim)}.meth li{margin:6px 0}
 .vsrow{display:flex;justify-content:space-between}
+.boot{padding:40px;color:var(--fg-dim)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-</style>
-</head>
-<body>
-<noscript>This dashboard needs JavaScript and must be served over http (run <code>build_data.py</code>, then a static server).</noscript>
-<div style="padding:40px;font-family:sans-serif;color:#93a1b5">Loading WC26 Matchday…</div>
-<script src="app.js"></script>
-</body>
-</html>

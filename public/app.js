@@ -665,7 +665,7 @@ function chrome(){
     if(e.key==='/'&&!/input|select|textarea/i.test(document.activeElement.tagName)){e.preventDefault();openPalette();}
   });
 }
-fetch('data.json?_='+Date.now()).then(r=>r.json()).then(d=>{
+fetch((window.__BASE__||'')+'data.json?_='+Date.now()).then(r=>r.json()).then(d=>{
   DB=d; window.DB=d; buildIndexes(); buildPalette();
   chrome();
   applyTheme(localStorage.getItem('wc-theme')||'dark');

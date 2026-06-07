@@ -1,0 +1,16 @@
+{
+  "name": "wc26-matchday",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "FIFA World Cup 2026 data explorer (Astro static site)",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "data": "python3 dashboard/build_data.py"
+  },
+  "devDependencies": {
+    "astro": "^6.4.4"
+  }
+}

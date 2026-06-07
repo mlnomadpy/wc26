@@ -8,7 +8,7 @@ from collections import Counter, defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data", "fifa-world-cup-2026")
-OUT = os.path.join(ROOT, "dashboard", "data.json")
+OUT = os.path.join(ROOT, "public", "data.json")
 
 INT_FIELDS = {"shirt_number","age","caps","international_goals","height_cm","market_value_eur",
     "club_apps_2025_26","club_starts_2025_26","club_minutes_2025_26","club_goals_2025_26",
