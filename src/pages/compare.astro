@@ -13,7 +13,14 @@ const playerMetrics = DB.players.map(p => ({ id: p.player_id, name: p.player_nam
   caps: p.caps || 0, goals: p.international_goals || 0, apps: p.club_apps_2025_26 || 0, cg: p.club_goals_2025_26 || 0, ca: p.club_assists_2025_26 || 0, min: p.club_minutes_2025_26 || 0 }));
 ---
 <Base title="Compare — teams & players head-to-head | 2026 World Cup" description="Compare any two 2026 World Cup teams or players side by side on a radar chart: squad shape, experience, goal threat and 2025/26 club stats.">
-  <div class="panel">
+  <header class="phead">
+    <div>
+      <div class="pe">Head to head</div>
+      <h1>Compare</h1>
+      <p class="psub">Put any two teams or players side by side on a radar — squad shape, experience, goal threat and 2025/26 club output.</p>
+    </div>
+  </header>
+  <div class="panel" style="margin-top:16px">
     <div class="controls">
       <div class="chips"><span class="chip on" id="mTeam">Teams</span><span class="chip" id="mPlayer">Players</span></div>
       <span id="selA"></span><span class="faint">vs</span><span id="selB"></span>

@@ -1,13 +1,22 @@
 ---
 import Base from '../../components/Base.astro';
+import Flag from '../../components/Flag.astro';
 import DB from '../../../public/data.json';
-import { CONF, flag, money } from '../../lib/wc.js';
+import { CONF, money } from '../../lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const players = [...DB.players].sort((a, b) => (b.caps || 0) - (a.caps || 0));
 const teams = [...new Set(DB.players.map(p => p.team_name))].sort();
 const cols = [['shirt_number', '#'], ['position', 'Pos'], ['player_name', 'Player'], ['fifa_code', 'Team'], ['age', 'Age'], ['club', 'Club'], ['caps', 'Caps'], ['international_goals', 'Goals'], ['club_apps_2025_26', 'Apps26'], ['club_goals_2025_26', 'G26'], ['market_value_eur', 'Value']];
 ---
 <Base title="Players — all 1,247 at the 2026 FIFA World Cup" description="Searchable, sortable table of all 1,247 players at the 2026 FIFA World Cup: club, caps, international goals and 2025/26 club stats. Filter by team, confederation and position.">
+  <header class="phead">
+    <div>
+      <div class="pe">Every call-up</div>
+      <h1>1,247 players</h1>
+      <p class="psub">Search, filter and sort every player heading to the 2026 World Cup — by team, confederation, position, caps, goals and club form.</p>
+    </div>
+    <div class="pstat"><div class="s"><b>1,247</b><span>Players</span></div><div class="s"><b>{DB.totals.clubs}</b><span>Clubs</span></div></div>
+  </header>
   <div class="panel">
     <div class="controls">
       <input id="q" placeholder="Search player or club…" aria-label="Search players" />
@@ -29,7 +38,7 @@ const cols = [['shirt_number', '#'], ['position', 'Pos'], ['player_name', 'Playe
               <td class="mono">{p.shirt_number ?? ''}</td>
               <td><span class={`pill ${p.position}`}>{p.position}</span></td>
               <td>{p.player_name}{p.is_captain ? ' (C)' : ''}</td>
-              <td>{flag(p.fifa_code)} <span class="mono faint">{p.fifa_code}</span></td>
+              <td><span class="nat"><Flag code={p.fifa_code} cls="sm" /> <span class="mono faint">{p.fifa_code}</span></span></td>
               <td class="mono">{p.age ?? ''}</td>
               <td class="faint">{p.club}</td>
               <td class="mono">{p.caps ?? ''}</td><td class="mono">{p.international_goals ?? ''}</td>

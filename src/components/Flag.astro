@@ -1,0 +1,8 @@
+---
+import { flagImg, FLAG } from '../lib/wc.js';
+const { code, w = 40, cls = '' } = Astro.props;
+const src = flagImg(code, w);
+---
+{src
+  ? <img class={`flagi ${cls}`} src={src} alt={code} loading="lazy" />
+  : <span class={cls}>{FLAG[code] || '🏳️'}</span>}

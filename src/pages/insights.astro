@@ -12,7 +12,14 @@ const cc = Object.entries(DB.agg.by_club_country).slice(0, 12); const cmax = Mat
 const chartData = { positions: DB.agg.positions, conf: DB.agg.by_confederation, posc: POSC, confc: CONF };
 ---
 <Base title="Insights — age, value, leagues & diaspora | 2026 World Cup" description="Visual breakdowns of the 2026 FIFA World Cup squads: position split, confederation share, age pyramid, most valuable players, top leagues and player diaspora.">
-  <div class="grid2">
+  <header class="phead">
+    <div>
+      <div class="pe">The numbers</div>
+      <h1>Insights</h1>
+      <p class="psub">Position split, confederation share, an age pyramid, the most valuable players, top leagues and where the world's squads actually play.</p>
+    </div>
+  </header>
+  <div class="grid2" style="margin-top:16px">
     <div class="panel"><h3>Players by position</h3><canvas id="c1" height="200"></canvas></div>
     <div class="panel"><h3>Players by confederation</h3><canvas id="c2" height="200"></canvas></div>
   </div>

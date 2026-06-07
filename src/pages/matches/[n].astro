@@ -1,7 +1,8 @@
 ---
 import Base from '../../components/Base.astro';
+import Flag from '../../components/Flag.astro';
 import DB from '../../../public/data.json';
-import { indexes, autoForm, pickXI, FORMATIONS, flag, surname, num, money, avgAge } from '../../lib/wc.js';
+import { indexes, autoForm, pickXI, FORMATIONS, surname, num, money, avgAge } from '../../lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const IDX = indexes(DB);
 export function getStaticPaths() {
@@ -42,9 +43,9 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
   <div class="matchhead">
     <div class="ms">{m.stage} · Match {m.match_number}</div>
     <div class="mscore">
-      {ht ? <span><a href={`${B}teams/${ht.fifa_code.toLowerCase()}/`}>{flag(ht.fifa_code)} {ht.team_name}</a></span> : <span class="faint">{lbl[0]}</span>}
+      {ht ? <span><a href={`${B}teams/${ht.fifa_code.toLowerCase()}/`}><Flag code={ht.fifa_code} cls="sm" /> {ht.team_name}</a></span> : <span class="faint">{lbl[0]}</span>}
       <span class="mv">vs</span>
-      {at ? <span><a href={`${B}teams/${at.fifa_code.toLowerCase()}/`}>{at.team_name} {flag(at.fifa_code)}</a></span> : <span class="faint">{lbl[1]}</span>}
+      {at ? <span><a href={`${B}teams/${at.fifa_code.toLowerCase()}/`}>{at.team_name} <Flag code={at.fifa_code} cls="sm" /></a></span> : <span class="faint">{lbl[1]}</span>}
     </div>
     <div class="faint">{(m.kickoff_at || '').replace('T', ' ')} · {m.venue}, {m.city}, {m.country}</div>
   </div>
@@ -53,12 +54,12 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
     <>
       <div class="panel">
         <h3>Tale of the tape</h3>
-        <div class="tape"><div><b>{flag(ht.fifa_code)} {ht.team_name}</b><div class="faint">{ht.head_coach}</div></div><div></div><div style="text-align:right"><b>{at.team_name} {flag(at.fifa_code)}</b><div class="faint">{at.head_coach}</div></div></div>
+        <div class="tape"><div><b><Flag code={ht.fifa_code} cls="sm" /> {ht.team_name}</b><div class="faint">{ht.head_coach}</div></div><div></div><div style="text-align:right"><b>{at.team_name} <Flag code={at.fifa_code} cls="sm" /></b><div class="faint">{at.head_coach}</div></div></div>
         {tape.map(([l, a, b]) => <div class="taperow"><span class="mono">{a}</span><span class="tl">{l}</span><span class="mono">{b}</span></div>)}
       </div>
       <div class="panel">
         <h3>Projected head-to-head XIs <span class="tag">auto-picked — not official lineups</span></h3>
-        <div class="mhead"><span>{flag(ht.fifa_code)} {ht.team_name} <span class="faint">{hf2}</span></span><span><span class="faint">{af2}</span> {at.team_name} {flag(at.fifa_code)}</span></div>
+        <div class="mhead"><span><Flag code={ht.fifa_code} cls="sm" /> {ht.team_name} <span class="faint">{hf2}</span></span><span><span class="faint">{af2}</span> {at.team_name} <Flag code={at.fifa_code} cls="sm" /></span></div>
         <div class="pitch tall">
           <div class="line ch"></div><div class="line cc"></div><div class="line box top"></div><div class="line box bot"></div><div class="line six top"></div><div class="line six bot"></div>
           {tokens.map(tk => (

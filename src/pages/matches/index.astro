@@ -1,12 +1,20 @@
 ---
 import Base from '../../components/Base.astro';
+import Flag from '../../components/Flag.astro';
 import DB from '../../../public/data.json';
-import { flag } from '../../lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const matches = [...DB.matches].sort((a, b) => (a.kickoff_at || '').localeCompare(b.kickoff_at || ''));
 const stages = [...new Set(DB.matches.map(m => m.stage))];
 ---
 <Base title="Match schedule — all 104 fixtures of the 2026 FIFA World Cup" description="The complete 2026 FIFA World Cup schedule: all 104 matches with kickoff times, venues and host cities. Open a match for projected head-to-head lineups.">
+  <header class="phead">
+    <div>
+      <div class="pe">Fixtures</div>
+      <h1>104 matches</h1>
+      <p class="psub">The full schedule, June 11 to July 19. Open any match for projected head-to-head XIs and the tale of the tape.</p>
+    </div>
+    <div class="pstat"><div class="s"><b>104</b><span>Matches</span></div><div class="s"><b>{stages.length}</b><span>Stages</span></div></div>
+  </header>
   <div class="panel">
     <div class="controls">
       <select id="ss"><option value="">All stages</option>{stages.map(s => <option>{s}</option>)}</select>
@@ -21,7 +29,9 @@ const stages = [...new Set(DB.matches.map(m => m.stage))];
               <td class="mono">{m.match_number}</td>
               <td class="faint mono">{(m.kickoff_at || '').replace('T', ' ').slice(0, 16)}</td>
               <td>{m.match_label}</td>
-              <td>{m.home_code ? <span>{flag(m.home_code)} {m.home_team} <span class="faint">v</span> {flag(m.away_code)} {m.away_team}</span> : <span class="faint">{m.match_label}</span>}</td>
+              <td>{m.home_code
+                ? <span class="nat"><Flag code={m.home_code} cls="sm" /> {m.home_team} <span class="faint">v</span> <Flag code={m.away_code} cls="sm" /> {m.away_team}</span>
+                : <span class="faint">{m.match_label}</span>}</td>
               <td class="faint">{m.venue}, {(m.city || '').split('/')[0]}</td>
             </tr>
           ))}

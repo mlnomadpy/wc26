@@ -8,8 +8,15 @@ const X = lo => (lo - minLo) / (maxLo - minLo) * 100, Yc = la => (1 - (la - minL
 const mcount = {}; DB.matches.forEach(m => { if (m.city_id) mcount[m.city_id] = (mcount[m.city_id] || 0) + 1; });
 ---
 <Base title="Host cities — 2026 FIFA World Cup venues map" description="The 16 host cities and stadiums of the 2026 FIFA World Cup across the USA, Canada and Mexico, with matches hosted per venue.">
-  <h2 class="sec">16 host cities</h2>
-  <div class="grid2">
+  <header class="phead">
+    <div>
+      <div class="pe">Across three nations</div>
+      <h1>16 host cities</h1>
+      <p class="psub">From Vancouver to Mexico City — the venues hosting the first World Cup spread across the USA, Canada and Mexico.</p>
+    </div>
+    <div class="pstat"><div class="s"><b>16</b><span>Venues</span></div><div class="s"><b>3</b><span>Nations</span></div></div>
+  </header>
+  <div class="grid2" style="margin-top:16px">
     <div class="panel">
       <h3>Venues across North America</h3>
       <div class="mapbox">

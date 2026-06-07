@@ -1,20 +1,32 @@
 ---
 import Base from '../../components/Base.astro';
+import Flag from '../../components/Flag.astro';
 import DB from '../../../public/data.json';
-import { flag } from '../../lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const byG = {}; DB.teams.forEach(t => { (byG[t.group_letter] = byG[t.group_letter] || []).push(t); });
 const groups = Object.keys(byG).sort();
+const confs = new Set(DB.teams.map(t => t.confederation)).size;
 ---
 <Base title="Teams — FIFA World Cup 2026 (all 48 squads)" description="All 48 FIFA World Cup 2026 teams across 12 groups with FIFA rankings. Open a team for its full squad, projected lineup and bench.">
-  <h2 class="sec">48 teams · 12 groups</h2>
-  <div class="tgrid">
+  <header class="phead">
+    <div>
+      <div class="pe">The field</div>
+      <h1>48 teams, 12 groups</h1>
+      <p class="psub">The largest World Cup ever. Tap a nation for its squad, projected XI, bench and stats.</p>
+    </div>
+    <div class="pstat">
+      <div class="s"><b>48</b><span>Teams</span></div>
+      <div class="s"><b>{confs}</b><span>Confeds</span></div>
+      <div class="s"><b>12</b><span>Groups</span></div>
+    </div>
+  </header>
+  <div class="tgrid" style="margin-top:16px">
     {groups.map(g => (
       <div class="gcard">
         <div class="gh">Group {g}</div>
         {byG[g].sort((a, b) => (a.fifa_ranking || 999) - (b.fifa_ranking || 999)).map(t => (
           <a class="trow" href={`${B}teams/${t.fifa_code.toLowerCase()}/`}>
-            <span><span class="fl">{flag(t.fifa_code)}</span> {t.team_name}</span>
+            <span class="nat"><Flag code={t.fifa_code} /> {t.team_name}</span>
             <span class="rk">{t.fifa_ranking ? '#' + t.fifa_ranking : ''}</span>
           </a>
         ))}

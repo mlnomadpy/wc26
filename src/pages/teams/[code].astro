@@ -1,5 +1,6 @@
 ---
 import Base from '../../components/Base.astro';
+import Flag from '../../components/Flag.astro';
 import DB from '../../../public/data.json';
 import { indexes, autoForm, pickXI, strength, FORMATIONS, FORMNAMES, POSC, POSNAME, CONF, flag, surname, num, money, avgAge } from '../../lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
@@ -34,7 +35,7 @@ const jsonld = {
 <Base title={`${t.team_name} — 2026 World Cup squad, lineup & stats`} description={desc} jsonld={jsonld}>
   <a class="btn back" href={B + 'teams/'}>← All teams</a>
   <div class="teamhead" style={`--c:${CONF[t.confederation]}`}>
-    <div class="thflag">{flag(t.fifa_code)}</div>
+    <div class="thflag"><Flag code={t.fifa_code} cls="xl" /></div>
     <div>
       <div class="faint">Group {t.group_letter} · {t.confederation} · {t.qualification_method || ''}</div>
       <h1>{t.team_name}</h1>
