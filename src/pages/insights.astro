@@ -1,0 +1,53 @@
+---
+import Base from '../components/Base.astro';
+import DB from '../../public/data.json';
+import { POSC, CONF, flag, money } from '../lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const buckets = {}; DB.players.forEach(p => { if (Number.isFinite(p.age)) { const b = Math.floor(p.age / 2) * 2; buckets[b] = (buckets[b] || 0) + 1; } });
+const ages = Object.keys(buckets).map(Number).sort((a, b) => b - a);
+const amax = Math.max(...Object.values(buckets));
+const topVal = [...DB.players].filter(p => p.market_value_eur).sort((a, b) => b.market_value_eur - a.market_value_eur).slice(0, 12);
+const lg = Object.entries(DB.agg.by_league).slice(0, 12); const lmax = Math.max(...lg.map(x => x[1]));
+const cc = Object.entries(DB.agg.by_club_country).slice(0, 12); const cmax = Math.max(...cc.map(x => x[1]));
+const chartData = { positions: DB.agg.positions, conf: DB.agg.by_confederation, posc: POSC, confc: CONF };
+---
+<Base title="Insights — age, value, leagues & diaspora | 2026 World Cup" description="Visual breakdowns of the 2026 FIFA World Cup squads: position split, confederation share, age pyramid, most valuable players, top leagues and player diaspora.">
+  <div class="grid2">
+    <div class="panel"><h3>Players by position</h3><canvas id="c1" height="200"></canvas></div>
+    <div class="panel"><h3>Players by confederation</h3><canvas id="c2" height="200"></canvas></div>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Age pyramid <span class="tag">squad ages</span></h3>
+      {ages.map(k => <div class="barrow"><span class="mono">{k}-{k + 1}</span><div class="bartrack"><div class="bar" style={`width:${buckets[k] / amax * 100}%`}></div></div><span class="faint mono">{buckets[k]}</span></div>)}
+    </div>
+    <div class="panel"><h3>Most valuable players</h3>
+      {topVal.map((p, i) => <a class="lead" href={`${B}players/${p.player_id}/`}><span><span class="rk">{i + 1}</span>{flag(p.fifa_code)} {p.player_name} <span class="faint">{p.club}</span></span><b class="mono">{money(p.market_value_eur)}</b></a>)}
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Top leagues by players</h3>
+      {lg.map(([l, n]) => <div class="barrow"><span>{l}</span><div class="bartrack"><div class="bar" style={`width:${n / lmax * 100}%`}></div></div><span class="faint mono">{n}</span></div>)}
+    </div>
+    <div class="panel"><h3>Diaspora — where players play <span class="tag">top club countries</span></h3>
+      {cc.map(([c, n]) => <div class="barrow"><span>{c}</span><div class="bartrack"><div class="bar alt" style={`width:${n / cmax * 100}%`}></div></div><span class="faint mono">{n}</span></div>)}
+    </div>
+  </div>
+  <script type="application/json" id="cd" set:html={JSON.stringify(chartData)}></script>
+  <script is:inline>
+    (function () {
+      function go() {
+        if (!window.Chart) return setTimeout(go, 60);
+        var d = JSON.parse(document.getElementById('cd').textContent);
+        var css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#888';
+        function dough(id, obj, cmap) {
+          new Chart(document.getElementById(id), { type: 'doughnut',
+            data: { labels: Object.keys(obj), datasets: [{ data: Object.values(obj), backgroundColor: Object.keys(obj).map(k => cmap[k] || '#888'), borderColor: css('--bg'), borderWidth: 2 }] },
+            options: { plugins: { legend: { position: 'right', labels: { color: css('--fg-dim'), boxWidth: 12, padding: 7, font: { size: 11 } } } }, cutout: '60%' } });
+        }
+        dough('c1', d.positions, d.posc); dough('c2', d.conf, d.confc);
+      }
+      go();
+    })();
+  </script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</Base>

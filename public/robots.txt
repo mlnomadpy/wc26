@@ -20,4 +20,4 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
-Sitemap: https://www.tahabouhsine.com/wc26/sitemap.xml
+Sitemap: https://www.tahabouhsine.com/wc26/sitemap-index.xml

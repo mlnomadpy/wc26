@@ -1,0 +1,44 @@
+---
+import Base from '../components/Base.astro';
+import DB from '../../public/data.json';
+import { num } from '../lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const t = DB.totals, cov = DB.agg.coverage;
+const meth = [
+  'Squads are the official 26-man lists (announced 2 June 2026). Playoff slots resolved from March 2026 results.',
+  'Club-season stats are 2025/26, sourced per player (Wikipedia / FBref / Transfermarkt). Unverified fields are left null, never guessed.',
+  'Projected XIs are auto-generated from a transparent score (club minutes/apps + caps + goals, captain weighted) — not official team sheets, which do not exist before kickoff.',
+  'Win/draw/loss per player is essentially unpublished (≈0.3% coverage) and mostly null by design.',
+  "Iran's shirt numbers were never published; Uzbekistan's were unverifiable — both left null.",
+];
+const dl = [['players.csv', 'players.csv'], ['teams.csv', 'teams.csv']];
+---
+<Base title="Data & sources — FIFA World Cup 2026 dataset coverage & methodology" description="Coverage, methodology and honesty notes for the WC26 Matchday dataset: 1,247 players, sources, what is verified and what is left null.">
+  <div class="grid2">
+    <div class="panel">
+      <h3>Dataset</h3>
+      <div class="kv">
+        <span class="k">Teams</span><span class="mono">{t.teams}</span>
+        <span class="k">Players</span><span class="mono">{num(t.players)}</span>
+        <span class="k">Clubs</span><span class="mono">{t.clubs}</span>
+        <span class="k">Leagues</span><span class="mono">{t.leagues}</span>
+        <span class="k">Matches</span><span class="mono">{t.matches}</span>
+        <span class="k">Host cities</span><span class="mono">{t.host_cities}</span>
+        <span class="k">Built</span><span>{DB.generated_at}</span>
+      </div>
+      <div class="sublabel">Raw data (JSON)</div>
+      <a class="btn" href={B + 'data.json'} download>⬇ data.json</a>
+      <a class="btn" href={B + 'search.json'} download>⬇ search.json</a>
+    </div>
+    <div class="panel">
+      <h3>Field coverage <span class="tag">filled / {num(t.players)} · null = not fabricated</span></h3>
+      {Object.entries(cov).map(([k, n]) => { const p = t.players ? Math.round(n / t.players * 100) : 0; return (
+        <div class="barrow"><span>{k}</span><div class="bartrack"><div class="bar" style={`width:${p}%`}></div></div><span class="faint mono">{p}%</span></div>
+      ); })}
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Methodology &amp; honesty notes</h3>
+    <ul class="meth">{meth.map(x => <li set:html={x}></li>)}</ul>
+  </div>
+</Base>

@@ -1,0 +1,32 @@
+---
+import Base from '../components/Base.astro';
+import DB from '../../public/data.json';
+import { flag } from '../lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const byG = {}; DB.teams.forEach(t => { (byG[t.group_letter] = byG[t.group_letter] || []).push(t); });
+const groups = Object.keys(byG).sort();
+const fixtures = g => DB.matches.filter(m => m.match_label === 'Group ' + g).length;
+---
+<Base title="Groups — FIFA World Cup 2026 group stage (A–L)" description="The 2026 FIFA World Cup group stage: all 12 groups (A–L), the four teams in each, and fixture counts.">
+  <h2 class="sec">Group stage</h2>
+  <div class="tgrid">
+    {groups.map(g => (
+      <div class="gcard">
+        <div class="gh">Group {g}</div>
+        <table class="gtable">
+          <thead><tr><th>Team</th><th>Conf</th><th>Rk</th></tr></thead>
+          <tbody>
+            {byG[g].map(t => (
+              <tr onclick={`location.href='${B}teams/${t.fifa_code.toLowerCase()}/'`}>
+                <td>{flag(t.fifa_code)} {t.team_name}</td>
+                <td class="faint">{t.confederation}</td>
+                <td class="mono">{t.fifa_ranking ? '#' + t.fifa_ranking : ''}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div class="sublabel">{fixtures(g)} fixtures</div>
+      </div>
+    ))}
+  </div>
+</Base>

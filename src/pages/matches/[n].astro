@@ -1,0 +1,75 @@
+---
+import Base from '../../components/Base.astro';
+import DB from '../../../public/data.json';
+import { indexes, autoForm, pickXI, FORMATIONS, flag, surname, num, money, avgAge } from '../../lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const IDX = indexes(DB);
+export function getStaticPaths() {
+  return DB.matches.map(m => ({ params: { n: String(m.match_number) } }));
+}
+const m = DB.matches.find(x => String(x.match_number) === Astro.params.n);
+const ht = m.home_code ? IDX.teamByCode[m.home_code] : null;
+const at = m.away_code ? IDX.teamByCode[m.away_code] : null;
+const sum = (t, k) => (IDX.playersByTeam[t.fifa_code] || []).reduce((s, p) => s + (p[k] || 0), 0);
+const fa = t => { const a = avgAge(IDX.playersByTeam[t.fifa_code] || []); return a ? a.toFixed(1) : '—'; };
+let tokens = [];
+if (ht && at) {
+  const hsq = IDX.playersByTeam[ht.fifa_code], asq = IDX.playersByTeam[at.fifa_code];
+  const hf = autoForm(hsq), af = autoForm(asq);
+  const hx = pickXI(hsq, hf), ax = pickXI(asq, af);
+  const hById = {}; hsq.forEach(p => hById[p.player_id] = p);
+  const aById = {}; asq.forEach(p => aById[p.player_id] = p);
+  const mk = (xi, form, byId, bottom, col) => xi.map((id, i) => {
+    const p = id ? byId[id] : null, [, x, y] = FORMATIONS[form][i];
+    return { x: bottom ? x : 100 - x, y: bottom ? 50 + (y / 100) * 47 : 50 - (y / 100) * 47, n: p ? (p.shirt_number ?? '') : '', nm: p ? surname(p.player_name) : '', id, col };
+  });
+  tokens = [...mk(ax, af, aById, false, '#ff8fb0'), ...mk(hx, hf, hById, true, '#5ce0a8')];
+  var hf2 = hf, af2 = af;
+}
+const tape = (ht && at) ? [
+  ['FIFA ranking', ht.fifa_ranking ? '#' + ht.fifa_ranking : '—', at.fifa_ranking ? '#' + at.fifa_ranking : '—'],
+  ['Avg age', fa(ht), fa(at)],
+  ['Total caps', num(sum(ht, 'caps')), num(sum(at, 'caps'))],
+  ['Total intl goals', num(sum(ht, 'international_goals')), num(sum(at, 'international_goals'))],
+  ['Squad value', money(sum(ht, 'market_value_eur')) || '—', money(sum(at, 'market_value_eur')) || '—'],
+] : [];
+const lbl = (m.match_label || '').split(/\s+vs\s+/);
+const titleTeams = ht && at ? `${ht.team_name} vs ${at.team_name}` : m.match_label;
+const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.kickoff_at || '').slice(0, 10)}, ${m.venue}, ${m.city}. Projected lineups and head-to-head.`;
+---
+<Base title={`${titleTeams} — 2026 World Cup ${m.stage} (Match ${m.match_number})`} description={desc}>
+  <a class="btn back" href={B + 'matches/'}>← Schedule</a>
+  <div class="matchhead">
+    <div class="ms">{m.stage} · Match {m.match_number}</div>
+    <div class="mscore">
+      {ht ? <span><a href={`${B}teams/${ht.fifa_code.toLowerCase()}/`}>{flag(ht.fifa_code)} {ht.team_name}</a></span> : <span class="faint">{lbl[0]}</span>}
+      <span class="mv">vs</span>
+      {at ? <span><a href={`${B}teams/${at.fifa_code.toLowerCase()}/`}>{at.team_name} {flag(at.fifa_code)}</a></span> : <span class="faint">{lbl[1]}</span>}
+    </div>
+    <div class="faint">{(m.kickoff_at || '').replace('T', ' ')} · {m.venue}, {m.city}, {m.country}</div>
+  </div>
+
+  {ht && at ? (
+    <>
+      <div class="panel">
+        <h3>Tale of the tape</h3>
+        <div class="tape"><div><b>{flag(ht.fifa_code)} {ht.team_name}</b><div class="faint">{ht.head_coach}</div></div><div></div><div style="text-align:right"><b>{at.team_name} {flag(at.fifa_code)}</b><div class="faint">{at.head_coach}</div></div></div>
+        {tape.map(([l, a, b]) => <div class="taperow"><span class="mono">{a}</span><span class="tl">{l}</span><span class="mono">{b}</span></div>)}
+      </div>
+      <div class="panel">
+        <h3>Projected head-to-head XIs <span class="tag">auto-picked — not official lineups</span></h3>
+        <div class="mhead"><span>{flag(ht.fifa_code)} {ht.team_name} <span class="faint">{hf2}</span></span><span><span class="faint">{af2}</span> {at.team_name} {flag(at.fifa_code)}</span></div>
+        <div class="pitch tall">
+          <div class="line ch"></div><div class="line cc"></div><div class="line box top"></div><div class="line box bot"></div><div class="line six top"></div><div class="line six bot"></div>
+          {tokens.map(tk => (
+            <a class="token sm" style={`left:${tk.x}%;top:${tk.y}%`} href={tk.id ? `${B}players/${tk.id}/` : '#'} title={tk.nm}>
+              <div class="sh" style={`background:${tk.col}`}>{tk.n}</div><div class="nm">{tk.nm}</div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </>
+  ) : (
+    <div class="panel"><div class="faint">This is a knockout slot — the two teams are decided by earlier results ({m.match_label}). Lineups appear once both teams are known.</div></div>
+  )}
+</Base>

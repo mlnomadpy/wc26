@@ -1,0 +1,31 @@
+---
+import Base from '../components/Base.astro';
+import DB from '../../public/data.json';
+import { CITY_GEO } from '../lib/wc.js';
+const lats = Object.values(CITY_GEO).map(g => g[0]), lons = Object.values(CITY_GEO).map(g => g[1]);
+const minLa = Math.min(...lats) - 2, maxLa = Math.max(...lats) + 2, minLo = Math.min(...lons) - 3, maxLo = Math.max(...lons) + 3;
+const X = lo => (lo - minLo) / (maxLo - minLo) * 100, Yc = la => (1 - (la - minLa) / (maxLa - minLa)) * 100;
+const mcount = {}; DB.matches.forEach(m => { if (m.city_id) mcount[m.city_id] = (mcount[m.city_id] || 0) + 1; });
+---
+<Base title="Host cities — 2026 FIFA World Cup venues map" description="The 16 host cities and stadiums of the 2026 FIFA World Cup across the USA, Canada and Mexico, with matches hosted per venue.">
+  <h2 class="sec">16 host cities</h2>
+  <div class="grid2">
+    <div class="panel">
+      <h3>Venues across North America</h3>
+      <div class="mapbox">
+        {DB.cities.map(c => { const g = CITY_GEO[c.id]; if (!g) return null; const sz = 8 + (mcount[c.id] || 0) * 0.9; return [
+          <div class="cdot2" style={`left:${X(g[1])}%;top:${Yc(g[0])}%;width:${sz}px;height:${sz}px`} title={`${c.city_name} — ${mcount[c.id]||0} matches`}></div>,
+          <div class="clab" style={`left:${X(g[1])}%;top:${Yc(g[0])}%`}>{c.city_name}</div>
+        ]; })}
+      </div>
+      <div class="faint" style="margin-top:8px">Dot size = matches hosted. Approximate positions (no basemap).</div>
+    </div>
+    <div class="panel">
+      <h3>Cities</h3>
+      <table>
+        <thead><tr><th>City</th><th>Venue</th><th>Country</th><th>Matches</th></tr></thead>
+        <tbody>{DB.cities.map(c => <tr><td>{c.city_name}</td><td class="faint">{c.venue_name}</td><td class="faint">{c.country}</td><td class="mono">{mcount[c.id] || 0}</td></tr>)}</tbody>
+      </table>
+    </div>
+  </div>
+</Base>

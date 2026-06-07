@@ -1,0 +1,105 @@
+---
+import '../styles/global.css';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/'; // "/wc26/"
+const SITE = 'https://www.tahabouhsine.com';
+const {
+  title = 'WC26 Matchday — FIFA World Cup 2026',
+  description = 'Explore every 2026 FIFA World Cup squad, projected lineup, club and match — 1,247 players, 48 teams, 104 matches.',
+  jsonld = null,
+  ogImage = B + 'og.png',
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, SITE).href;
+const NAV = [['', 'Home'], ['teams/', 'Teams'], ['players/', 'Players'], ['clubs/', 'Clubs'], ['groups/', 'Groups'], ['bracket/', 'Bracket'], ['matches/', 'Matches'], ['map/', 'Map'], ['compare/', 'Compare'], ['insights/', 'Insights'], ['data/', 'Data']];
+const here = Astro.url.pathname.replace(/\/$/, '') + '/';
+const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p === '' ? here === B : here.startsWith(full); };
+---
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <meta name="author" content="Taha Bouhsine" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="theme-color" content="#080b10" />
+  <link rel="canonical" href={canonical} />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="WC26 Matchday" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
+  <link rel="icon" type="image/svg+xml" href={B + 'favicon.svg'} />
+  <link rel="apple-touch-icon" href={B + 'favicon.svg'} />
+  <link rel="manifest" href={B + 'site.webmanifest'} />
+  <link rel="sitemap" href={B + 'sitemap-index.xml'} />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  {jsonld && <script type="application/ld+json" set:html={JSON.stringify(jsonld)} />}
+</head>
+<body>
+  <a href="#main" class="skip">Skip to content</a>
+  <header class="topbar">
+    <a class="brand" href={B}><span class="ball"></span><span>WC<b>26</b> <span class="faint">Matchday</span></span></a>
+    <nav id="nav" aria-label="Primary">
+      {NAV.map(([p, l]) => <a href={B + p} class={isOn(p) ? 'on' : ''}>{l}</a>)}
+    </nav>
+    <div class="actions">
+      <button class="btn ghost kbtn" id="palBtn" aria-label="Search">⌘K</button>
+      <button class="btn ghost" id="themeb" aria-label="Toggle theme">☀️</button>
+    </div>
+  </header>
+  <main id="main"><slot /></main>
+  <footer class="foot faint">FIFA World Cup 2026 data explorer · 1,247 players · projected lineups are estimates, not official lineups. · <a href={B + 'data/'}>Data &amp; sources</a></footer>
+
+  <div class="palette" id="palette" role="dialog" aria-modal="true" aria-label="Search">
+    <div class="palbox">
+      <input id="palq" placeholder="Search players, teams, clubs, cities…" aria-label="Search" autocomplete="off" />
+      <div id="palres" class="palres"></div>
+      <div class="palfoot faint">↑↓ navigate · ↵ open · esc close</div>
+    </div>
+  </div>
+
+  <script define:vars={{ B }}>
+    window.__B__ = B;
+    // theme
+    const setTheme = t => { document.documentElement.dataset.theme = t; localStorage.setItem('wc-theme', t); const b = document.getElementById('themeb'); if (b) b.textContent = t === 'light' ? '🌙' : '☀️'; };
+    setTheme(localStorage.getItem('wc-theme') || 'dark');
+    document.getElementById('themeb').addEventListener('click', () => setTheme((localStorage.getItem('wc-theme') || 'dark') === 'dark' ? 'light' : 'dark'));
+    // command palette (lazy index)
+    let IDX = null, sel = 0;
+    const pal = document.getElementById('palette'), q = document.getElementById('palq'), res = document.getElementById('palres');
+    async function ensure() { if (!IDX) { try { IDX = await (await fetch(B + 'search.json')).json(); } catch (e) { IDX = []; } } }
+    function draw() {
+      const t = q.value.toLowerCase().trim();
+      let r = t ? IDX.filter(x => x.s.includes(t)) : IDX.filter(x => x.t === 'Page' || x.t === 'Team');
+      r = r.slice(0, 40); sel = 0;
+      res.innerHTML = r.map((x, i) => `<a class="palrow ${i === 0 ? 'sel' : ''}" href="${B}${x.u}"><span class="palk">${x.k || x.t[0]}</span><span class="pall">${x.n}</span><span class="palsub faint">${x.d || ''}</span><span class="palt faint">${x.t}</span></a>`).join('') || '<div class="palrow faint">No matches.</div>';
+    }
+    async function open() { await ensure(); pal.classList.add('show'); q.value = ''; draw(); q.focus(); }
+    function close() { pal.classList.remove('show'); }
+    document.getElementById('palBtn').addEventListener('click', open);
+    q.addEventListener('input', draw);
+    pal.addEventListener('click', e => { if (e.target === pal) close(); });
+    q.addEventListener('keydown', e => {
+      const rows = [...res.querySelectorAll('.palrow[href]')];
+      if (e.key === 'ArrowDown') { e.preventDefault(); rows[sel]?.classList.remove('sel'); sel = Math.min(sel + 1, rows.length - 1); rows[sel]?.classList.add('sel'); rows[sel]?.scrollIntoView({ block: 'nearest' }); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); rows[sel]?.classList.remove('sel'); sel = Math.max(sel - 1, 0); rows[sel]?.classList.add('sel'); rows[sel]?.scrollIntoView({ block: 'nearest' }); }
+      else if (e.key === 'Enter') { e.preventDefault(); (rows[sel] || rows[0])?.click(); }
+    });
+    document.addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); open(); }
+      else if (e.key === '/' && !/input|select|textarea/i.test(document.activeElement.tagName)) { e.preventDefault(); open(); }
+      else if (e.key === 'Escape') close();
+    });
+  </script>
+</body>
+</html>

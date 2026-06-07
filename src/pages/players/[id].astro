@@ -1,0 +1,61 @@
+---
+import Base from '../../components/Base.astro';
+import DB from '../../../public/data.json';
+import { indexes, slugify, POSC, flag, num, money } from '../../lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const IDX = indexes(DB);
+export function getStaticPaths() {
+  return DB.players.map(p => ({ params: { id: String(p.player_id) } }));
+}
+const p = IDX.playerById[Astro.params.id];
+const clubStats = ['club_apps_2025_26', 'club_starts_2025_26', 'club_minutes_2025_26', 'club_goals_2025_26', 'club_assists_2025_26', 'club_yellow_2025_26', 'club_red_2025_26', 'club_clean_sheets_2025_26', 'club_goals_conceded_2025_26'];
+const hasClub = clubStats.some(k => p[k] != null);
+const wl = (p.team_wins_2025_26 != null || p.team_losses_2025_26 != null);
+const srcs = String(p.enrichment_sources || '').split(' ; ').map(s => s.trim()).filter(s => /^https?:/.test(s));
+const stat = (k, l, fmt = num) => p[k] != null ? { v: fmt(p[k]), l } : null;
+const intl = [stat('caps', 'Caps'), stat('international_goals', 'Goals')].filter(Boolean);
+const club = [['club_apps_2025_26', 'Apps'], ['club_starts_2025_26', 'Starts'], ['club_minutes_2025_26', 'Minutes'], ['club_goals_2025_26', 'Goals'], ['club_assists_2025_26', 'Assists'], ['club_yellow_2025_26', 'Yellow'], ['club_red_2025_26', 'Red'], ['club_clean_sheets_2025_26', 'Clean sheets'], ['club_goals_conceded_2025_26', 'Conceded']].map(([k, l]) => stat(k, l)).filter(Boolean);
+const rec = [['team_wins_2025_26', 'Won'], ['team_draws_2025_26', 'Drew'], ['team_losses_2025_26', 'Lost']].map(([k, l]) => stat(k, l)).filter(Boolean);
+const career = [['career_club_apps', 'Career apps'], ['career_club_goals', 'Career goals']].map(([k, l]) => stat(k, l)).filter(Boolean);
+const desc = `${p.player_name} — ${p.team_name} (${p.position}) at the 2026 FIFA World Cup. ${p.club}${p.caps ? `, ${p.caps} caps` : ''}${p.international_goals ? `, ${p.international_goals} goals` : ''}. 2025/26 club stats and profile.`;
+const jsonld = {
+  '@context': 'https://schema.org', '@type': 'Person', name: p.player_name,
+  jobTitle: 'Footballer', nationality: p.team_name, birthDate: p.date_of_birth || undefined,
+  height: p.height_cm ? p.height_cm + ' cm' : undefined,
+  memberOf: [{ '@type': 'SportsTeam', name: p.team_name }, p.club ? { '@type': 'SportsTeam', name: p.club } : undefined].filter(Boolean),
+};
+const StatGrid = (items) => items;
+---
+<Base title={`${p.player_name} — ${p.team_name} | 2026 World Cup profile & stats`} description={desc} jsonld={jsonld}>
+  <a class="btn back" href={`${B}teams/${p.fifa_code.toLowerCase()}/`}>← {p.team_name}</a>
+  <div class="playerhead" style={`--c:${POSC[p.position]}`}>
+    <div class="phnum mono">{p.shirt_number ?? '—'}</div>
+    <div>
+      <div class="faint"><a href={`${B}teams/${p.fifa_code.toLowerCase()}/`}>{flag(p.fifa_code)} {p.team_name}</a> · Group {p.group_letter} · <span class={`pill ${p.position}`}>{p.position}</span></div>
+      <h1>{p.player_name} {p.is_captain && <span class="faint">(captain)</span>}</h1>
+      <div class="faint"><a href={`${B}clubs/${slugify(p.club)}/`}>{p.club}</a> · {p.club_league || ''}</div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>Profile</h3>
+      <div class="kv">
+        <span class="k">Date of birth</span><span>{p.date_of_birth || '—'}{p.age ? ` (age ${p.age})` : ''}</span>
+        <span class="k">Club</span><span>{p.club || '—'} · {p.club_country || ''}</span>
+        <span class="k">Height</span><span>{p.height_cm ? p.height_cm + ' cm' : '—'}</span>
+        <span class="k">Preferred foot</span><span>{p.preferred_foot || '—'}</span>
+        <span class="k">Market value</span><span class="mono">{p.market_value_eur ? money(p.market_value_eur) : '—'}</span>
+      </div>
+      <div class="sublabel">International</div>
+      <div class="statgrid">{intl.map(s => <div class="stat"><div class="v mono">{s.v}</div><div class="k">{s.l}</div></div>)}</div>
+    </div>
+    <div class="panel">
+      <h3>Club season 2025/26 {p.club_competitions_2025_26 && <span class="tag">{p.club_competitions_2025_26}</span>}</h3>
+      {hasClub ? <div class="statgrid">{club.map(s => <div class="stat"><div class="v mono">{s.v}</div><div class="k">{s.l}</div></div>)}</div> : <div class="faint">No verified club-season stats.</div>}
+      {rec.length > 0 && <><div class="sublabel">Team record in his matches</div><div class="statgrid">{rec.map(s => <div class="stat"><div class="v mono">{s.v}</div><div class="k">{s.l}</div></div>)}</div></>}
+      {career.length > 0 && <><div class="sublabel">Club career totals</div><div class="statgrid">{career.map(s => <div class="stat"><div class="v mono">{s.v}</div><div class="k">{s.l}</div></div>)}</div></>}
+      {p.form_note && <><div class="sublabel">Form</div><div class="faint">{p.form_note}</div></>}
+    </div>
+  </div>
+  {srcs.length > 0 && <div class="panel"><h3>Sources</h3>{srcs.map(s => <div class="src"><a href={s} target="_blank" rel="noopener">{s}</a></div>)}</div>}
+</Base>

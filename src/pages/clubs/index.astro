@@ -1,0 +1,25 @@
+---
+import Base from '../../components/Base.astro';
+import DB from '../../../public/data.json';
+import { slugify } from '../../lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const m = {}; DB.players.forEach(p => { if (p.club) (m[p.club] = m[p.club] || []).push(p); });
+const rows = Object.entries(m).map(([c, ps]) => ({ c, n: ps.length, country: ps[0].club_country, league: ps[0].club_league })).sort((a, b) => b.n - a.n);
+---
+<Base title="Clubs at the 2026 World Cup — which clubs send the most players" description="All 512 clubs represented at the 2026 FIFA World Cup, ranked by how many players they send. Open a club to see its World Cup players.">
+  <div class="panel">
+    <h3>{rows.length} clubs represented <span class="tag">ranked by players sent</span></h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Club</th><th>Country</th><th>League</th><th>Players</th></tr></thead>
+        <tbody>
+          {rows.map(r => (
+            <tr onclick={`location.href='${B}clubs/${slugify(r.c)}/'`}>
+              <td>{r.c}</td><td class="faint">{r.country}</td><td class="faint">{r.league}</td><td class="mono"><b>{r.n}</b></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</Base>

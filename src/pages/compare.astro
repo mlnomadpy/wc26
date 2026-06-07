@@ -1,0 +1,69 @@
+---
+import Base from '../components/Base.astro';
+import DB from '../../public/data.json';
+import { indexes, CONF, POSC, avgAge } from '../lib/wc.js';
+const IDX = indexes(DB);
+const teamMetrics = DB.teams.map(t => {
+  const sq = IDX.playersByTeam[t.fifa_code] || [], a = avgAge(sq) || 27;
+  return { code: t.fifa_code, name: t.team_name, conf: t.confederation, color: CONF[t.confederation],
+    att: sq.filter(p => p.position === 'FW').length, mid: sq.filter(p => p.position === 'MF').length, def: sq.filter(p => p.position === 'DF').length,
+    exp: sq.reduce((s, p) => s + (p.caps || 0), 0), goal: sq.reduce((s, p) => s + (p.international_goals || 0), 0), youth: +(40 - a).toFixed(1), avg: +a.toFixed(1) };
+});
+const playerMetrics = DB.players.map(p => ({ id: p.player_id, name: p.player_name, team: p.fifa_code, pos: p.position, color: POSC[p.position],
+  caps: p.caps || 0, goals: p.international_goals || 0, apps: p.club_apps_2025_26 || 0, cg: p.club_goals_2025_26 || 0, ca: p.club_assists_2025_26 || 0, min: p.club_minutes_2025_26 || 0 }));
+---
+<Base title="Compare — teams & players head-to-head | 2026 World Cup" description="Compare any two 2026 World Cup teams or players side by side on a radar chart: squad shape, experience, goal threat and 2025/26 club stats.">
+  <div class="panel">
+    <div class="controls">
+      <div class="chips"><span class="chip on" id="mTeam">Teams</span><span class="chip" id="mPlayer">Players</span></div>
+      <span id="selA"></span><span class="faint">vs</span><span id="selB"></span>
+    </div>
+    <div id="cmpout"></div>
+  </div>
+  <script type="application/json" id="tm" set:html={JSON.stringify(teamMetrics)}></script>
+  <script type="application/json" id="pm" set:html={JSON.stringify(playerMetrics)}></script>
+  <script>
+    const TM = JSON.parse(document.getElementById('tm').textContent);
+    const PM = JSON.parse(document.getElementById('pm').textContent);
+    const out = document.getElementById('cmpout'), selA = document.getElementById('selA'), selB = document.getElementById('selB');
+    const FLAG = {}; // optional; names are enough
+    let mode = 'team', a, b;
+    function radar(labels, av, bv, ca, cb) {
+      const N = labels.length, R = 92, cx = 120, cy = 120;
+      const pt = (i, v) => { const ang = -Math.PI / 2 + i / N * 2 * Math.PI; return [cx + Math.cos(ang) * R * v, cy + Math.sin(ang) * R * v]; };
+      const poly = v => v.map((x, i) => pt(i, Math.max(0.04, x)).join(',')).join(' ');
+      const rings = [0.25, 0.5, 0.75, 1].map(r => `<polygon points="${labels.map((_, i) => pt(i, r).join(',')).join(' ')}" class="rring"/>`).join('');
+      const axes = labels.map((l, i) => { const [x, y] = pt(i, 1.18), [ax, ay] = pt(i, 1); return `<line x1="${cx}" y1="${cy}" x2="${ax}" y2="${ay}" class="raxis"/><text x="${x}" y="${y}" class="rlab" text-anchor="middle">${l}</text>`; }).join('');
+      return `<svg viewBox="0 0 240 240" class="radar">${rings}${axes}<polygon points="${poly(bv)}" fill="${cb}" fill-opacity="0.18" stroke="${cb}" stroke-width="2"/><polygon points="${poly(av)}" fill="${ca}" fill-opacity="0.22" stroke="${ca}" stroke-width="2"/></svg>`;
+    }
+    function opts(list, val) { return list.map(x => `<option value="${x.id ?? x.code}" ${String(x.id ?? x.code) === String(val) ? 'selected' : ''}>${x.name}${x.team ? ' (' + x.team + ')' : ''}</option>`).join(''); }
+    function draw() {
+      if (mode === 'team') {
+        const A = TM.find(x => x.code === a), B = TM.find(x => x.code === b);
+        const M = [['Attack', 'att'], ['Midfield', 'mid'], ['Defence', 'def'], ['Experience', 'exp'], ['Goal threat', 'goal'], ['Youth', 'youth']];
+        const av = M.map(([, k]) => A[k]), bv = M.map(([, k]) => B[k]), mx = M.map((_, i) => Math.max(av[i], bv[i]) || 1);
+        out.innerHTML = `<div class="cmpwrap"><div>${radar(M.map(m => m[0]), av.map((v, i) => v / mx[i]), bv.map((v, i) => v / mx[i]), A.color, B.color)}</div><div><div class="cmpleg"><span style="color:${A.color}">● ${A.name}</span><span style="color:${B.color}">● ${B.name}</span></div>${M.map(([l, k]) => `<div class="taperow"><span class="mono">${Math.round(A[k])}</span><span class="tl">${l}</span><span class="mono">${Math.round(B[k])}</span></div>`).join('')}<div class="taperow"><span class="mono">${A.avg}</span><span class="tl">Avg age</span><span class="mono">${B.avg}</span></div></div></div>`;
+      } else {
+        const A = PM.find(x => x.id == a), B = PM.find(x => x.id == b);
+        const M = [['Caps', 'caps'], ['Intl goals', 'goals'], ['Club apps', 'apps'], ['Club goals', 'cg'], ['Club assists', 'ca'], ['Minutes', 'min']];
+        const av = M.map(([, k]) => A[k]), bv = M.map(([, k]) => B[k]), mx = M.map((_, i) => Math.max(av[i], bv[i]) || 1);
+        out.innerHTML = `<div class="cmpwrap"><div>${radar(M.map(m => m[0]), av.map((v, i) => v / mx[i]), bv.map((v, i) => v / mx[i]), A.color, B.color)}</div><div><div class="cmpleg"><span style="color:${A.color}">● ${A.name} (${A.team})</span><span style="color:${B.color}">● ${B.name} (${B.team})</span></div>${M.map(([l, k]) => `<div class="taperow"><span class="mono">${A[k].toLocaleString()}</span><span class="tl">${l}</span><span class="mono">${B[k].toLocaleString()}</span></div>`).join('')}</div></div>`;
+      }
+    }
+    function build() {
+      if (mode === 'team') { a = a || 'ARG'; b = b || 'FRA';
+        selA.innerHTML = `<select id="ca">${opts(TM, a)}</select>`; selB.innerHTML = `<select id="cb">${opts(TM, b)}</select>`;
+        document.getElementById('ca').onchange = e => { a = e.target.value; draw(); };
+        document.getElementById('cb').onchange = e => { b = e.target.value; draw(); };
+      } else { a = PM[0].id; b = PM[1].id;
+        selA.innerHTML = `<select id="ca">${opts(PM, a)}</select>`; selB.innerHTML = `<select id="cb">${opts(PM, b)}</select>`;
+        document.getElementById('ca').onchange = e => { a = e.target.value; draw(); };
+        document.getElementById('cb').onchange = e => { b = e.target.value; draw(); };
+      }
+      draw();
+    }
+    document.getElementById('mTeam').onclick = () => { mode = 'team'; a = b = null; document.getElementById('mTeam').classList.add('on'); document.getElementById('mPlayer').classList.remove('on'); build(); };
+    document.getElementById('mPlayer').onclick = () => { mode = 'player'; a = b = null; document.getElementById('mPlayer').classList.add('on'); document.getElementById('mTeam').classList.remove('on'); build(); };
+    build();
+  </script>
+</Base>

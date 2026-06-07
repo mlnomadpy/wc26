@@ -1,0 +1,60 @@
+---
+import Base from '../components/Base.astro';
+import DB from '../../public/data.json';
+import { BTREE, STAGE_R, decodeSlot, groupColor } from '../lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const byNum = {}; DB.matches.forEach(m => byNum[m.match_number] = m);
+const roundOf = n => { const m = byNum[n]; return m ? (STAGE_R[m.stage] || 0) : 0; };
+const leaves = []; (function dfs(n) { const ch = BTREE[n]; if (!ch) { leaves.push(n); return; } ch.forEach(dfs); })(104);
+const Y = {}; leaves.forEach((n, i) => Y[n] = i);
+Object.keys(BTREE).map(Number).sort((a, b) => roundOf(a) - roundOf(b)).forEach(n => { const ch = BTREE[n]; Y[n] = ch.reduce((s, c) => s + Y[c], 0) / ch.length; });
+const cardW = 164, cardH = 60, colGap = 78, rowUnit = 74, padT = 44;
+const headers = ['Round of 32', 'Round of 16', 'Quarterfinals', 'Semifinals', 'Final'];
+const colX = r => r * (cardW + colGap);
+const H = leaves.length * rowUnit + padT + 18, W = colX(5) + 186;
+const yc = n => Y[n] * rowUnit + padT + cardH / 2;
+const lines = [];
+Object.entries(BTREE).forEach(([p, ch]) => { const px = colX(roundOf(+p)), pyc = yc(+p); ch.forEach(c => { const cr = colX(roundOf(c)) + cardW, cy = yc(c), mid = (cr + px) / 2; lines.push({ d: `M${cr} ${cy} H${mid} V${pyc} H${px}`, cls: 'bcon' }); }); });
+lines.push({ d: `M${colX(4) + cardW} ${yc(104)} H${colX(5)}`, cls: 'bcon win' });
+const allNodes = [...leaves, ...Object.keys(BTREE).map(Number)].map(n => {
+  const m = byNum[n], r = roundOf(n); const [a, b] = (m.match_label || '').split(/\s+vs\s+/);
+  return { n, r, x: colX(r), y: Y[n] * rowUnit + padT, a: decodeSlot(a), b: decodeSlot(b), city: (m.city || '').split('/')[0] };
+});
+const tp = byNum[103];
+const legend = [['A', groupColor('A'), 'Group A winner / runner-up'], ['3rd', '#3b3320', 'Best third-placed team'], ['W', '#26406b', 'Winner of an earlier match'], ['RU', '#5a2740', 'Runner-up (third-place playoff)']];
+---
+<Base title="Bracket — FIFA World Cup 2026 knockout 'Road to the Final'" description="The 2026 FIFA World Cup knockout bracket: Round of 32 through the Final, with decoded slots and host cities. The first 48-team World Cup knockout tree.">
+  <div class="brkhead"><h2 class="sec" style="margin:0">Road to the final</h2><span class="tag">48 → 1 · open any match for its head-to-head</span></div>
+  <div class="bktwrap">
+    <div class="bktree" style={`width:${W}px;height:${H}px`}>
+      <svg class="bcons" width={W} height={H} aria-hidden="true">{lines.map(l => <path d={l.d} class={l.cls} />)}</svg>
+      {headers.map((h, r) => <div class="bhead" style={`left:${colX(r)}px;width:${cardW}px`}>{h}</div>)}
+      <div class="bhead" style={`left:${colX(5)}px;width:170px`}>Champion</div>
+      {allNodes.map(nd => (
+        <a class={`bnode r${nd.r}`} style={`left:${nd.x}px;top:${nd.y}px;width:${cardW}px;height:${cardH}px`} href={`${B}matches/${nd.n}/`} aria-label={`Match ${nd.n}`}>
+          <div class="brow"><span class="bchip" style={`background:${nd.a.color}`}>{nd.a.code}</span><span class="blabel">{nd.a.label}</span></div>
+          <div class="bvs"><span>vs</span></div>
+          <div class="brow"><span class="bchip" style={`background:${nd.b.color}`}>{nd.b.code}</span><span class="blabel">{nd.b.label}</span></div>
+          <div class="bnum">#{nd.n} · {nd.city}</div>
+        </a>
+      ))}
+      <div class="bchamp" style={`left:${colX(5)}px;top:${Y[104] * rowUnit + padT - 6}px`}>
+        <div class="trophy">🏆</div><div class="ct">Champion 2026</div><div class="faint cs">Lifts the trophy<br>Jul 19 · New York</div>
+      </div>
+    </div>
+  </div>
+  <div class="grid2">
+    {tp && (
+      <div class="panel">
+        <h3>🥉 Third-place playoff</h3>
+        {(tp.match_label || '').split(/\s+vs\s+/).map(s => { const d = decodeSlot(s); return <div class="brow"><span class="bchip" style={`background:${d.color}`}>{d.code}</span><span class="blabel">{d.label}</span></div>; })}
+        <div class="faint" style="margin-top:8px">Match #103 · {tp.venue}, {tp.city}</div>
+      </div>
+    )}
+    <div class="panel">
+      <h3>How to read the slots</h3>
+      <div class="kv">{legend.map(([c, col, t]) => [<span class="bchip" style={`background:${col}`}>{c}</span>, <span>{t}</span>])}</div>
+      <div class="faint" style="margin-top:10px">Teams fill in once the group stage and each knockout round finish.</div>
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,146 @@
+---
+import Base from '../../components/Base.astro';
+import DB from '../../../public/data.json';
+import { indexes, autoForm, pickXI, strength, FORMATIONS, FORMNAMES, POSC, POSNAME, CONF, flag, surname, num, money, avgAge } from '../../lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const IDX = indexes(DB);
+export function getStaticPaths() {
+  return DB.teams.map(t => ({ params: { code: t.fifa_code.toLowerCase() } }));
+}
+const code = Astro.params.code.toUpperCase();
+const t = IDX.teamByCode[code];
+const sq = IDX.playersByTeam[code] || [];
+const byId = {}; sq.forEach(p => byId[p.player_id] = p);
+const form = autoForm(sq);
+const xi = pickXI(sq, form);
+const onPitch = new Set(xi.filter(Boolean));
+const bench = sq.filter(p => !onPitch.has(p.player_id)).sort((a, b) => strength(b) - strength(a));
+const av = avgAge(sq);
+const byPos = { GK: [], DF: [], MF: [], FW: [] }; sq.forEach(p => byPos[p.position] && byPos[p.position].push(p));
+const benchSub = p => [p.club_apps_2025_26 != null ? p.club_apps_2025_26 + ' apps' : '', p.club_goals_2025_26 != null ? p.club_goals_2025_26 + 'g' : '', (p.caps || 0) + 'c'].filter(Boolean).join(' · ');
+const totG = sq.reduce((s, p) => s + (p.international_goals || 0), 0), totC = sq.reduce((s, p) => s + (p.caps || 0), 0);
+const val = sq.reduce((s, p) => s + (p.market_value_eur || 0), 0);
+const abroad = sq.filter(p => p.club_country && p.club_country !== t.team_name).length;
+const topCap = [...sq].sort((a, b) => (b.caps || 0) - (a.caps || 0))[0];
+const topSc = [...sq].sort((a, b) => (b.international_goals || 0) - (a.international_goals || 0))[0];
+const desc = `${t.team_name} 2026 FIFA World Cup squad (Group ${t.group_letter}): all ${sq.length} players, projected XI, coach ${t.head_coach || ''}. Caps, goals and 2025/26 club stats.`;
+const jsonld = {
+  '@context': 'https://schema.org', '@type': 'SportsTeam', name: t.team_name, sport: 'Association football',
+  url: new URL(Astro.url.pathname, 'https://www.tahabouhsine.com').href,
+  coach: t.head_coach ? { '@type': 'Person', name: t.head_coach } : undefined,
+  athlete: sq.map(p => ({ '@type': 'Person', name: p.player_name })),
+};
+---
+<Base title={`${t.team_name} — 2026 World Cup squad, lineup & stats`} description={desc} jsonld={jsonld}>
+  <a class="btn back" href={B + 'teams/'}>← All teams</a>
+  <div class="teamhead" style={`--c:${CONF[t.confederation]}`}>
+    <div class="thflag">{flag(t.fifa_code)}</div>
+    <div>
+      <div class="faint">Group {t.group_letter} · {t.confederation} · {t.qualification_method || ''}</div>
+      <h1>{t.team_name}</h1>
+      <div class="faint">{t.head_coach || '—'} · {t.fifa_ranking ? 'FIFA #' + t.fifa_ranking : ''} · {sq.length} players · avg age {av ? av.toFixed(1) : '—'}</div>
+    </div>
+  </div>
+
+  <div id="teamroot" data-form={form}>
+    <h2 class="sec">Projected XI <span class="tag">{form} · auto-picked from squad data, not an official lineup</span></h2>
+    <div class="pitchwrap">
+      <div class="panel">
+        <div class="formrow">{FORMNAMES.map(f => <span class={`chip ${f === form ? 'on' : ''}`} data-f={f}>{f}</span>)}</div>
+        <div class="pitch" id="pitch">
+          <div class="line ch"></div><div class="line cc"></div><div class="line box top"></div><div class="line box bot"></div><div class="line six top"></div><div class="line six bot"></div>
+          {xi.map((id, i) => { const [cat, x, y] = FORMATIONS[form][i]; const p = id ? byId[id] : null; return (
+            <a class="token" style={`left:${x}%;top:${y}%`} href={id ? `${B}players/${id}/` : '#'} title={p ? p.player_name : ''}>
+              <div class="sh" style={`background:${POSC[cat]}`}>{p ? (p.shirt_number ?? '') : ''}{p && p.is_captain && <i class="cap">C</i>}</div>
+              <div class="nm">{p ? surname(p.player_name) : '—'}</div>
+            </a>
+          ); })}
+        </div>
+        <div class="hint faint">Switch formation to re-pick the XI. Tap a player for full stats.</div>
+      </div>
+      <div class="panel">
+        <h3>Bench <span class="tag">{bench.length} · ranked by projected role</span></h3>
+        <div class="benchlist" id="bench">
+          {bench.map(p => (
+            <a class="pcard" href={`${B}players/${p.player_id}/`}>
+              <div class="pcrow"><span class={`pill ${p.position}`}>{p.position}</span><span class="faint">#{p.shirt_number ?? '—'}</span></div>
+              <div class="nm">{p.player_name}{p.is_captain ? ' ©' : ''}</div>
+              <div class="meta faint">{p.club}</div><div class="meta faint">{benchSub(p)}</div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sec">Squad</h2>
+  <div class="grid2">
+    {['GK', 'DF', 'MF', 'FW'].map(pos => (
+      <div class="panel">
+        <h3>{POSNAME[pos]} <span class="tag">{byPos[pos].length}</span></h3>
+        <table>
+          <thead><tr><th>#</th><th>Player</th><th>Club</th><th>Age</th><th>Apps</th><th>G</th><th>A</th></tr></thead>
+          <tbody>
+            {byPos[pos].sort((a, b) => (a.shirt_number || 99) - (b.shirt_number || 99)).map(p => (
+              <tr onclick={`location.href='${B}players/${p.player_id}/'`}>
+                <td class="mono">{p.shirt_number ?? ''}</td>
+                <td>{p.player_name}{p.is_captain ? ' (C)' : ''}</td>
+                <td class="faint">{p.club}</td>
+                <td class="mono">{p.age ?? ''}</td>
+                <td class="mono">{p.club_apps_2025_26 ?? '·'}</td><td class="mono">{p.club_goals_2025_26 ?? '·'}</td><td class="mono">{p.club_assists_2025_26 ?? '·'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ))}
+  </div>
+
+  <h2 class="sec">Team info</h2>
+  <div class="panel">
+    <div class="kv">
+      <span class="k">Head coach</span><span>{t.head_coach || '—'}</span>
+      <span class="k">FIFA ranking</span><span>{t.fifa_ranking ? '#' + t.fifa_ranking : '—'}</span>
+      <span class="k">Qualified via</span><span>{t.qualification_method || '—'}</span>
+      <span class="k">Average age</span><span>{av ? av.toFixed(1) : '—'}</span>
+      <span class="k">Total caps</span><span class="mono">{num(totC)}</span>
+      <span class="k">Total intl goals</span><span class="mono">{num(totG)}</span>
+      <span class="k">Squad value</span><span class="mono">{val ? money(val) : '—'}</span>
+      <span class="k">Play abroad</span><span class="mono">{abroad}/{sq.length}</span>
+      <span class="k">Most capped</span><span>{topCap.player_name} ({topCap.caps})</span>
+      <span class="k">Top scorer</span><span>{topSc.player_name} ({topSc.international_goals})</span>
+    </div>
+  </div>
+
+  <script type="application/json" id="squad" set:html={JSON.stringify(sq)}></script>
+  <script>
+    import { FORMATIONS, pickXI, POSC, surname } from '../../lib/wc.js';
+    const root = document.getElementById('teamroot');
+    const el = document.getElementById('squad');
+    if (root && el) {
+      const sq = JSON.parse(el.textContent);
+      const byId = {}; sq.forEach(p => byId[p.player_id] = p);
+      const B = window.__B__ || '/';
+      const pitch = document.getElementById('pitch'), bench = document.getElementById('bench');
+      const benchSub = p => [p.club_apps_2025_26 != null ? p.club_apps_2025_26 + ' apps' : '', p.club_goals_2025_26 != null ? p.club_goals_2025_26 + 'g' : '', (p.caps || 0) + 'c'].filter(Boolean).join(' · ');
+      function render(form) {
+        const xi = pickXI(sq, form);
+        pitch.querySelectorAll('.token').forEach(n => n.remove());
+        FORMATIONS[form].forEach((s, i) => {
+          const [cat, x, y] = s, id = xi[i], p = id ? byId[id] : null;
+          const a = document.createElement('a'); a.className = 'token'; a.style.left = x + '%'; a.style.top = y + '%';
+          a.href = id ? B + 'players/' + id + '/' : '#';
+          a.innerHTML = `<div class="sh" style="background:${POSC[cat]}">${p ? (p.shirt_number ?? '') : ''}${p && p.is_captain ? '<i class="cap">C</i>' : ''}</div><div class="nm">${p ? surname(p.player_name) : '—'}</div>`;
+          pitch.appendChild(a);
+        });
+        const on = new Set(xi.filter(Boolean));
+        const bn = sq.filter(p => !on.has(p.player_id)).sort((a, b) => (b.caps || 0) - (a.caps || 0));
+        bench.innerHTML = bn.map(p => `<a class="pcard" href="${B}players/${p.player_id}/"><div class="pcrow"><span class="pill ${p.position}">${p.position}</span><span class="faint">#${p.shirt_number ?? '—'}</span></div><div class="nm">${p.player_name}${p.is_captain ? ' ©' : ''}</div><div class="meta faint">${p.club ?? ''}</div><div class="meta faint">${benchSub(p)}</div></a>`).join('');
+      }
+      document.querySelectorAll('.formrow .chip').forEach(c => c.addEventListener('click', () => {
+        document.querySelectorAll('.formrow .chip').forEach(x => x.classList.toggle('on', x === c));
+        render(c.dataset.f);
+      }));
+    }
+  </script>
+</Base>

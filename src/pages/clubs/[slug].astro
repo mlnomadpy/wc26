@@ -1,0 +1,40 @@
+---
+import Base from '../../components/Base.astro';
+import DB from '../../../public/data.json';
+import { indexes, slugify, flag } from '../../lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const IDX = indexes(DB);
+export function getStaticPaths() {
+  const seen = {};
+  DB.players.forEach(p => { if (p.club) { const s = slugify(p.club); if (!seen[s]) seen[s] = p.club; } });
+  return Object.entries(seen).map(([slug, club]) => ({ params: { slug }, props: { club } }));
+}
+const { club } = Astro.props;
+const ps = IDX.playersByClub[club] || [];
+const desc = `${club} players at the 2026 FIFA World Cup — ${ps.length} call-ups across national teams. Positions, nations and 2025/26 stats.`;
+---
+<Base title={`${club} at the 2026 World Cup — ${ps.length} players`} description={desc}>
+  <a class="btn back" href={B + 'clubs/'}>← All clubs</a>
+  <div class="panel">
+    <div class="faint">{ps[0]?.club_country} · {ps[0]?.club_league}</div>
+    <h1>{club}</h1>
+    <div class="faint">{ps.length} players at WC 2026</div>
+  </div>
+  <div class="panel">
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Pos</th><th>Player</th><th>Nation</th><th>Apps26</th><th>G26</th></tr></thead>
+        <tbody>
+          {ps.sort((a, b) => a.team_name.localeCompare(b.team_name)).map(p => (
+            <tr onclick={`location.href='${B}players/${p.player_id}/'`}>
+              <td><span class={`pill ${p.position}`}>{p.position}</span></td>
+              <td>{p.player_name}</td>
+              <td>{flag(p.fifa_code)} {p.team_name}</td>
+              <td class="mono">{p.club_apps_2025_26 ?? '·'}</td><td class="mono">{p.club_goals_2025_26 ?? '·'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</Base>

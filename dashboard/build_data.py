@@ -151,7 +151,37 @@ payload = {
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 with open(OUT, "w", encoding="utf-8") as f:
     json.dump(payload, f, ensure_ascii=False)
+
+# ---- search.json: compact index for the command palette ----
+import unicodedata, re as _re
+def slugify(s):
+    s = unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode().lower()
+    return _re.sub(r"-+", "-", _re.sub(r"[^a-z0-9]+", "-", s)).strip("-")
+
+search = []
+for t in teams:
+    search.append({"n": t["team_name"], "d": f"Group {t['group_letter']} · {t.get('confederation','')}",
+                   "t": "Team", "u": f"teams/{t['fifa_code'].lower()}/", "s": f"{t['team_name']} {t['fifa_code']}".lower()})
+for p in players:
+    search.append({"n": p["player_name"], "d": f"{p['fifa_code']} · {p.get('club','')}",
+                   "t": "Player", "u": f"players/{p['player_id']}/", "s": f"{p['player_name']} {p.get('club','')}".lower()})
+seen_clubs = {}
+for p in players:
+    if p.get("club") and p["club"] not in seen_clubs:
+        seen_clubs[p["club"]] = True
+        search.append({"n": p["club"], "d": p.get("club_country", ""), "t": "Club",
+                       "u": f"clubs/{slugify(p['club'])}/", "s": p["club"].lower()})
+for c in cities:
+    search.append({"n": c["city_name"], "d": c["venue_name"], "t": "City", "u": "map/", "s": c["city_name"].lower()})
+for nm, u in [("Home", ""), ("Teams", "teams/"), ("Players", "players/"), ("Clubs", "clubs/"),
+              ("Groups", "groups/"), ("Bracket", "bracket/"), ("Matches", "matches/"), ("Map", "map/"),
+              ("Compare", "compare/"), ("Insights", "insights/"), ("Data", "data/")]:
+    search.append({"n": nm, "d": "", "t": "Page", "k": "→", "u": u, "s": nm.lower()})
+with open(os.path.join(os.path.dirname(OUT), "search.json"), "w", encoding="utf-8") as f:
+    json.dump(search, f, ensure_ascii=False)
+
 print(f"wrote {OUT}")
+print(f"  search.json: {len(search)} entries")
 print(f"  teams={payload['totals']['teams']} players={payload['totals']['players']} "
       f"clubs={payload['totals']['clubs']} leagues={payload['totals']['leagues']}")
 print(f"  enrichment active: {has_enrichment} | coverage: " +

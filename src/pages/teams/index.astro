@@ -1,0 +1,24 @@
+---
+import Base from '../../components/Base.astro';
+import DB from '../../../public/data.json';
+import { flag } from '../../lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const byG = {}; DB.teams.forEach(t => { (byG[t.group_letter] = byG[t.group_letter] || []).push(t); });
+const groups = Object.keys(byG).sort();
+---
+<Base title="Teams — FIFA World Cup 2026 (all 48 squads)" description="All 48 FIFA World Cup 2026 teams across 12 groups with FIFA rankings. Open a team for its full squad, projected lineup and bench.">
+  <h2 class="sec">48 teams · 12 groups</h2>
+  <div class="tgrid">
+    {groups.map(g => (
+      <div class="gcard">
+        <div class="gh">Group {g}</div>
+        {byG[g].sort((a, b) => (a.fifa_ranking || 999) - (b.fifa_ranking || 999)).map(t => (
+          <a class="trow" href={`${B}teams/${t.fifa_code.toLowerCase()}/`}>
+            <span><span class="fl">{flag(t.fifa_code)}</span> {t.team_name}</span>
+            <span class="rk">{t.fifa_ranking ? '#' + t.fifa_ranking : ''}</span>
+          </a>
+        ))}
+      </div>
+    ))}
+  </div>
+</Base>
