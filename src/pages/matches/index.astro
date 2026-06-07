@@ -7,6 +7,7 @@ const matches = [...DB.matches].sort((a, b) => (a.kickoff_at || '').localeCompar
 const stages = [...new Set(DB.matches.map(m => m.stage))];
 ---
 <Base title="Match schedule — all 104 fixtures of the 2026 FIFA World Cup" description="The complete 2026 FIFA World Cup schedule: all 104 matches with kickoff times, venues and host cities. Open a match for projected head-to-head lineups.">
+  <div class="app-page">
   <header class="phead">
     <div>
       <div class="pe">Fixtures</div>
@@ -15,7 +16,7 @@ const stages = [...new Set(DB.matches.map(m => m.stage))];
     </div>
     <div class="pstat"><div class="s"><b>104</b><span>Matches</span></div><div class="s"><b>{stages.length}</b><span>Stages</span></div></div>
   </header>
-  <div class="panel">
+  <div class="panel app-grow">
     <div class="controls">
       <select id="ss"><option value="">All stages</option>{stages.map(s => <option>{s}</option>)}</select>
       <span class="count" id="mc"></span>
@@ -38,6 +39,7 @@ const stages = [...new Set(DB.matches.map(m => m.stage))];
         </tbody>
       </table>
     </div>
+  </div>
   </div>
   <script>
     const ss = document.getElementById('ss'), rows = [...document.getElementById('mb').children], mc = document.getElementById('mc');

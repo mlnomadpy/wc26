@@ -528,3 +528,39 @@ tr[role="link"]{cursor:pointer}
 .duel-nm{font-weight:700;font-size:15px}
 .duel-st{font-size:12px;color:var(--fg-dim);margin-top:3px}.duel-st b{color:var(--fg);font-family:var(--fmono)}
 .mhead .dotg,.mhead .dotb{display:inline-block;vertical-align:middle}
+
+/* ============================================================
+   v6 — APP SHELL: fixed chrome, viewport-height, internal scroll
+   ============================================================ */
+html{height:100%}
+body{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{position:relative;z-index:50;flex:none}
+main{flex:1;min-height:0;overflow-y:auto;overflow-x:clip;scroll-behavior:smooth;
+  padding:16px 22px 28px;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+main::-webkit-scrollbar{width:10px}main::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px;border:3px solid var(--bg)}
+.foot{flex:none;padding:9px 22px;margin:0;max-width:none}
+/* tables flow within the single scroll pane; headers stick under the bar */
+.tablewrap{max-height:none;overflow:visible;border:0;border-radius:0}
+.tablewrap table{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th{top:-16px}                                  /* offset for main padding so sticky sits flush */
+/* tighter vertical rhythm everywhere */
+h2.sec{margin:16px 2px 10px}
+.panel{margin:12px 0}
+.phead{padding:22px 4px 16px}
+/* denser squad grid (fits more, less scroll) */
+.squadgrid{grid-template-columns:repeat(auto-fill,minmax(184px,1fr));gap:8px}
+.scard{padding:9px 10px;gap:10px;border-radius:11px}
+.scard .jersey{width:36px;height:36px;font-size:16px;border-radius:9px}
+.scard .sn{font-size:13px}.scard .sc{font-size:10.5px}.scard .sx{font-size:10px}
+.poshead{margin:14px 0 8px}
+/* team sub-tabs share .subtab styling; hidden sections via JS (no-JS shows all) */
+.subtabs{position:sticky;top:-16px;z-index:5;background:var(--bg);padding:8px 0;margin-bottom:4px}
+
+/* fill-viewport pages: header/filters fixed, only the list scrolls internally */
+.app-page{height:100%;display:flex;flex-direction:column;min-height:0}
+.app-page>.phead{flex:none}
+.app-grow{flex:1;min-height:0;display:flex;flex-direction:column}
+.app-grow .controls{flex:none}
+.app-grow .tablewrap{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radius:12px}
+.app-grow .tablewrap table{border:0;border-radius:0}
+.app-grow .tablewrap th{top:0}

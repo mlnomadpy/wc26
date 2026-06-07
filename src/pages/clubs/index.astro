@@ -8,6 +8,7 @@ const rows = Object.entries(m).map(([c, ps]) => ({ c, n: ps.length, country: ps[
 const top = rows[0];
 ---
 <Base title="Clubs at the 2026 World Cup — which clubs send the most players" description="All clubs represented at the 2026 FIFA World Cup, ranked by how many players they send. Open a club to see its World Cup players.">
+  <div class="app-page">
   <header class="phead">
     <div>
       <div class="pe">Club watch</div>
@@ -16,7 +17,7 @@ const top = rows[0];
     </div>
     <div class="pstat"><div class="s"><b>{rows.length}</b><span>Clubs</span></div><div class="s"><b>{DB.totals.leagues}</b><span>Leagues</span></div></div>
   </header>
-  <div class="panel">
+  <div class="panel app-grow">
     <div class="tablewrap">
       <table>
         <thead><tr><th>Club</th><th>Country</th><th>League</th><th>Players</th></tr></thead>
@@ -29,5 +30,6 @@ const top = rows[0];
         </tbody>
       </table>
     </div>
+  </div>
   </div>
 </Base>

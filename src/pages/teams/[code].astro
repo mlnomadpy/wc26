@@ -51,8 +51,14 @@ const jsonld = {
     </div>
   </header>
 
-  <div id="teamroot" data-form={form}>
-    <h2 class="sec">Projected XI <span class="tag">{form} · auto-picked from squad data, not an official lineup</span></h2>
+  <div class="subtabs" id="tsubs">
+    <button class="subtab on" data-t="lineup">Lineup</button>
+    <button class="subtab" data-t="squad">Squad ({sq.length})</button>
+    <button class="subtab" data-t="info">Team info</button>
+  </div>
+
+  <div class="tsec" data-sec="lineup" id="teamroot" data-form={form}>
+    <h2 class="sec" style="margin-top:6px">Projected XI <span class="tag">{form} · auto-picked from squad data, not an official lineup</span></h2>
     <div class="pitchwrap">
       <div class="panel">
         <div class="formrow">{FORMNAMES.map(f => <span class={`chip ${f === form ? 'on' : ''}`} data-f={f}>{f}</span>)}</div>
@@ -82,7 +88,7 @@ const jsonld = {
     </div>
   </div>
 
-  <h2 class="sec">Squad</h2>
+  <div class="tsec" data-sec="squad">
   {['GK', 'DF', 'MF', 'FW'].map(pos => (
     <section style={`--pc:${POSC[pos]}`}>
       <div class="poshead"><span class="pdot"></span><h3>{POSNAME[pos]}</h3><span class="pn">{byPos[pos].length} players</span></div>
@@ -100,8 +106,9 @@ const jsonld = {
       </div>
     </section>
   ))}
+  </div>
 
-  <h2 class="sec">Team info</h2>
+  <div class="tsec" data-sec="info">
   <div class="panel">
     <div class="kv">
       <span class="k">Head coach</span><span>{t.head_coach || '—'}</span>
@@ -115,6 +122,7 @@ const jsonld = {
       <span class="k">Most capped</span><span>{topCap.player_name} ({topCap.caps})</span>
       <span class="k">Top scorer</span><span>{topSc.player_name} ({topSc.international_goals})</span>
     </div>
+  </div>
   </div>
 
   <script type="application/json" id="squad" set:html={JSON.stringify(sq)}></script>
@@ -146,6 +154,18 @@ const jsonld = {
         document.querySelectorAll('.formrow .chip').forEach(x => x.classList.toggle('on', x === c));
         render(c.dataset.f);
       }));
+    }
+    // sub-tabs: Lineup / Squad / Info — one screen each, no long scroll
+    const subs = document.getElementById('tsubs');
+    if (subs) {
+      const secs = document.querySelectorAll('.tsec');
+      const show = t => {
+        secs.forEach(s => { s.style.display = s.dataset.sec === t ? '' : 'none'; });
+        subs.querySelectorAll('.subtab').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+        document.getElementById('main')?.scrollTo(0, 0);
+      };
+      subs.querySelectorAll('.subtab').forEach(b => b.addEventListener('click', () => show(b.dataset.t)));
+      show('lineup');
     }
   </script>
 </Base>
