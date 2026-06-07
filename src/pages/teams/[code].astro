@@ -51,8 +51,8 @@ const jsonld = {
         <div class="pitch" id="pitch">
           <div class="line ch"></div><div class="line cc"></div><div class="line box top"></div><div class="line box bot"></div><div class="line six top"></div><div class="line six bot"></div>
           {xi.map((id, i) => { const [cat, x, y] = FORMATIONS[form][i]; const p = id ? byId[id] : null; return (
-            <a class="token" style={`left:${x}%;top:${y}%`} href={id ? `${B}players/${id}/` : '#'} title={p ? p.player_name : ''}>
-              <div class="sh" style={`background:${POSC[cat]}`}>{p ? (p.shirt_number ?? '') : ''}{p && p.is_captain && <i class="cap">C</i>}</div>
+            <a class={`token ${p && p.is_captain ? 'cpt' : ''}`} style={`left:${x}%;top:${y}%`} href={id ? `${B}players/${id}/` : '#'} title={p ? p.player_name : ''}>
+              <div class="sh" style={`--tc:${POSC[cat]}`}>{p ? (p.shirt_number ?? '') : ''}{p && p.is_captain && <i class="cap">C</i>}</div>
               <div class="nm">{p ? surname(p.player_name) : '—'}</div>
             </a>
           ); })}
@@ -75,27 +75,23 @@ const jsonld = {
   </div>
 
   <h2 class="sec">Squad</h2>
-  <div class="grid2">
-    {['GK', 'DF', 'MF', 'FW'].map(pos => (
-      <div class="panel">
-        <h3>{POSNAME[pos]} <span class="tag">{byPos[pos].length}</span></h3>
-        <table>
-          <thead><tr><th>#</th><th>Player</th><th>Club</th><th>Age</th><th>Apps</th><th>G</th><th>A</th></tr></thead>
-          <tbody>
-            {byPos[pos].sort((a, b) => (a.shirt_number || 99) - (b.shirt_number || 99)).map(p => (
-              <tr onclick={`location.href='${B}players/${p.player_id}/'`}>
-                <td class="mono">{p.shirt_number ?? ''}</td>
-                <td>{p.player_name}{p.is_captain ? ' (C)' : ''}</td>
-                <td class="faint">{p.club}</td>
-                <td class="mono">{p.age ?? ''}</td>
-                <td class="mono">{p.club_apps_2025_26 ?? '·'}</td><td class="mono">{p.club_goals_2025_26 ?? '·'}</td><td class="mono">{p.club_assists_2025_26 ?? '·'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  {['GK', 'DF', 'MF', 'FW'].map(pos => (
+    <section style={`--pc:${POSC[pos]}`}>
+      <div class="poshead"><span class="pdot"></span><h3>{POSNAME[pos]}</h3><span class="pn">{byPos[pos].length} players</span></div>
+      <div class="squadgrid">
+        {byPos[pos].sort((a, b) => (a.shirt_number || 99) - (b.shirt_number || 99)).map(p => (
+          <a class="scard" href={`${B}players/${p.player_id}/`}>
+            <div class="jersey">{p.shirt_number ?? '–'}{p.is_captain && <span class="cpt">C</span>}</div>
+            <div style="min-width:0">
+              <div class="sn">{p.player_name}</div>
+              <div class="sc">{p.club}</div>
+              <div class="sx">{p.age ?? '–'}y · {p.club_apps_2025_26 ?? '–'} apps · {p.club_goals_2025_26 ?? '–'}g · {p.caps ?? '–'}c</div>
+            </div>
+          </a>
+        ))}
       </div>
-    ))}
-  </div>
+    </section>
+  ))}
 
   <h2 class="sec">Team info</h2>
   <div class="panel">
@@ -129,9 +125,9 @@ const jsonld = {
         pitch.querySelectorAll('.token').forEach(n => n.remove());
         FORMATIONS[form].forEach((s, i) => {
           const [cat, x, y] = s, id = xi[i], p = id ? byId[id] : null;
-          const a = document.createElement('a'); a.className = 'token'; a.style.left = x + '%'; a.style.top = y + '%';
+          const a = document.createElement('a'); a.className = 'token' + (p && p.is_captain ? ' cpt' : ''); a.style.left = x + '%'; a.style.top = y + '%';
           a.href = id ? B + 'players/' + id + '/' : '#';
-          a.innerHTML = `<div class="sh" style="background:${POSC[cat]}">${p ? (p.shirt_number ?? '') : ''}${p && p.is_captain ? '<i class="cap">C</i>' : ''}</div><div class="nm">${p ? surname(p.player_name) : '—'}</div>`;
+          a.innerHTML = `<div class="sh" style="--tc:${POSC[cat]}">${p ? (p.shirt_number ?? '') : ''}${p && p.is_captain ? '<i class="cap">C</i>' : ''}</div><div class="nm">${p ? surname(p.player_name) : '—'}</div>`;
           pitch.appendChild(a);
         });
         const on = new Set(xi.filter(Boolean));

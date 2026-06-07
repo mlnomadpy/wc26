@@ -64,7 +64,7 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
           <div class="line ch"></div><div class="line cc"></div><div class="line box top"></div><div class="line box bot"></div><div class="line six top"></div><div class="line six bot"></div>
           {tokens.map(tk => (
             <a class="token sm" style={`left:${tk.x}%;top:${tk.y}%`} href={tk.id ? `${B}players/${tk.id}/` : '#'} title={tk.nm}>
-              <div class="sh" style={`background:${tk.col}`}>{tk.n}</div><div class="nm">{tk.nm}</div>
+              <div class="sh" style={`--tc:${tk.col}`}>{tk.n}</div><div class="nm">{tk.nm}</div>
             </a>
           ))}
         </div>

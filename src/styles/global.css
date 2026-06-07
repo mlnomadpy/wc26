@@ -358,3 +358,84 @@ main > .phead, main > .reveal{animation:fadeUp .5s cubic-bezier(.22,.61,.36,1) b
 /* gold accent text where green used to read */
 .eyebrow,.l-eyebrow,.pe,.gh,.sublabel,.ms,.cdcard .lab{color:var(--gold)}
 .bchamp{border-color:var(--gold);box-shadow:0 0 30px -10px var(--gold)}
+
+/* ============================================================
+   v2 — navbar identity, alive buttons, jersey tokens, squad cards
+   ============================================================ */
+.topbar{gap:14px;padding:0 20px;height:62px}
+.brand{gap:11px;font-size:15px}
+.brand .mark{position:relative;width:30px;height:30px;border-radius:50%;flex:none;
+  background:radial-gradient(circle at 35% 30%,#fff 0 16%,transparent 17%),
+            radial-gradient(circle at 70% 65%,#fff 0 11%,transparent 12%),
+            radial-gradient(circle at 50% 50%,var(--gold2),var(--gold) 70%);
+  box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--gold),0 0 16px -2px rgba(233,187,76,.6)}
+.brand .mark::after{content:"";position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0 86%,rgba(0,0,0,.18) 88% 94%,transparent 96%)}
+.brand .wm{font-family:var(--fdisp);font-weight:800;letter-spacing:.01em}
+.brand .wm b{color:var(--gold)}
+.brand .wm em{font-style:normal;font-weight:600;color:var(--fg-dim);margin-left:2px}
+/* nav links — broadcast feel: uppercase, tracked, sliding gold underline */
+#nav{gap:1px;align-self:stretch;align-items:stretch}
+#nav a{display:flex;align-items:center;border-radius:0;padding:0 13px;font-size:12px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.07em;color:var(--fg-mute);position:relative;background:none}
+#nav a span{position:relative;padding:4px 0}
+#nav a span::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;border-radius:2px;
+  background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform .2s cubic-bezier(.22,.61,.36,1)}
+#nav a:hover{color:var(--fg);background:none}
+#nav a:hover span::after{transform:scaleX(1)}
+#nav a.on{color:var(--fg);background:none;box-shadow:none}
+#nav a.on span::after{transform:scaleX(1);box-shadow:0 0 10px var(--gold)}
+/* live kickoff chip */
+.navcd{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;font-size:12px;
+  border:1px solid var(--line2);background:var(--bg2);color:var(--fg);white-space:nowrap}
+.navcd:hover{border-color:var(--gold)}
+.navcd.live{border-color:var(--can);color:var(--can)}
+.livedot{width:7px;height:7px;border-radius:50%;background:var(--can);box-shadow:0 0 0 0 rgba(228,87,46,.6);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(228,87,46,.55)}70%{box-shadow:0 0 0 7px rgba(228,87,46,0)}100%{box-shadow:0 0 0 0 rgba(228,87,46,0)}}
+/* search pill + icon button */
+.searchpill{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line2);background:var(--bg2);color:var(--fg-dim);font-family:var(--fbody);font-size:12.5px;transition:.15s}
+.searchpill:hover{border-color:var(--gold);color:var(--fg)}
+.searchpill kbd{font-family:var(--fmono);font-size:10px;background:var(--bg3);border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:var(--fg-mute)}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line2);background:var(--bg2);color:var(--fg);font-size:15px;transition:.15s}
+.iconbtn:hover{border-color:var(--gold);transform:rotate(-12deg)}
+@media(max-width:780px){.navcd,.searchpill .sp-t,.searchpill kbd{display:none}.searchpill{padding:8px}.brand .wm em{display:none}}
+
+/* alive buttons — gold gradient, lift, sheen */
+.btn{border-radius:11px;font-weight:600;padding:10px 16px}
+.btn.primary{background:linear-gradient(135deg,var(--gold2),var(--gold));border-color:var(--gold);position:relative;overflow:hidden}
+.btn.primary::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);transform:translateX(-120%);transition:transform .5s}
+.btn.primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px -6px rgba(233,187,76,.65)}
+.btn.primary:hover::after{transform:translateX(120%)}
+.btn:active{transform:translateY(0) scale(.98)}
+
+/* ===== pitch tokens — jersey discs that feel alive ===== */
+.token .sh{background:radial-gradient(circle at 38% 28%,rgba(255,255,255,.45),transparent 42%),var(--tc,var(--gold));
+  border:2px solid rgba(255,255,255,.85);box-shadow:0 4px 12px rgba(0,0,0,.55),inset 0 -3px 6px rgba(0,0,0,.25);
+  transition:transform .14s cubic-bezier(.22,.61,.36,1),box-shadow .14s}
+.token:hover{filter:none;transform:translate(-50%,-50%) scale(1.16);z-index:6}
+.token:hover .sh{box-shadow:0 8px 22px rgba(0,0,0,.6),0 0 0 3px var(--gold)}
+.token .cap{background:var(--gold);color:#3a2a05;box-shadow:0 0 0 2px var(--bg)}
+.token.cpt .sh{animation:capglow 2.4s ease-in-out infinite}
+@keyframes capglow{0%,100%{box-shadow:0 4px 12px rgba(0,0,0,.55),0 0 0 0 rgba(233,187,76,.0)}50%{box-shadow:0 4px 12px rgba(0,0,0,.55),0 0 0 4px rgba(233,187,76,.35)}}
+.token .nm{background:rgba(0,0,0,.45);padding:1px 6px;border-radius:5px;backdrop-filter:blur(2px)}
+
+/* position pills — bolder badges */
+.pill{padding:3px 8px;border-radius:6px;font-weight:800;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+
+/* ===== squad UI — position-grouped jersey cards ===== */
+.squadgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:11px}
+.scard{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;background:var(--bg1);
+  border:1px solid var(--line);border-left:3px solid var(--pc,var(--line2));transition:.15s cubic-bezier(.22,.61,.36,1)}
+.scard:hover{transform:translateY(-3px);border-color:var(--pc,var(--gold));box-shadow:var(--sh)}
+.scard .jersey{position:relative;width:42px;height:42px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fdisp2);font-size:19px;color:var(--bg);background:linear-gradient(160deg,var(--pc),color-mix(in srgb,var(--pc) 60%,#000));box-shadow:inset 0 -3px 6px rgba(0,0,0,.3)}
+.scard .cpt{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:var(--gold);color:#3a2a05;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg1)}
+.scard .sn{font-weight:600;font-size:13.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scard .sc{font-size:11px;color:var(--fg-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scard .sx{font-family:var(--fmono);font-size:10.5px;color:var(--fg-mute);margin-top:2px}
+.poshead{display:flex;align-items:center;gap:9px;margin:18px 0 10px}
+.poshead .pdot{width:10px;height:10px;border-radius:3px;background:var(--pc)}
+.poshead h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+.poshead .pn{font-family:var(--fmono);font-size:11px;color:var(--fg-mute)}

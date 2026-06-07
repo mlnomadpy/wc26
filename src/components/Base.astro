@@ -2,6 +2,7 @@
 import '../styles/global.css';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/'; // "/wc26/"
 const SITE = 'https://www.tahabouhsine.com';
+const KICKOFF = '2026-06-11T15:00:00-06:00'; // opening match
 const {
   title = 'WC26 Matchday — FIFA World Cup 2026',
   description = 'Explore every 2026 FIFA World Cup squad, projected lineup, club and match — 1,247 players, 48 teams, 104 matches.',
@@ -48,13 +49,22 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
 <body>
   <a href="#main" class="skip">Skip to content</a>
   <header class="topbar">
-    <a class="brand" href={B}><span class="ball"></span><span>WC<b>26</b> <span class="faint">Matchday</span></span></a>
+    <a class="brand" href={B} aria-label="WC26 Matchday home">
+      <span class="mark" aria-hidden="true"></span>
+      <span class="wm">WC<b>26</b> <em>Matchday</em></span>
+    </a>
     <nav id="nav" aria-label="Primary">
-      {NAV.map(([p, l]) => <a href={B + p} class={isOn(p) ? 'on' : ''}>{l}</a>)}
+      {NAV.map(([p, l]) => <a href={B + p} class={isOn(p) ? 'on' : ''}><span>{l}</span></a>)}
     </nav>
     <div class="actions">
-      <button class="btn ghost kbtn" id="palBtn" aria-label="Search">⌘K</button>
-      <button class="btn ghost" id="themeb" aria-label="Toggle theme">☀️</button>
+      <a class="navcd" id="navcd" href={B + 'matches/1/'} title="Time to the opening match">
+        <span class="livedot"></span><span id="navcd-t" class="mono">—</span>
+      </a>
+      <button class="searchpill" id="palBtn" aria-label="Search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <span class="sp-t">Search</span><kbd>⌘K</kbd>
+      </button>
+      <button class="iconbtn" id="themeb" aria-label="Toggle theme">☀️</button>
     </div>
   </header>
   <main id="main"><slot /></main>
@@ -68,8 +78,20 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
     </div>
   </div>
 
-  <script define:vars={{ B }}>
+  <script define:vars={{ B, KICKOFF }}>
     window.__B__ = B;
+    // navbar live countdown chip
+    (function () {
+      const el = document.getElementById('navcd-t'); if (!el) return;
+      const target = new Date(KICKOFF).getTime();
+      function upd() {
+        const d = target - Date.now();
+        if (d <= 0) { el.textContent = 'LIVE'; document.getElementById('navcd').classList.add('live'); return; }
+        const days = Math.floor(d / 864e5), h = Math.floor(d / 36e5) % 24, m = Math.floor(d / 6e4) % 60;
+        el.textContent = days > 0 ? days + 'd ' + h + 'h' : h + 'h ' + m + 'm';
+      }
+      upd(); setInterval(upd, 30000);
+    })();
     // theme
     const setTheme = t => { document.documentElement.dataset.theme = t; localStorage.setItem('wc-theme', t); const b = document.getElementById('themeb'); if (b) b.textContent = t === 'light' ? '🌙' : '☀️'; };
     setTheme(localStorage.getItem('wc-theme') || 'dark');
