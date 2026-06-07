@@ -1,7 +1,7 @@
 :root{
   /* warm graduated darks (never pure black) */
   --bg:#0a0a0d; --bg1:#101016; --bg2:#17171f; --bg3:#1f1f2a; --line:#27272f; --line2:#37373f;
-  --fg:#f5f1e9; --fg-dim:#a59e90; --fg-mute:#6d665b;
+  --fg:#f5f1e9; --fg-dim:#a59e90; --fg-mute:#8a8275;
   /* trophy gold = primary accent (WC2026 brand); host tri-colour CAN red / MEX green / USA blue */
   --gold:#e9bb4c; --gold2:#f6d77e;
   --accent:#e9bb4c; --accent2:#5b9cff; --on-accent:#1c1503;
@@ -464,3 +464,28 @@ main > .phead, main > .reveal{animation:fadeUp .5s cubic-bezier(.22,.61,.36,1) b
 .thstat span{font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--fg-mute);font-family:var(--fmono)}
 html[data-theme="light"] .thstat{background:rgba(0,0,0,.03)}
 @media(max-width:640px){.dhero{padding:18px}.dhero .dh-stats{width:100%}.thstat{flex:1;min-width:0}}
+
+/* ============================================================
+   v4 — full audit polish: overflow, focus, touch, rhythm
+   ============================================================ */
+main{overflow-x:clip}                      /* clip decorative glow bleed (no page-level scroll) */
+.lhero,.phead{overflow:clip}               /* contain hero/header glows */
+/* visible keyboard focus (a11y critical) */
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,
+[tabindex]:focus-visible,tr[role="link"]:focus-visible,.chip:focus-visible,.scard:focus-visible,
+.xrow:focus-visible,.trow:focus-visible,.story:focus-visible,.tile:focus-visible,.bnode:focus-visible{
+  outline:2px solid var(--gold);outline-offset:2px;border-radius:8px}
+/* touch targets >= 44px */
+tbody td{padding-top:11px;padding-bottom:11px}
+.gtable td,.gtable th{padding-top:8px;padding-bottom:8px}
+.chip{padding:8px 14px}
+#nav a{min-height:44px}
+.trow{padding:10px 9px}
+/* spacing rhythm + table feel */
+.panel{padding:18px 20px}
+.tablewrap{border-radius:12px}
+thead th{border-bottom:1px solid var(--line2)}
+tbody tr:last-child td{border-bottom:0}
+.controls{gap:9px}
+/* clearer interactive cursor + hover affordance on rows */
+tr[role="link"]{cursor:pointer}

@@ -80,6 +80,11 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
 
   <script define:vars={{ B, KICKOFF }}>
     window.__B__ = B;
+    // a11y: make clickable table rows keyboard-operable
+    document.querySelectorAll('tr[onclick]').forEach(tr => {
+      tr.tabIndex = 0; tr.setAttribute('role', 'link');
+      tr.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); tr.click(); } });
+    });
     // navbar live countdown chip
     (function () {
       const el = document.getElementById('navcd-t'); if (!el) return;

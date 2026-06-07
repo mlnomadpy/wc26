@@ -39,14 +39,14 @@ const legend = [['A', groupColor('A'), 'Group A winner / runner-up'], ['3rd', '#
         </a>
       ))}
       <div class="bchamp" style={`left:${colX(5)}px;top:${Y[104] * rowUnit + padT - 6}px`}>
-        <div class="trophy">🏆</div><div class="ct">Champion 2026</div><div class="faint cs">Lifts the trophy<br>Jul 19 · New York</div>
+        <div class="trophy"><svg width="34" height="34" viewBox="0 0 24 24" fill="var(--gold)" aria-hidden="true"><path d="M18 2H6v2H2v3a4 4 0 0 0 4 4 6 6 0 0 0 5 4.9V19H8v3h8v-3h-3v-3.1A6 6 0 0 0 18 11a4 4 0 0 0 4-4V4h-4V2zM6 9a2 2 0 0 1-2-2V6h2v3zm14-2a2 2 0 0 1-2 2V6h2v1z"/></svg></div><div class="ct">Champion 2026</div><div class="faint cs">Lifts the trophy<br>Jul 19 · New York</div>
       </div>
     </div>
   </div>
   <div class="grid2">
     {tp && (
       <div class="panel">
-        <h3>🥉 Third-place playoff</h3>
+        <h3>Third-place playoff</h3>
         {(tp.match_label || '').split(/\s+vs\s+/).map(s => { const d = decodeSlot(s); return <div class="brow"><span class="bchip" style={`background:${d.color}`}>{d.code}</span><span class="blabel">{d.label}</span></div>; })}
         <div class="faint" style="margin-top:8px">Match #103 · {tp.venue}, {tp.city}</div>
       </div>
