@@ -2,7 +2,7 @@
 import Base from '../../components/Base.astro';
 import Flag from '../../components/Flag.astro';
 import DB from '../../../public/data.json';
-import { indexes, slugify, POSC, num, money } from '../../lib/wc.js';
+import { indexes, slugify, POSC, num, money, flagImg } from '../../lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const IDX = indexes(DB);
 export function getStaticPaths() {
@@ -29,14 +29,22 @@ const StatGrid = (items) => items;
 ---
 <Base title={`${p.player_name} — ${p.team_name} | 2026 World Cup profile & stats`} description={desc} jsonld={jsonld}>
   <a class="btn back" href={`${B}teams/${p.fifa_code.toLowerCase()}/`}>← {p.team_name}</a>
-  <div class="playerhead" style={`--c:${POSC[p.position]}`}>
-    <div class="phnum mono">{p.shirt_number ?? '—'}</div>
-    <div>
-      <div class="faint"><a class="nat" href={`${B}teams/${p.fifa_code.toLowerCase()}/`}><Flag code={p.fifa_code} cls="sm" /> {p.team_name}</a> · Group {p.group_letter} · <span class={`pill ${p.position}`}>{p.position}</span></div>
-      <h1>{p.player_name} {p.is_captain && <span class="faint">(captain)</span>}</h1>
-      <div class="faint"><a href={`${B}clubs/${slugify(p.club)}/`}>{p.club}</a> · {p.club_league || ''}</div>
+  <header class="dhero" style={`--c:${POSC[p.position]}`}>
+    <div class="dh-bg" style={`background-image:url(${flagImg(p.fifa_code, 320)})`}></div>
+    <div class="dh-main">
+      <div class="dh-num">{p.shirt_number ?? '–'}</div>
+      <div>
+        <div class="dh-eye"><a class="nat" href={`${B}teams/${p.fifa_code.toLowerCase()}/`}><Flag code={p.fifa_code} cls="sm" /> {p.team_name}</a> · Group {p.group_letter} · <span class={`pill ${p.position}`}>{p.position}</span>{p.is_captain && ' · CAPTAIN'}</div>
+        <h1>{p.player_name}</h1>
+        <div class="dh-meta"><a href={`${B}clubs/${slugify(p.club)}/`}>{p.club}</a> · {p.club_league || ''}</div>
+      </div>
     </div>
-  </div>
+    <div class="dh-stats">
+      <div class="thstat"><b>{p.caps ?? '—'}</b><span>Caps</span></div>
+      <div class="thstat"><b>{p.international_goals ?? '—'}</b><span>Goals</span></div>
+      {p.market_value_eur && <div class="thstat"><b>{money(p.market_value_eur)}</b><span>Value</span></div>}
+    </div>
+  </header>
   <div class="grid2">
     <div class="panel">
       <h3>Profile</h3>

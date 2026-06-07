@@ -295,7 +295,7 @@ img{max-width:100%}
 .xstrip{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:10px}
 .xrow{display:flex;align-items:center;gap:12px;padding:13px 15px;border:1px solid var(--line);border-radius:12px;background:var(--bg1);transition:.14s}
 .xrow:hover{border-color:var(--accent);background:var(--bg2);transform:translateY(-2px)}
-.xrow .xi{font-size:20px;width:24px;text-align:center;flex:none}
+.xrow .xi{display:flex;align-items:center;justify-content:center;width:26px;flex:none;color:var(--gold)}
 .xrow .xh{font-weight:600;font-size:13.5px}
 .xrow .xs{font-size:11px;color:var(--fg-mute)}
 
@@ -397,7 +397,7 @@ main > .phead, main > .reveal{animation:fadeUp .5s cubic-bezier(.22,.61,.36,1) b
   border:1px solid var(--line2);background:var(--bg2);color:var(--fg-dim);font-family:var(--fbody);font-size:12.5px;transition:.15s}
 .searchpill:hover{border-color:var(--gold);color:var(--fg)}
 .searchpill kbd{font-family:var(--fmono);font-size:10px;background:var(--bg3);border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:var(--fg-mute)}
-.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;cursor:pointer;
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:999px;cursor:pointer;
   border:1px solid var(--line2);background:var(--bg2);color:var(--fg);font-size:15px;transition:.15s}
 .iconbtn:hover{border-color:var(--gold);transform:rotate(-12deg)}
 @media(max-width:780px){.navcd,.searchpill .sp-t,.searchpill kbd{display:none}.searchpill{padding:8px}.brand .wm em{display:none}}
@@ -439,3 +439,28 @@ main > .phead, main > .reveal{animation:fadeUp .5s cubic-bezier(.22,.61,.36,1) b
 .poshead .pdot{width:10px;height:10px;border-radius:3px;background:var(--pc)}
 .poshead h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.08em}
 .poshead .pn{font-family:var(--fmono);font-size:11px;color:var(--fg-mute)}
+
+/* ============================================================
+   v3 — detail hero headers (team / player) with identity
+   ============================================================ */
+.dhero{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:22px;flex-wrap:wrap;
+  padding:24px 26px;border-radius:18px;border:1px solid var(--line2);box-shadow:var(--sh);margin-bottom:6px;
+  background:linear-gradient(110deg,color-mix(in srgb,var(--gold) 11%,var(--bg1)),var(--bg1) 56%)}
+.dhero::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--gold),color-mix(in srgb,var(--gold) 0%,transparent))}
+.dhero .dh-bg{position:absolute;right:-30px;top:50%;transform:translateY(-50%);width:280px;height:190px;z-index:0;
+  background-size:cover;background-position:center;opacity:.09;filter:saturate(1.25);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 70%);mask-image:linear-gradient(90deg,transparent,#000 70%)}
+.dhero .dh-main{display:flex;align-items:center;gap:18px;position:relative;z-index:1;min-width:0}
+.dhero .dh-flag{width:74px;border-radius:9px;box-shadow:var(--sh),0 0 0 1px rgba(255,255,255,.15)}
+.dhero .dh-num{font-family:var(--fdisp2);font-size:46px;width:72px;text-align:center;color:var(--c);line-height:1;
+  text-shadow:0 2px 10px rgba(0,0,0,.5)}
+.dhero .dh-eye{font-family:var(--fmono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--gold)}
+.dhero h1{font-size:clamp(1.9rem,4vw,2.9rem);margin:4px 0 5px;line-height:1}
+.dhero .dh-meta{color:var(--fg-dim);font-size:13.5px}
+.dhero .dh-meta a{color:var(--fg)}
+.dhero .dh-stats{display:flex;gap:10px;position:relative;z-index:1;flex-wrap:wrap}
+.thstat{text-align:center;background:rgba(255,255,255,.045);border:1px solid var(--line2);border-radius:13px;padding:11px 16px;min-width:78px;backdrop-filter:blur(3px)}
+.thstat b{font-family:var(--fdisp2);font-size:24px;display:block;color:var(--gold);line-height:1.05}
+.thstat span{font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--fg-mute);font-family:var(--fmono)}
+html[data-theme="light"] .thstat{background:rgba(0,0,0,.03)}
+@media(max-width:640px){.dhero{padding:18px}.dhero .dh-stats{width:100%}.thstat{flex:1;min-width:0}}

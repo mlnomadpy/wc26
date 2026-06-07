@@ -2,7 +2,7 @@
 import Base from '../../components/Base.astro';
 import Flag from '../../components/Flag.astro';
 import DB from '../../../public/data.json';
-import { indexes, autoForm, pickXI, strength, FORMATIONS, FORMNAMES, POSC, POSNAME, CONF, flag, surname, num, money, avgAge } from '../../lib/wc.js';
+import { indexes, autoForm, pickXI, strength, FORMATIONS, FORMNAMES, POSC, POSNAME, CONF, surname, num, money, avgAge, flagImg } from '../../lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const IDX = indexes(DB);
 export function getStaticPaths() {
@@ -34,14 +34,22 @@ const jsonld = {
 ---
 <Base title={`${t.team_name} — 2026 World Cup squad, lineup & stats`} description={desc} jsonld={jsonld}>
   <a class="btn back" href={B + 'teams/'}>← All teams</a>
-  <div class="teamhead" style={`--c:${CONF[t.confederation]}`}>
-    <div class="thflag"><Flag code={t.fifa_code} cls="xl" /></div>
-    <div>
-      <div class="faint">Group {t.group_letter} · {t.confederation} · {t.qualification_method || ''}</div>
-      <h1>{t.team_name}</h1>
-      <div class="faint">{t.head_coach || '—'} · {t.fifa_ranking ? 'FIFA #' + t.fifa_ranking : ''} · {sq.length} players · avg age {av ? av.toFixed(1) : '—'}</div>
+  <header class="dhero" style={`--c:${CONF[t.confederation]}`}>
+    <div class="dh-bg" style={`background-image:url(${flagImg(t.fifa_code, 320)})`}></div>
+    <div class="dh-main">
+      <Flag code={t.fifa_code} cls="dh-flag" w={160} />
+      <div>
+        <div class="dh-eye">Group {t.group_letter} · {t.confederation} · {t.qualification_method || 'qualified'}</div>
+        <h1>{t.team_name}</h1>
+        <div class="dh-meta">{t.head_coach || '—'} · {sq.length} players · avg age {av ? av.toFixed(1) : '—'}</div>
+      </div>
     </div>
-  </div>
+    <div class="dh-stats">
+      <div class="thstat"><b>{t.fifa_ranking ? '#' + t.fifa_ranking : '—'}</b><span>FIFA rank</span></div>
+      <div class="thstat"><b>{t.group_letter}</b><span>Group</span></div>
+      <div class="thstat"><b>{av ? av.toFixed(1) : '—'}</b><span>Avg age</span></div>
+    </div>
+  </header>
 
   <div id="teamroot" data-form={form}>
     <h2 class="sec">Projected XI <span class="tag">{form} · auto-picked from squad data, not an official lineup</span></h2>

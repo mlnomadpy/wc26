@@ -28,15 +28,26 @@ const tiles = [
 ].filter(Boolean);
 
 const marquee = [...DB.teams].sort((a, b) => a.group_letter.localeCompare(b.group_letter));
+const svg = (p) => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const ICON = {
+  teams: svg('<path d="M12 3 4 6v6c0 5 3.5 7.5 8 9 4.5-1.5 8-4 8-9V6l-8-3z"/>'),
+  players: svg('<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.6a3 3 0 0 1 0 5.6M22 20a6 6 0 0 0-5-5.9"/>'),
+  matches: svg('<circle cx="12" cy="12" r="8.5"/><path d="m12 7.6 2.6 1.9-1 3.1h-3.2l-1-3.1z"/>'),
+  map: svg('<path d="M12 21s-6-5.3-6-10a6 6 0 1 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/>'),
+  insights: svg('<path d="M5 19V11M12 19V5M19 19v-6"/><path d="M4 20h16"/>'),
+  compare: svg('<path d="M3 8h13l-3-3M21 16H8l3 3"/>'),
+  groups: svg('<rect x="4" y="4" width="7" height="7" rx="1.2"/><rect x="13" y="4" width="7" height="7" rx="1.2"/><rect x="4" y="13" width="7" height="7" rx="1.2"/><rect x="13" y="13" width="7" height="7" rx="1.2"/>'),
+  data: svg('<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/>'),
+};
 const explore = [
-  ['⚽', 'teams/', 'Teams & lineups', 'Formation pitch · projected XI'],
-  ['👥', 'players/', 'Players', '1,247 players · filter & compare'],
-  ['🏟️', 'matches/', 'Match Centre', '104 matches · head-to-head'],
-  ['🗺️', 'map/', 'Host cities', '16 venues across 3 nations'],
-  ['📊', 'insights/', 'Insights', 'Age · value · diaspora'],
-  ['🆚', 'compare/', 'Compare', 'Teams & players, side by side'],
-  ['🏅', 'groups/', 'Groups', 'All 12 groups, A–L'],
-  ['🗂️', 'data/', 'Data & sources', 'Coverage · methodology · export'],
+  [ICON.teams, 'teams/', 'Teams & lineups', 'Formation pitch · projected XI'],
+  [ICON.players, 'players/', 'Players', '1,247 players · filter & compare'],
+  [ICON.matches, 'matches/', 'Match Centre', '104 matches · head-to-head'],
+  [ICON.map, 'map/', 'Host cities', '16 venues across 3 nations'],
+  [ICON.insights, 'insights/', 'Insights', 'Age · value · diaspora'],
+  [ICON.compare, 'compare/', 'Compare', 'Teams & players, side by side'],
+  [ICON.groups, 'groups/', 'Groups', 'All 12 groups, A–L'],
+  [ICON.data, 'data/', 'Data & sources', 'Coverage · methodology · export'],
 ];
 const jsonld = [
   { '@context': 'https://schema.org', '@type': 'WebSite', name: 'WC26 Matchday', url: 'https://www.tahabouhsine.com' + B, inLanguage: 'en' },
@@ -111,7 +122,7 @@ const jsonld = [
   <div class="xstrip reveal d3">
     {explore.map(([icon, u, h, s]) => (
       <a class="xrow" href={B + u}>
-        <span class="xi">{icon}</span>
+        <span class="xi" set:html={icon}></span>
         <span><span class="xh">{h}</span><br /><span class="xs">{s}</span></span>
       </a>
     ))}

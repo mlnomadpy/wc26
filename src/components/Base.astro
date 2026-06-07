@@ -93,7 +93,9 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
       upd(); setInterval(upd, 30000);
     })();
     // theme
-    const setTheme = t => { document.documentElement.dataset.theme = t; localStorage.setItem('wc-theme', t); const b = document.getElementById('themeb'); if (b) b.textContent = t === 'light' ? '🌙' : '☀️'; };
+    const SUN = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>';
+    const MOON = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+    const setTheme = t => { document.documentElement.dataset.theme = t; localStorage.setItem('wc-theme', t); const b = document.getElementById('themeb'); if (b) b.innerHTML = t === 'light' ? MOON : SUN; };
     setTheme(localStorage.getItem('wc-theme') || 'dark');
     document.getElementById('themeb').addEventListener('click', () => setTheme((localStorage.getItem('wc-theme') || 'dark') === 'dark' ? 'light' : 'dark'));
     // command palette (lazy index)
