@@ -222,3 +222,7 @@ node_modules/
 dist/
 .astro/
 npm-debug.log*
+
+# Installed agent skills (local tooling, not part of the site)
+.agents/
+skills-lock.json

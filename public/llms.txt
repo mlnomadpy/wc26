@@ -1,0 +1,20 @@
+# WC26 Matchday
+
+> An interactive data explorer for the 2026 FIFA World Cup (11 June – 19 July 2026, hosted by the USA, Canada and Mexico). It covers all 48 qualified national teams, 1,247 players, 512 clubs, 16 host cities and the full 104-match schedule.
+
+WC26 Matchday is a free, open static web app. It presents an enriched, verified dataset: every player's club, international caps and goals, plus 2025/26 club-season stats (appearances, goals, assists, minutes). Projected starting XIs are auto-generated from squad data and clearly labelled as estimates, not official lineups. Unverified values are left blank rather than fabricated.
+
+## Key pages
+- [Home / storylines](https://www.tahabouhsine.com/wc26/#/home): tournament hooks and entry points
+- [Teams](https://www.tahabouhsine.com/wc26/#/teams): all 48 squads, formation pitch, projected XI, bench
+- [Players](https://www.tahabouhsine.com/wc26/#/players): searchable, filterable table of 1,247 players
+- [Bracket](https://www.tahabouhsine.com/wc26/#/bracket): the knockout "Road to the Final" tree
+- [Matches](https://www.tahabouhsine.com/wc26/#/matches): 104 matches with head-to-head projected XIs
+- [Compare](https://www.tahabouhsine.com/wc26/#/compare): team-vs-team and player-vs-player radars
+- [Insights](https://www.tahabouhsine.com/wc26/#/insights): age, value, league and diaspora breakdowns
+- [Data & sources](https://www.tahabouhsine.com/wc26/#/data): coverage, methodology, CSV export
+
+## Notes
+- Tournament dates: 11 June 2026 – 19 July 2026.
+- Format: first 48-team World Cup; 12 groups (A–L); knockout from Round of 32.
+- Data sourced per player from Wikipedia, FBref and Transfermarkt; null where unverified.

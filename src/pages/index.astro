@@ -1,22 +1,91 @@
 ---
 import '../styles/global.css';
-const base = import.meta.env.BASE_URL.replace(/\/$/, '') + '/'; // guarantee trailing slash: "/wc26/" prod, "/" dev
+const base = import.meta.env.BASE_URL.replace(/\/$/, '') + '/'; // "/wc26/" prod, "/" dev
+const SITE = 'https://www.tahabouhsine.com';
+const url = SITE + base;                 // canonical site URL
+const title = 'WC26 Matchday — FIFA World Cup 2026 Squads, Lineups & Bracket';
+const description = 'Explore every 2026 FIFA World Cup squad, projected lineup, club and match — 1,247 players across 48 teams and 104 matches, with an interactive bracket, team comparisons and stats.';
+const ogImage = url + 'og.png';
+
+const ld = [
+  {
+    '@context': 'https://schema.org', '@type': 'WebSite',
+    name: 'WC26 Matchday', url, description,
+    inLanguage: 'en',
+    publisher: { '@type': 'Person', name: 'Taha Bouhsine' },
+  },
+  {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'FIFA World Cup 2026 — Squads & Player Stats',
+    description: 'Enriched dataset of all 48 FIFA World Cup 2026 squads: 1,247 players with clubs, caps, goals, 2025/26 club-season stats, plus teams, host cities and the full 104-match schedule.',
+    url, license: 'https://opensource.org/licenses/MIT',
+    creator: { '@type': 'Person', name: 'Taha Bouhsine' },
+    temporalCoverage: '2026', isAccessibleForFree: true,
+    keywords: ['FIFA World Cup 2026', 'squads', 'players', 'football statistics', 'lineups', 'bracket'],
+  },
+  {
+    '@context': 'https://schema.org', '@type': 'SportsEvent',
+    name: 'FIFA World Cup 2026', sport: 'Association football',
+    startDate: '2026-06-11', endDate: '2026-07-19', url,
+    location: [
+      { '@type': 'Country', name: 'United States' },
+      { '@type': 'Country', name: 'Canada' },
+      { '@type': 'Country', name: 'Mexico' },
+    ],
+  },
+];
 ---
 <!doctype html>
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WC26 Matchday — FIFA World Cup 2026 Data Explorer</title>
-  <meta name="description" content="Explore every squad, lineup, club and match of the 2026 FIFA World Cup — 1,247 players, 48 teams, 104 matches." />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <meta name="keywords" content="FIFA World Cup 2026, World Cup squads, World Cup 2026 lineups, World Cup bracket, football players, soccer stats, World Cup teams, projected XI" />
+  <meta name="author" content="Taha Bouhsine" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="theme-color" content="#080b10" />
+  <link rel="canonical" href={url} />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="WC26 Matchday" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={url} />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
+
+  <!-- Icons -->
+  <link rel="icon" type="image/svg+xml" href={base + 'favicon.svg'} />
+  <link rel="apple-touch-icon" href={base + 'favicon.svg'} />
+  <link rel="manifest" href={base + 'site.webmanifest'} />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <script is:inline src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script type="application/ld+json" set:html={JSON.stringify(ld)} />
 </head>
 <body>
-  <noscript>This dashboard needs JavaScript.</noscript>
-  <div class="boot">Loading WC26 Matchday…</div>
+  <!-- Crawlable fallback (replaced by the app once JS runs) -->
+  <main class="boot">
+    <h1>FIFA World Cup 2026 — Squads, Lineups &amp; Bracket</h1>
+    <p>WC26 Matchday is an interactive explorer for the 2026 FIFA World Cup: all 48 national-team squads
+    (1,247 players with clubs, caps, goals and 2025/26 club-season stats), projected lineups on a formation
+    pitch, an interactive knockout bracket, host-city map, team and player comparisons, and the full
+    104-match schedule. Loading the interactive app…</p>
+    <noscript>This interactive dashboard needs JavaScript enabled.</noscript>
+  </main>
   <script is:inline define:vars={{ base }}>window.__BASE__ = base;</script>
   <script is:inline src={base + 'app.js'}></script>
 </body>

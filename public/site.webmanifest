@@ -1,0 +1,13 @@
+{
+  "name": "WC26 Matchday — FIFA World Cup 2026 Explorer",
+  "short_name": "WC26 Matchday",
+  "description": "Explore every 2026 FIFA World Cup squad, lineup, club and match.",
+  "start_url": "/wc26/",
+  "scope": "/wc26/",
+  "display": "standalone",
+  "background_color": "#080b10",
+  "theme_color": "#080b10",
+  "icons": [
+    { "src": "/wc26/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
