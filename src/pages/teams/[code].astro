@@ -33,6 +33,7 @@ const jsonld = {
 };
 ---
 <Base title={`${t.team_name} — 2026 World Cup squad, lineup & stats`} description={desc} jsonld={jsonld}>
+  <div class="app-page">
   <a class="btn back" href={B + 'teams/'}>← All teams</a>
   <header class="dhero" style={`--c:${CONF[t.confederation]}`}>
     <div class="dh-bg" style={`background-image:url(${flagImg(t.fifa_code, 320)})`}></div>
@@ -57,6 +58,7 @@ const jsonld = {
     <button class="subtab" data-t="info">Team info</button>
   </div>
 
+  <div class="app-grow scroll" id="tbody">
   <div class="tsec" data-sec="lineup" id="teamroot" data-form={form}>
     <h2 class="sec" style="margin-top:6px">Projected XI <span class="tag">{form} · auto-picked from squad data, not an official lineup</span></h2>
     <div class="pitchwrap">
@@ -124,6 +126,8 @@ const jsonld = {
     </div>
   </div>
   </div>
+  </div>
+  </div>
 
   <script type="application/json" id="squad" set:html={JSON.stringify(sq)}></script>
   <script>
@@ -162,7 +166,7 @@ const jsonld = {
       const show = t => {
         secs.forEach(s => { s.style.display = s.dataset.sec === t ? '' : 'none'; });
         subs.querySelectorAll('.subtab').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-        document.getElementById('main')?.scrollTo(0, 0);
+        document.getElementById('tbody')?.scrollTo(0, 0);
       };
       subs.querySelectorAll('.subtab').forEach(b => b.addEventListener('click', () => show(b.dataset.t)));
       show('lineup');

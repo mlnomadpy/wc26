@@ -12,6 +12,7 @@ const cc = Object.entries(DB.agg.by_club_country).slice(0, 12); const cmax = Mat
 const chartData = { positions: DB.agg.positions, conf: DB.agg.by_confederation, posc: POSC, confc: CONF };
 ---
 <Base title="Insights — age, value, leagues & diaspora | 2026 World Cup" description="Visual breakdowns of the 2026 FIFA World Cup squads: position split, confederation share, age pyramid, most valuable players, top leagues and player diaspora.">
+  <div class="app-page">
   <header class="phead">
     <div>
       <div class="pe">The numbers</div>
@@ -19,7 +20,8 @@ const chartData = { positions: DB.agg.positions, conf: DB.agg.by_confederation, 
       <p class="psub">Position split, confederation share, an age pyramid, the most valuable players, top leagues and where the world's squads actually play.</p>
     </div>
   </header>
-  <div class="grid2" style="margin-top:16px">
+  <div class="app-grow scroll">
+  <div class="grid2">
     <div class="panel"><h3>Players by position</h3><canvas id="c1" height="200"></canvas></div>
     <div class="panel"><h3>Players by confederation</h3><canvas id="c2" height="200"></canvas></div>
   </div>
@@ -38,6 +40,8 @@ const chartData = { positions: DB.agg.positions, conf: DB.agg.by_confederation, 
     <div class="panel"><h3>Diaspora — where players play <span class="tag">top club countries</span></h3>
       {cc.map(([c, n]) => <div class="barrow"><span>{c}</span><div class="bartrack"><div class="bar alt" style={`width:${n / cmax * 100}%`}></div></div><span class="faint mono">{n}</span></div>)}
     </div>
+  </div>
+  </div>
   </div>
   <script type="application/json" id="cd" set:html={JSON.stringify(chartData)}></script>
   <script is:inline>

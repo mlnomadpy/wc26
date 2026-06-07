@@ -15,13 +15,14 @@ const ps = IDX.playersByClub[club] || [];
 const desc = `${club} players at the 2026 FIFA World Cup — ${ps.length} call-ups across national teams. Positions, nations and 2025/26 stats.`;
 ---
 <Base title={`${club} at the 2026 World Cup — ${ps.length} players`} description={desc}>
+  <div class="app-page">
   <a class="btn back" href={B + 'clubs/'}>← All clubs</a>
   <div class="panel">
     <div class="faint">{ps[0]?.club_country} · {ps[0]?.club_league}</div>
     <h1>{club}</h1>
     <div class="faint">{ps.length} players at WC 2026</div>
   </div>
-  <div class="panel">
+  <div class="panel app-grow">
     <div class="tablewrap">
       <table>
         <thead><tr><th>Pos</th><th>Player</th><th>Nation</th><th>Apps26</th><th>G26</th></tr></thead>
@@ -37,5 +38,6 @@ const desc = `${club} players at the 2026 FIFA World Cup — ${ps.length} call-u
         </tbody>
       </table>
     </div>
+  </div>
   </div>
 </Base>

@@ -8,6 +8,7 @@ const groups = Object.keys(byG).sort();
 const confs = new Set(DB.teams.map(t => t.confederation)).size;
 ---
 <Base title="Teams — FIFA World Cup 2026 (all 48 squads)" description="All 48 FIFA World Cup 2026 teams across 12 groups with FIFA rankings. Open a team for its full squad, projected lineup and bench.">
+  <div class="app-page">
   <header class="phead">
     <div>
       <div class="pe">The field</div>
@@ -20,7 +21,8 @@ const confs = new Set(DB.teams.map(t => t.confederation)).size;
       <div class="s"><b>12</b><span>Groups</span></div>
     </div>
   </header>
-  <div class="tgrid" style="margin-top:16px">
+  <div class="app-grow scroll">
+  <div class="tgrid">
     {groups.map(g => (
       <div class="gcard">
         <div class="gh">Group {g}</div>
@@ -32,5 +34,7 @@ const confs = new Set(DB.teams.map(t => t.confederation)).size;
         ))}
       </div>
     ))}
+  </div>
+  </div>
   </div>
 </Base>

@@ -53,6 +53,7 @@ const titleTeams = ht && at ? `${ht.team_name} vs ${at.team_name}` : m.match_lab
 const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.kickoff_at || '').slice(0, 10)}, ${m.venue}, ${m.city}. Projected lineups and head-to-head.`;
 ---
 <Base title={`${titleTeams} — 2026 World Cup ${m.stage} (Match ${m.match_number})`} description={desc}>
+  <div class="app-page">
   <a class="btn back" href={B + 'matches/'}>← Schedule</a>
 
   <section class="mscore2">
@@ -75,6 +76,7 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
   </section>
   <div class="ms-meta faint">{m.venue}, {m.city}, {m.country} · {(m.kickoff_at || '').replace('T', ' ')}</div>
 
+  <div class="app-grow scroll">
   {ht && at ? (
     <div class="grid2" style="margin-top:16px">
       <div class="panel">
@@ -119,6 +121,8 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
       </div>
     </div>
   )}
+  </div>
+  </div>
 
   {kick && (
     <script is:inline>

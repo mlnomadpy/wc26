@@ -8,6 +8,7 @@ const groups = Object.keys(byG).sort();
 const fixtures = g => DB.matches.filter(m => m.match_label === 'Group ' + g).length;
 ---
 <Base title="Groups — FIFA World Cup 2026 group stage (A–L)" description="The 2026 FIFA World Cup group stage: all 12 groups (A–L), the four teams in each, and fixture counts.">
+  <div class="app-page">
   <header class="phead">
     <div>
       <div class="pe">Group stage</div>
@@ -16,7 +17,8 @@ const fixtures = g => DB.matches.filter(m => m.match_label === 'Group ' + g).len
     </div>
     <div class="pstat"><div class="s"><b>12</b><span>Groups</span></div><div class="s"><b>72</b><span>Group games</span></div></div>
   </header>
-  <div class="tgrid" style="margin-top:16px">
+  <div class="app-grow scroll">
+  <div class="tgrid">
     {groups.map(g => (
       <div class="gcard">
         <div class="gh">Group {g}</div>
@@ -35,5 +37,7 @@ const fixtures = g => DB.matches.filter(m => m.match_label === 'Group ' + g).len
         <div class="sublabel">{fixtures(g)} fixtures →</div>
       </div>
     ))}
+  </div>
+  </div>
   </div>
 </Base>

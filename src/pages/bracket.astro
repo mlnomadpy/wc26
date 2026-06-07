@@ -24,7 +24,9 @@ const tp = byNum[103];
 const legend = [['A', groupColor('A'), 'Group A winner / runner-up'], ['3rd', '#3b3320', 'Best third-placed team'], ['W', '#26406b', 'Winner of an earlier match'], ['RU', '#5a2740', 'Runner-up (third-place playoff)']];
 ---
 <Base title="Bracket — FIFA World Cup 2026 knockout 'Road to the Final'" description="The 2026 FIFA World Cup knockout bracket: Round of 32 through the Final, with decoded slots and host cities. The first 48-team World Cup knockout tree.">
+  <div class="app-page">
   <div class="brkhead"><h2 class="sec" style="margin:0">Road to the final</h2><span class="tag">48 → 1 · open any match for its head-to-head</span></div>
+  <div class="app-grow scroll">
   <div class="bktwrap">
     <div class="bktree" style={`width:${W}px;height:${H}px`}>
       <svg class="bcons" width={W} height={H} aria-hidden="true">{lines.map(l => <path d={l.d} class={l.cls} />)}</svg>
@@ -56,5 +58,7 @@ const legend = [['A', groupColor('A'), 'Group A winner / runner-up'], ['3rd', '#
       <div class="kv">{legend.map(([c, col, t]) => [<span class="bchip" style={`background:${col}`}>{c}</span>, <span>{t}</span>])}</div>
       <div class="faint" style="margin-top:10px">Teams fill in once the group stage and each knockout round finish.</div>
     </div>
+  </div>
+  </div>
   </div>
 </Base>
