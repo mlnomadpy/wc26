@@ -19,6 +19,10 @@ export const BTREE = {104:[101,102],101:[97,98],102:[99,100],97:[89,90],98:[93,9
   89:[73,75],90:[74,77],91:[76,78],92:[79,80],93:[83,84],94:[81,82],95:[86,88],96:[85,87]};
 export const STAGE_R = {'Round of 32':0,'Round of 16':1,'Quarterfinals':2,'Semifinals':3,'Final':4};
 
+// FIFA code -> ISO 3166 (flagcdn) code, incl. UK subdivisions
+export const FLAG_ISO = {MEX:'mx',RSA:'za',KOR:'kr',CZE:'cz',CAN:'ca',BIH:'ba',QAT:'qa',SUI:'ch',BRA:'br',MAR:'ma',HAI:'ht',SCO:'gb-sct',USA:'us',PAR:'py',AUS:'au',TUR:'tr',GER:'de',CUR:'cw',CIV:'ci',ECU:'ec',NED:'nl',JPN:'jp',SWE:'se',TUN:'tn',BEL:'be',EGY:'eg',IRN:'ir',NZL:'nz',ESP:'es',CPV:'cv',KSA:'sa',URU:'uy',FRA:'fr',SEN:'sn',IRQ:'iq',NOR:'no',ARG:'ar',ALG:'dz',AUT:'at',JOR:'jo',POR:'pt',COD:'cd',UZB:'uz',COL:'co',ENG:'gb-eng',CRO:'hr',GHA:'gh',PAN:'pa'};
+export const flagImg = (code, w = 40) => FLAG_ISO[code] ? `https://flagcdn.com/w${w}/${FLAG_ISO[code]}.png` : '';
+
 export const num = n => n==null||n===''?'':Number(n).toLocaleString('en-US');
 export const money = v => v==null?'':v>=1e6?'€'+(v/1e6).toFixed(v>=1e7?0:1)+'M':v>=1e3?'€'+Math.round(v/1e3)+'K':'€'+v;
 export const flag = c => FLAG[c]||'🏳️';

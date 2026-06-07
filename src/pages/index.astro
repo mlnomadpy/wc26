@@ -1,51 +1,141 @@
 ---
 import Base from '../components/Base.astro';
 import DB from '../../public/data.json';
-import { flag, money, num } from '../lib/wc.js';
+import { indexes, flag, flagImg, money, num } from '../lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const IDX = indexes(DB);
 const t = DB.totals, P = DB.players;
+const m1 = DB.matches.find(m => m.match_number === 1) || DB.matches[0];
+const ht = IDX.teamById[m1.home_team_id], at = IDX.teamById[m1.away_team_id], c1 = IDX.cityById[m1.city_id];
+// normalise "2026-06-11 15:00:00-06" -> valid ISO "2026-06-11T15:00:00-06:00"
+const target = (m1.kickoff_at || '2026-06-11 15:00:00-06').replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00');
+
 const oldest = [...P].filter(p => p.age).sort((a, b) => b.age - a.age)[0];
 const youngest = [...P].filter(p => p.age).sort((a, b) => a.age - b.age)[0];
 const topVal = [...P].filter(p => p.market_value_eur).sort((a, b) => b.market_value_eur - a.market_value_eur)[0];
 const topScorer = [...P].sort((a, b) => (b.international_goals || 0) - (a.international_goals || 0))[0];
 const clubCount = {}; P.forEach(p => { if (p.club) clubCount[p.club] = (clubCount[p.club] || 0) + 1; });
 const topClub = Object.entries(clubCount).sort((a, b) => b[1] - a[1])[0];
-const teamUrl = p => `${B}teams/${p.fifa_code.toLowerCase()}/`;
-const playerUrl = p => `${B}players/${p.player_id}/`;
-const stories = [
-  { big: flag('ARG') + ' ' + flag('POR'), lab: 'The last dance', sub: 'Messi (ARG) & Ronaldo (POR) — likely their final World Cup', href: B + 'compare/' },
-  { big: youngest?.age, lab: 'Youngest player', sub: `${youngest?.player_name} ${flag(youngest?.fifa_code)} · ${youngest?.club}`, href: playerUrl(youngest) },
-  { big: oldest?.age, lab: 'Oldest player', sub: `${oldest?.player_name} ${flag(oldest?.fifa_code)} · ${oldest?.club}`, href: playerUrl(oldest) },
-  { big: topScorer.international_goals, lab: 'Most intl goals', sub: `${topScorer.player_name} ${flag(topScorer.fifa_code)}`, href: playerUrl(topScorer) },
-  topVal && { big: money(topVal.market_value_eur), lab: 'Most valuable', sub: `${topVal.player_name} ${flag(topVal.fifa_code)} · ${topVal.club}`, href: playerUrl(topVal) },
-  topClub && { big: topClub[1], lab: 'Top club supplier', sub: `${topClub[0]} sends ${topClub[1]} players`, href: B + 'clubs/' },
-  { big: '12 → 1', lab: 'Knockout bracket', sub: 'From 48 teams to one champion', href: B + 'bracket/' },
+const pUrl = p => `${B}players/${p.player_id}/`;
+
+const tiles = [
+  { big: youngest?.age, img: flagImg(youngest?.fifa_code), lab: 'Youngest player', sub: youngest?.player_name + ' · ' + youngest?.club, href: pUrl(youngest) },
+  { big: oldest?.age, img: flagImg(oldest?.fifa_code), lab: 'Oldest player', sub: oldest?.player_name + ' · ' + oldest?.club, href: pUrl(oldest) },
+  { big: topScorer.international_goals, img: flagImg(topScorer.fifa_code), lab: 'Most intl goals', sub: topScorer.player_name, href: pUrl(topScorer) },
+  topVal && { big: money(topVal.market_value_eur), img: flagImg(topVal.fifa_code), lab: 'Most valuable', sub: topVal.player_name + ' · ' + topVal.club, href: pUrl(topVal) },
+  topClub && { big: topClub[1], lab: 'Top club supplier', sub: topClub[0] + ' send ' + topClub[1] + ' players', href: B + 'clubs/' },
+  { big: '12→1', lab: 'Knockout bracket', sub: 'From 48 teams to one champion', href: B + 'bracket/' },
 ].filter(Boolean);
-const explore = [['teams/', 'Teams & lineups', 'Formation pitch, projected XI, bench'], ['players/', 'Players', '1,247 players, filter & compare'], ['matches/', 'Match Centre', '104 matches, head-to-head XIs'], ['map/', 'Host cities', '16 venues on the map'], ['compare/', 'Compare', 'Teams & players side-by-side'], ['insights/', 'Insights', 'Charts, value, age, diaspora'], ['data/', 'Data & sources', 'Coverage, methodology, export']];
+
+const marquee = [...DB.teams].sort((a, b) => a.group_letter.localeCompare(b.group_letter));
+const explore = [
+  ['⚽', 'teams/', 'Teams & lineups', 'Formation pitch · projected XI'],
+  ['👥', 'players/', 'Players', '1,247 players · filter & compare'],
+  ['🏟️', 'matches/', 'Match Centre', '104 matches · head-to-head'],
+  ['🗺️', 'map/', 'Host cities', '16 venues across 3 nations'],
+  ['📊', 'insights/', 'Insights', 'Age · value · diaspora'],
+  ['🆚', 'compare/', 'Compare', 'Teams & players, side by side'],
+  ['🏅', 'groups/', 'Groups', 'All 12 groups, A–L'],
+  ['🗂️', 'data/', 'Data & sources', 'Coverage · methodology · export'],
+];
 const jsonld = [
   { '@context': 'https://schema.org', '@type': 'WebSite', name: 'WC26 Matchday', url: 'https://www.tahabouhsine.com' + B, inLanguage: 'en' },
   { '@context': 'https://schema.org', '@type': 'SportsEvent', name: 'FIFA World Cup 2026', sport: 'Association football', startDate: '2026-06-11', endDate: '2026-07-19', location: [{ '@type': 'Country', name: 'United States' }, { '@type': 'Country', name: 'Canada' }, { '@type': 'Country', name: 'Mexico' }] },
 ];
 ---
-<Base title="WC26 Matchday — FIFA World Cup 2026 Squads, Lineups & Bracket" description="Explore every 2026 FIFA World Cup squad, projected lineup, club and match — 1,247 players across 48 teams and 104 matches, with an interactive bracket, comparisons and stats." jsonld={jsonld}>
-  <section class="hero">
-    <div class="eyebrow">JUNE 11 – JULY 19, 2026 · USA · CANADA · MEXICO</div>
-    <h1>The first <span class="accent">48-team</span> World Cup, in data.</h1>
-    <p class="lede">{num(t.players)} players · {t.teams} nations · {t.clubs} clubs · {t.matches} matches across {t.host_cities} cities. Explore every squad, build lineups, and trace the road to the final.</p>
-    <div class="herobtns">
-      <a class="btn primary" href={B + 'teams/'}>Browse teams</a>
-      <a class="btn" href={B + 'bracket/'}>Road to the final</a>
-      <button class="btn ghost" onclick="document.getElementById('palBtn').click()">⌘K  Search anything</button>
+<Base title="WC26 Matchday — FIFA World Cup 2026 Squads, Lineups & Bracket" description="Explore every 2026 FIFA World Cup squad, projected lineup, club and match — 1,247 players across 48 teams and 104 matches, with a live countdown, interactive bracket and comparisons." jsonld={jsonld}>
+  <section class="lhero reveal">
+    <div class="glow"></div>
+    <div>
+      <div class="l-eyebrow">June 11 – July 19, 2026 · 🇺🇸 🇨🇦 🇲🇽</div>
+      <h1>The first <span class="accent">48-team</span> World Cup, in data.</h1>
+      <p class="lede">Every squad, projected lineup, club and match of the 2026 FIFA World Cup — explore {num(t.players)} players, build XIs, and trace the road to the final.</p>
+      <div class="lbtns">
+        <a class="btn primary" href={B + 'teams/'}>Browse teams</a>
+        <a class="btn" href={B + 'bracket/'}>Road to the final</a>
+      </div>
+      <div class="statbar">
+        <div class="s"><b>{num(t.players)}</b><span>Players</span></div>
+        <div class="s"><b>{t.teams}</b><span>Teams</span></div>
+        <div class="s"><b>{t.matches}</b><span>Matches</span></div>
+        <div class="s"><b>{t.clubs}</b><span>Clubs</span></div>
+        <div class="s"><b>{t.host_cities}</b><span>Host cities</span></div>
+      </div>
+    </div>
+    <div class="cdcard reveal d1" id="cd" data-target={target}>
+      <div class="lab">Kickoff in</div>
+      <div class="cdgrid">
+        <div class="cdunit"><b id="cd-d">–</b><span>days</span></div>
+        <div class="cdunit"><b id="cd-h">–</b><span>hrs</span></div>
+        <div class="cdunit"><b id="cd-m">–</b><span>min</span></div>
+        <div class="cdunit"><b id="cd-s">–</b><span>sec</span></div>
+      </div>
+      <a class="cdmatch" href={`${B}matches/${m1.match_number}/`}>
+        <img src={flagImg(ht?.fifa_code, 40)} alt={ht?.team_name} loading="lazy" width="26" height="18" /> {ht?.team_name}
+        <span class="vs">vs</span>
+        <img src={flagImg(at?.fifa_code, 40)} alt={at?.team_name} loading="lazy" width="26" height="18" /> {at?.team_name}
+        <span class="where">Match 1 · {c1?.venue_name}, {c1?.city_name}</span>
+      </a>
     </div>
   </section>
 
+  <div class="marquee reveal d1" aria-hidden="true">
+    <div class="mtrack">
+      {[...marquee, ...marquee].map(tm => (
+        <a class="mflag" href={`${B}teams/${tm.fifa_code.toLowerCase()}/`}>
+          <img src={flagImg(tm.fifa_code, 40)} alt="" loading="lazy" width="21" height="15" />{tm.fifa_code}
+        </a>
+      ))}
+    </div>
+  </div>
+
   <h2 class="sec">Storylines</h2>
-  <div class="storygrid">
-    {stories.map(s => <a class="story" href={s.href}><div class="big">{s.big}</div><div class="lab">{s.lab}</div><div class="sub faint">{s.sub}</div></a>)}
+  <div class="bento reveal d2">
+    <a class="feature" href={B + 'compare/'}>
+      <div>
+        <div class="vsflags"><img src={flagImg('ARG', 80)} alt="Argentina" width="56" height="38" /><span class="vsx">vs</span><img src={flagImg('POR', 80)} alt="Portugal" width="56" height="38" /></div>
+        <div class="ft">The last dance</div>
+      </div>
+      <div class="faint">Messi (Argentina) &amp; Ronaldo (Portugal) — likely their final World Cup. Compare the two icons head-to-head.</div>
+    </a>
+    {tiles.map(s => (
+      <a class="tile" href={s.href}>
+        <div class="big">{s.img && <img src={s.img} alt="" width="26" height="18" loading="lazy" />}{s.big}</div>
+        <div class="lab">{s.lab}</div>
+        <div class="sub faint">{s.sub}</div>
+      </a>
+    ))}
   </div>
 
   <h2 class="sec">Explore</h2>
-  <div class="explore">
-    {explore.map(([u, h, s]) => <a class="ecard" href={B + u}><div class="eh">{h}</div><div class="faint">{s}</div></a>)}
+  <div class="xstrip reveal d3">
+    {explore.map(([icon, u, h, s]) => (
+      <a class="xrow" href={B + u}>
+        <span class="xi">{icon}</span>
+        <span><span class="xh">{h}</span><br /><span class="xs">{s}</span></span>
+      </a>
+    ))}
   </div>
+
+  <script>
+    const root = document.getElementById('cd');
+    if (root) {
+      const target = new Date(root.dataset.target).getTime();
+      const el = id => document.getElementById(id);
+      const u = { d: el('cd-d'), h: el('cd-h'), m: el('cd-m'), s: el('cd-s') };
+      let iv;
+      function tick() {
+        const diff = target - Date.now();
+        if (diff <= 0) {
+          root.innerHTML = '<div class="lab">Now playing</div><div class="cdlive">🔴 The World Cup is underway</div><a class="btn primary" href="' + (window.__B__ || '/') + 'matches/">See today\'s matches</a>';
+          clearInterval(iv); return;
+        }
+        u.d.textContent = Math.floor(diff / 864e5);
+        u.h.textContent = String(Math.floor(diff / 36e5) % 24).padStart(2, '0');
+        u.m.textContent = String(Math.floor(diff / 6e4) % 60).padStart(2, '0');
+        u.s.textContent = String(Math.floor(diff / 1e3) % 60).padStart(2, '0');
+      }
+      tick(); iv = setInterval(tick, 1000);
+    }
+  </script>
 </Base>

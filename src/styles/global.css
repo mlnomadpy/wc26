@@ -224,3 +224,81 @@ input{min-width:210px}
 .vsrow{display:flex;justify-content:space-between}
 .boot{padding:40px;color:var(--fg-dim)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ============================================================
+   Landing redesign — "World Cup" hero, countdown, marquee, bento
+   ============================================================ */
+body{overflow-x:clip}                 /* contain stray horizontal overflow without breaking sticky */
+#nav{min-width:0}
+img{max-width:100%}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.reveal{animation:fadeUp .55s cubic-bezier(.22,.61,.36,1) both}
+.reveal.d1{animation-delay:.06s}.reveal.d2{animation-delay:.12s}.reveal.d3{animation-delay:.18s}
+
+.lhero{position:relative;display:grid;grid-template-columns:1.18fr .82fr;gap:34px;align-items:center;padding:48px 4px 26px}
+.lhero .glow{position:absolute;inset:-60px -120px auto auto;width:560px;height:420px;pointer-events:none;z-index:-1;
+  background:radial-gradient(circle at 72% 30%,rgba(52,226,155,.16),transparent 58%),radial-gradient(circle at 30% 75%,rgba(90,162,255,.13),transparent 60%),radial-gradient(circle at 90% 90%,rgba(255,107,157,.08),transparent 55%)}
+.l-eyebrow{font-family:var(--fmono);font-size:12.5px;letter-spacing:.16em;color:var(--accent);text-transform:uppercase}
+.lhero h1{font-size:clamp(2.2rem,6vw,4.1rem);max-width:13ch;margin:12px 0;line-height:1.02}
+.lhero h1 .accent{color:var(--accent)}
+.lhero .lede{color:var(--fg-dim);max-width:54ch;font-size:15.5px;margin:14px 0 22px}
+.lbtns{display:flex;gap:11px;flex-wrap:wrap}
+.statbar{display:flex;gap:30px;flex-wrap:wrap;margin-top:28px;padding-top:18px;border-top:1px solid var(--line)}
+.statbar .s b{font-family:var(--fdisp);font-size:21px;font-weight:800;display:block;letter-spacing:-.02em}
+.statbar .s span{font-family:var(--fmono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-mute)}
+
+.cdcard{position:relative;overflow:hidden;background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 13%,var(--bg1)),var(--bg1) 65%);
+  border:1px solid var(--line2);border-radius:18px;padding:22px;box-shadow:var(--sh)}
+.cdcard::before{content:"";position:absolute;left:50%;top:-34%;width:64%;aspect-ratio:1;border:1px solid rgba(255,255,255,.07);border-radius:50%;transform:translateX(-50%)}
+.cdcard .lab{font-family:var(--fmono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.cdgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 12px}
+.cdunit{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 4px;text-align:center}
+.cdunit b{font-family:var(--fmono);font-size:clamp(22px,4vw,30px);font-weight:600;display:block;font-variant-numeric:tabular-nums;line-height:1}
+.cdunit span{font-size:9px;color:var(--fg-mute);text-transform:uppercase;letter-spacing:.08em}
+.cdmatch{display:flex;align-items:center;gap:9px;font-size:13px;flex-wrap:wrap}
+.cdmatch img{width:26px;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.cdmatch .vs{color:var(--fg-mute);font-size:11px;font-family:var(--fmono)}
+.cdmatch .where{color:var(--fg-mute);font-size:11px;width:100%}
+.cdlive{font-family:var(--fdisp);font-weight:800;font-size:24px;color:var(--accent);margin:10px 0}
+
+.marquee{margin:6px 0 4px;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+.mtrack{display:flex;gap:9px;width:max-content;animation:marq 70s linear infinite}
+.marquee:hover .mtrack{animation-play-state:paused}
+.mflag{display:flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--bg1);white-space:nowrap;font-size:12px;color:var(--fg)}
+.mflag:hover{border-color:var(--accent)}
+.mflag img{width:21px;border-radius:3px}
+@keyframes marq{to{transform:translateX(-50%)}}
+
+.bento{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;grid-auto-rows:1fr}
+.bento .tile,.bento .feature{border-radius:var(--radius);transition:.16s cubic-bezier(.22,.61,.36,1);text-decoration:none;color:var(--fg)}
+.bento .tile{background:var(--bg1);border:1px solid var(--line);padding:16px}
+.bento .feature{grid-column:span 2;grid-row:span 2;padding:22px;display:flex;flex-direction:column;justify-content:space-between;
+  background:linear-gradient(150deg,color-mix(in srgb,var(--accent) 12%,var(--bg1)),var(--bg1) 62%);border:1px solid var(--line2)}
+.bento a.tile:hover,.bento a.feature:hover{transform:translateY(-3px);border-color:var(--accent2)}
+.feature .vsflags{display:flex;align-items:center;gap:16px}
+.feature .vsflags img{width:56px;border-radius:6px;box-shadow:var(--sh)}
+.feature .vsx{font-family:var(--fdisp);font-weight:800;color:var(--fg-mute);font-size:22px}
+.feature .ft{font-family:var(--fdisp);font-weight:800;font-size:23px;margin-top:14px}
+.tile .big{font-family:var(--fdisp);font-weight:800;font-size:26px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.tile .big img{width:26px;border-radius:3px}
+.tile .lab{font-weight:600;margin-top:5px;font-size:13px}
+.tile .sub{font-size:11.5px;margin-top:2px}
+
+.xstrip{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:10px}
+.xrow{display:flex;align-items:center;gap:12px;padding:13px 15px;border:1px solid var(--line);border-radius:12px;background:var(--bg1);transition:.14s}
+.xrow:hover{border-color:var(--accent);background:var(--bg2);transform:translateY(-2px)}
+.xrow .xi{font-size:20px;width:24px;text-align:center;flex:none}
+.xrow .xh{font-weight:600;font-size:13.5px}
+.xrow .xs{font-size:11px;color:var(--fg-mute)}
+
+@media(max-width:860px){
+  .lhero{grid-template-columns:1fr;gap:22px;padding:30px 2px 14px}
+  .bento{grid-template-columns:1fr 1fr}
+}
+@media(max-width:560px){
+  .bento{grid-template-columns:1fr}
+  .bento .feature{grid-column:span 1;grid-row:auto}
+  .statbar{gap:20px}
+}
+
+.lhero h1 .accent{white-space:nowrap}
