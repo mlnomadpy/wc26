@@ -1,14 +1,15 @@
 /* ============================ 8. DETAIL HEROES ========================= */
-.phead{ display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap; padding:18px 4px 14px; border-bottom:1px solid var(--line); }
-.phead .pe{ font-family:var(--fmono); font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--spark); display:inline-flex; align-items:center; gap:8px; }
-.phead .pe::before{ content:""; width:16px; height:1.5px; background:linear-gradient(90deg,var(--spark),transparent); }
-.phead h1{ font-size:clamp(1.5rem,3vw,2.1rem); margin:4px 0 0; }
-.phead .psub{ color:var(--fg-dim); font-size:12.5px; margin-top:5px; max-width:80ch; line-height:1.5; }
-.phead .pstat{ display:flex; gap:24px; }
+.phead{ display:flex; align-items:center; justify-content:space-between; gap:14px 22px; flex-wrap:wrap; padding:8px 4px 9px; border-bottom:1px solid var(--line); }
+.phead>div:first-child{ min-width:0; }
+.phead .pe{ font-family:var(--fmono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--spark); display:inline-flex; align-items:center; gap:8px; }
+.phead .pe::before{ content:""; width:14px; height:1.5px; background:linear-gradient(90deg,var(--spark),transparent); }
+.phead h1{ font-size:clamp(1.2rem,2.3vw,1.6rem); margin:1px 0 0; }
+.phead .psub{ color:var(--fg-dim); font-size:12px; margin-top:2px; max-width:100ch; line-height:1.4; }
+.phead .pstat{ display:flex; gap:20px; flex:none; }
 .phead .pstat .s{ text-align:right; }
-.phead .pstat .s b{ font-family:var(--fdisp2); font-weight:800; font-size:22px; display:block; color:var(--fg); }
-.phead .pstat .s span{ font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--fg-mute); font-family:var(--fmono); }
-@media(max-width:620px){ .phead .pstat{ gap:16px; } .phead .pstat .s b{ font-size:18px; } }
+.phead .pstat .s b{ font-family:var(--fdisp2); font-weight:800; font-size:18px; display:block; line-height:1; color:var(--fg); }
+.phead .pstat .s span{ font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--fg-mute); font-family:var(--fmono); }
+@media(max-width:620px){ .phead .pstat{ gap:14px; } .phead .psub{ display:none; } }
 
 .dhero,.phero{ position:relative; overflow:hidden; border:1px solid color-mix(in srgb,var(--accent2) 30%,var(--line2)); border-radius:var(--r);
   box-shadow:var(--e2); margin:2px 0 12px; background:linear-gradient(180deg,var(--bg1),color-mix(in srgb,var(--bg1) 82%,var(--bg))); }
