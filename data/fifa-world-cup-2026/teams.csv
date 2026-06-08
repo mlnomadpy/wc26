@@ -21,7 +21,7 @@ id,team_name,fifa_code,group_letter,is_placeholder,confederation,head_coach,fifa
 20,Ecuador,ECU,E,False,CONMEBOL,Sebastián Beccacece,23,CONMEBOL qualifying,26
 21,Netherlands,NED,F,False,UEFA,Ronald Koeman,7,UEFA Group G winner,26
 22,Japan,JPN,F,False,AFC,Hajime Moriyasu,18,AFC qualifying (third round group winner),26
-23,Sweden,SWE,F,False,UEFA,Graham Potter,,UEFA play-off (Path winner via Nations League access),26
+23,Sweden,SWE,F,False,UEFA,Graham Potter,42,UEFA play-off (Path winner via Nations League access),26
 24,Tunisia,TUN,F,False,CAF,Sabri Lamouchi,44,CAF Group H winner,26
 25,Belgium,BEL,G,False,UEFA,Rudi Garcia,9,UEFA Group J winner,26
 26,Egypt,EGY,G,False,CAF,Hossam Hassan,29,CAF qualifying Group A winner,26
@@ -31,8 +31,8 @@ id,team_name,fifa_code,group_letter,is_placeholder,confederation,head_coach,fifa
 30,Cabo Verde,CPV,H,False,CAF,Pedro Leitao Brito (Bubista),69,CAF qualifying Group D winner,26
 31,Saudi Arabia,KSA,H,False,AFC,Georgios Donis,61,AFC qualifying (third round group runner-up / fourth round),26
 32,Uruguay,URU,H,False,CONMEBOL,Marcelo Bielsa,17,CONMEBOL qualifying,26
-33,France,FRA,I,False,UEFA,Didier Deschamps,1,UEFA Group D winner,26
-34,Senegal,SEN,I,False,CAF,Pape Thiaw,19,CAF Group B winner,26
+33,France,FRA,I,False,UEFA,Didier Deschamps,3,UEFA Group D winner,26
+34,Senegal,SEN,I,False,CAF,Pape Thiaw,20,CAF Group B winner,26
 35,Iraq,IRQ,I,False,AFC,Graham Arnold,57,Inter-confederation play-off (beat Bolivia),26
 36,Norway,NOR,I,False,UEFA,Ståle Solbakken,31,UEFA Group I winner,26
 37,Argentina,ARG,J,False,CONMEBOL,Lionel Scaloni,1,CONMEBOL qualifying,26
