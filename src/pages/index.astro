@@ -65,40 +65,38 @@ const jsonld = [
   <div class="app-page">
   <section class="lhero3 reveal">
     <div class="lh3-bg" aria-hidden="true" style={`background-image:url(${B}hero/stadium.jpg)`}></div>
+    <div class="lh3-art" aria-hidden="true">
+      <div class="lh3-ball">
+        <div class="ball-rays"></div>
+        <div class="ball-rays r2"></div>
+        <div class="ball-glow"></div>
+        <svg class="ball-svg" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="46" fill="#eef5ff" />
+          <g fill="#091226">
+            <polygon points="50,33 61,41 57,54 43,54 39,41" />
+            <polygon points="50,4 57,11 50,18 43,11" />
+            <polygon points="88,30 92,40 84,46 77,38 81,28" />
+            <polygon points="12,30 19,28 23,38 16,46 8,40" />
+            <polygon points="70,78 79,72 86,79 82,89 72,88" />
+            <polygon points="30,78 28,88 18,89 14,79 21,72" />
+          </g>
+          <circle cx="50" cy="50" r="46" fill="none" stroke="#2b8cff" stroke-width="2" />
+        </svg>
+      </div>
+      <img class="lh3-player" src={`${B}hero/player.png`} alt="" />
+    </div>
     <div class="lh3-grid">
       <div class="lh3-left">
         <div class="lh-eye"><span class="lh-dot"></span> Jun 11 – Jul 19, 2026 · USA · Canada · Mexico</div>
         <h1>The first <span class="accent">48-team</span> World Cup.</h1>
-        <p class="lh-lede">Every squad, projected lineup, club and match of the biggest World Cup ever — researched, ranked and mapped.</p>
+        <p class="lh-lede">More nations. More rivalries. One dream.</p>
         <div class="lbtns">
           <a class="btn primary" href={B + 'teams/'}>Explore teams</a>
           <a class="btn" href={B + 'bracket/'}>View bracket</a>
         </div>
       </div>
 
-      <div class="lh3-trophy" aria-hidden="true">
-        <div class="lh3-ball">
-          <div class="ball-rays"></div>
-          <div class="ball-rays r2"></div>
-          <div class="ball-glow"></div>
-          <svg class="ball-svg" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="46" fill="#eef5ff" />
-            <g fill="#091226">
-              <polygon points="50,33 61,41 57,54 43,54 39,41" />
-              <polygon points="50,4 57,11 50,18 43,11" />
-              <polygon points="88,30 92,40 84,46 77,38 81,28" />
-              <polygon points="12,30 19,28 23,38 16,46 8,40" />
-              <polygon points="70,78 79,72 86,79 82,89 72,88" />
-              <polygon points="30,78 28,88 18,89 14,79 21,72" />
-            </g>
-            <g fill="none" stroke="#1a3a6e" stroke-width="1.4" opacity=".7">
-              <path d="M50 18 L50 33 M61 41 L81 28 M57 54 L72 72 M43 54 L28 72 M39 41 L19 28" />
-            </g>
-            <circle cx="50" cy="50" r="46" fill="none" stroke="#2b8cff" stroke-width="2" />
-          </svg>
-        </div>
-        <div class="lh3-tcap">Ego · Awakening · 2026</div>
-      </div>
+      <div class="lh3-spacer" aria-hidden="true"></div>
 
       <a class="duel-big" href={B + 'compare/'}>
         <div class="db-tag">The last dance</div>

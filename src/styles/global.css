@@ -1114,3 +1114,29 @@ body::before{
 .db-face{border-color:color-mix(in srgb,var(--accent2) 60%,transparent)}
 /* electric FUT special/legend cards */
 .fut.special{box-shadow:0 0 0 1px color-mix(in srgb,var(--accent2) 60%,transparent),0 0 30px -8px var(--accent2),var(--sh)!important}
+
+/* v20b — cinematic full-bleed hero: glowing player + energy ball centerpiece */
+.lhero3{min-height:clamp(380px,46vh,520px);padding:26px 30px;justify-content:flex-start}
+.lh3-grid{grid-template-columns:1.15fr .8fr 1.1fr;align-items:start;min-height:clamp(300px,34vh,400px)}
+.lh3-left{align-self:center}
+.lhero3 h1{font-size:clamp(2.2rem,4.4vw,4rem)}
+/* the art layer (behind UI, above stadium bg) — player sits centre-right */
+.lh3-art{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.lh3-player{position:absolute;bottom:-4%;left:50%;height:120%;width:auto;transform:translateX(-30%);
+  filter:drop-shadow(0 0 12px rgba(120,236,255,.85)) drop-shadow(0 0 36px rgba(43,140,255,.6))}
+.lh3-art .lh3-ball{position:absolute;left:50%;bottom:6%;transform:translateX(-86%);width:clamp(150px,14vw,200px);max-width:none;margin:0}
+.lh3-art .ball-svg{width:64%}
+.lh3-art .ball-glow{inset:-6%}
+/* keep UI legible above the art */
+.lh3-grid,.lh3-foot{position:relative;z-index:2}
+.lh3-left .lh-lede{font-size:15px;color:var(--fg-dim)}
+@media(max-width:1040px){
+  .lh3-grid{grid-template-columns:1fr 1fr}
+  .lh3-spacer{display:none}
+  .lh3-player{height:100%;opacity:.45;transform:translateX(8%)}   /* recede behind UI on smaller screens */
+}
+@media(max-width:760px){
+  .lhero3{min-height:0}
+  .lh3-grid{grid-template-columns:1fr}
+  .lh3-art{opacity:.35}
+}
