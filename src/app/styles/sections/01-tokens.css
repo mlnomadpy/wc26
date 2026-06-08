@@ -17,6 +17,10 @@
   --e2:0 6px 20px -10px rgba(2,6,16,.7), 0 1px 3px rgba(2,6,16,.5);
   --e3:0 22px 50px -22px rgba(2,6,16,.85), 0 3px 12px -6px rgba(2,6,16,.6);
   --glow:0 0 24px -8px color-mix(in srgb,var(--accent2) 75%,transparent);
+  /* reusable HUD primitives (see docs/css-review.md) */
+  --hud-b:color-mix(in srgb,var(--accent2) 30%,var(--line2));   /* standard HUD border */
+  --cut:polygon(0 0,100% 0,100% 66%,calc(100% - 9px) 100%,0 100%); /* card bottom-right chamfer */
+  --cut-edge:polygon(2% 0,100% 0,97% 100%,0 100%);              /* angled tile/stat chamfer */
   --ease:cubic-bezier(.22,.61,.36,1); --t:.18s var(--ease);
   /* fonts */
   --fdisp:'Bricolage Grotesque',system-ui,sans-serif;
