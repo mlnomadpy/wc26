@@ -32,7 +32,7 @@ const jsonld = {
   athlete: sq.map(p => ({ '@type': 'Person', name: p.player_name })),
 };
 ---
-<Base title={`${t.team_name} — 2026 World Cup squad, lineup & stats`} description={desc} jsonld={jsonld}>
+<Base title={`${t.team_name} — 2026 World Cup squad, lineup & stats`} description={desc} jsonld={jsonld} ogImage={B + 'og/team/' + t.fifa_code.toLowerCase() + '.png'}>
   <div class="app-page">
   <a class="btn back" href={B + 'teams/'}>← All teams</a>
   <header class="dhero" style={`--c:${CONF[t.confederation]}`}>

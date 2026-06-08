@@ -52,7 +52,7 @@ const lbl = (m.match_label || '').split(/\s+vs\s+/);
 const titleTeams = ht && at ? `${ht.team_name} vs ${at.team_name}` : m.match_label;
 const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.kickoff_at || '').slice(0, 10)}, ${m.venue}, ${m.city}. Projected lineups and head-to-head.`;
 ---
-<Base title={`${titleTeams} — 2026 World Cup ${m.stage} (Match ${m.match_number})`} description={desc}>
+<Base title={`${titleTeams} — 2026 World Cup ${m.stage} (Match ${m.match_number})`} description={desc} ogImage={B + 'og/match/' + m.match_number + '.png'}>
   <div class="app-page">
   <a class="btn back" href={B + 'matches/'}>← Schedule</a>
 
