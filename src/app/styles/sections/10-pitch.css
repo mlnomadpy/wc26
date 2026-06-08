@@ -8,7 +8,7 @@
     radial-gradient(130% 72% at 50% -6%, color-mix(in srgb,var(--accent) 22%,transparent), transparent 56%),
     radial-gradient(130% 72% at 50% 106%, color-mix(in srgb,var(--accent2) 13%,transparent), transparent 56%),
     linear-gradient(180deg,#071a30,#040e1c);
-  border:1px solid color-mix(in srgb,var(--accent2) 46%,var(--line2));
+  border:1px solid var(--hud-b2);
   box-shadow:inset 0 0 90px rgba(0,0,0,.62), 0 0 46px -18px var(--accent2); }
 .pitch::before{ content:""; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.5;
   background:linear-gradient(rgba(88,221,255,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(88,221,255,.055) 1px, transparent 1px);
@@ -41,7 +41,7 @@
 .xistat span{ flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 4px; border-radius:8px; background:var(--bg2); border:1px solid var(--line2); }
 .xistat b{ font-family:var(--fdisp2); font-weight:800; font-size:19px; line-height:1; color:var(--fg); }
 .xistat i{ font-style:normal; font-family:var(--fmono); font-size:8.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-mute); }
-.xistat .xis-ov{ background:color-mix(in srgb,var(--accent2) 14%,transparent); border-color:color-mix(in srgb,var(--accent2) 46%,var(--line2)); }
+.xistat .xis-ov{ background:color-mix(in srgb,var(--accent2) 14%,transparent); border-color:var(--hud-b2); }
 .xistat .xis-ov b{ color:var(--accent2); }
 .token .cap{ position:absolute; top:-5px; right:-5px; background:var(--accent2); color:#062a1c; font-size:8px; font-style:normal; width:14px; height:14px; border-radius:50%;
   display:flex; align-items:center; justify-content:center; border:1px solid var(--bg); }

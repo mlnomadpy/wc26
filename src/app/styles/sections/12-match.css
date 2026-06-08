@@ -28,7 +28,6 @@
 .tot-bar .tb{ background:linear-gradient(90deg,color-mix(in srgb,var(--usa) 75%,#000),var(--usa)); border-radius:0 6px 6px 0; }
 .duel{ display:grid; gap:10px; }
 .duelman{ display:flex; align-items:center; gap:13px; padding:12px; border:1px solid var(--line2); border-radius:var(--r-sm); background:var(--bg2); transition:var(--t); }
-.duelman:hover{ border-color:var(--accent2); transform:translateY(-2px); }
 .duel-num{ font-family:var(--fdisp2); font-size:32px; width:44px; text-align:center; flex:none; }
 .duel-nm{ font-weight:700; font-size:15px; }
 .duel-st{ font-size:12px; color:var(--fg-dim); margin-top:3px; } .duel-st b{ color:var(--fg); font-family:var(--fmono); }

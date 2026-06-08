@@ -2,27 +2,34 @@
    WC26 Matchday — stylesheet index.
 
    One Blue Lock palette (electric blue + cyan on deep navy, green spark accent).
-   Split into ordered section partials under ./sections/. Vite inlines these
-   @imports into a single bundled file at build time, so there is no extra
-   request and the cascade is unchanged.
+   Split into ordered section partials under ./sections/, organised into native
+   cascade @layers so overrides are predictable regardless of source order /
+   specificity. Vite inlines these @imports into a single bundled file.
 
-   The look is last-writer-wins by source order, so THIS IMPORT ORDER IS
-   LOAD-BEARING — keep section numbers in sequence. Edit the partial for the
-   area you're changing; see docs/css-architecture.md for the map.
+   Layer precedence (low → high):  tokens < base < components < overrides
+   - tokens      : design tokens + light theme (01)
+   - base        : reset, body, typography, a11y, view-transitions (02)
+   - components   : every feature/page/FX partial (03–14, in order)
+   - overrides   : reserved — intentional last-word rules win here, no !important
+
+   Order within a layer is still source order, so the section numbers remain
+   load-bearing inside `components`. See docs/css-architecture.md for the map.
    ============================================================================ */
 
-@import "./sections/01-tokens.css";
-@import "./sections/02-base.css";
-@import "./sections/03-shell.css";
-@import "./sections/04-controls.css";
-@import "./sections/05-tables.css";
-@import "./sections/06-cards.css";
-@import "./sections/07-landing.css";
-@import "./sections/07b-landing-fx.css";
-@import "./sections/08-detail-heroes.css";
-@import "./sections/09-fut-cards.css";
-@import "./sections/10-pitch.css";
-@import "./sections/11-bracket.css";
-@import "./sections/12-match.css";
-@import "./sections/13-map-compare.css";
-@import "./sections/14-palette.css";
+@layer tokens, base, components, overrides;
+
+@import "./sections/01-tokens.css"        layer(tokens);
+@import "./sections/02-base.css"          layer(base);
+@import "./sections/03-shell.css"         layer(components);
+@import "./sections/04-controls.css"      layer(components);
+@import "./sections/05-tables.css"        layer(components);
+@import "./sections/06-cards.css"         layer(components);
+@import "./sections/07-landing.css"       layer(components);
+@import "./sections/07b-landing-fx.css"   layer(components);
+@import "./sections/08-detail-heroes.css" layer(components);
+@import "./sections/09-fut-cards.css"     layer(components);
+@import "./sections/10-pitch.css"         layer(components);
+@import "./sections/11-bracket.css"       layer(components);
+@import "./sections/12-match.css"         layer(components);
+@import "./sections/13-map-compare.css"   layer(components);
+@import "./sections/14-palette.css"       layer(components);

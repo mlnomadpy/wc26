@@ -101,18 +101,22 @@ instead of re-deriving the values.
 
 ---
 
-## 5. Optional next steps (behaviour-changing — opt-in)
+## 5. Consolidations applied
 
-These would shrink source further but **alter rendering slightly**, so they were
-not applied automatically:
+All four follow-ups are now done (verified: the bundle renders identically):
 
-1. **Standardise the hover-lift** into one shared rule driven by a per-element
-   `--lift` var. Homogenises the 9 lift values (most are already −2px).
-2. **Collapse the HUD-border %s** (26–54) toward 2–3 named steps
-   (`--hud-b`, plus a stronger `--hud-b2` at ~46%).
-3. **Collapse the chamfer angles** (2 / 2.5 / 3%) to a single `--cut-edge`.
-4. **Wrap the partials in native `@layer`** (base / components / overrides) so a
-   future re-skin overrides predictably without relying on `@import` order.
-
-Each needs a quick visual diff per component; say the word and I'll do a pass.
+1. **Hover-lift unified** into one shared rule
+   (`.spl,.xrow,…:hover{ transform:translateY(var(--lift)); … }`) with per-element
+   `--lift` / `--lift-sh` vars that preserve each element's exact lift & shadow —
+   8 rules → 1.
+2. **HUD borders** → `--hud-b` (30%) and `--hud-b2` (46%) tokens, substituted at
+   every exact call site.
+3. **Chamfers** → `--cut` (card) and `--cut-edge` (tile/stat); the 2 / 2.5 / 3%
+   variants now resolve through `--cut-edge`.
+4. **Native `@layer`** — `app.css` declares `tokens < base < components <
+   overrides` and imports each partial into its layer (`@import … layer(…)`).
+   Section order is still load-bearing *within* `components`; the empty
+   `overrides` layer is reserved for future last-word rules that win without
+   `!important`. Verified across landing, dashboards, tables and match — no
+   cascade shift.
 </content>
