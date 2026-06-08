@@ -255,8 +255,19 @@ tbody tr:last-child td{ border-bottom:0; }
 .lead:hover{ background:var(--bg2); } .lead .rk{ width:22px; display:inline-block; }
 .flagi{ width:22px; height:auto; border-radius:3px; vertical-align:middle; box-shadow:0 0 0 1px rgba(0,0,0,.35); display:inline-block; }
 .flagi.sm{ width:18px; } .flagi.lg{ width:46px; border-radius:5px; } .flagi.xl{ width:70px; border-radius:7px; box-shadow:var(--e2); }
-.tchip{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; padding:3px 8px; border-radius:6px; white-space:nowrap; font-family:var(--fmono); }
-.lbovr{ font-family:var(--fdisp2); font-size:18px; display:inline-block; min-width:30px; font-weight:800; }
+.tchip{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; padding:3px 8px; border-radius:6px; white-space:nowrap; font-family:var(--fmono);
+  color:var(--fg-dim); background:color-mix(in srgb,currentColor 14%,transparent); border:1px solid color-mix(in srgb,currentColor 30%,transparent); }
+.lbovr{ font-family:var(--fdisp2); font-size:18px; display:inline-block; min-width:30px; font-weight:800; color:var(--fg); }
+/* tier colours (shared by .tchip pills and .lbovr ratings) */
+.tchip.legend,.lbovr.legend,.tchip.gold,.lbovr.gold,.tchip.icon,.lbovr.icon{ color:var(--gold); }
+.tchip.special,.lbovr.special{ color:var(--accent2); }
+.tchip.centurion,.lbovr.centurion{ color:#ff7f97; }
+.tchip.glove,.lbovr.glove{ color:#5fe6d2; }
+.tchip.marksman,.lbovr.marksman{ color:#ffb061; }
+.tchip.maestro,.lbovr.maestro{ color:#c4a0ff; }
+.tchip.rising,.lbovr.rising{ color:var(--magenta); }
+.tchip.silver,.lbovr.silver{ color:#c2cde0; }
+.tchip.bronze,.lbovr.bronze{ color:#cd9b6a; }
 .funbar{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }
 .funchip{ display:inline-flex; align-items:center; gap:6px; padding:7px 13px; border-radius:999px; font-size:12.5px; font-weight:600;
   background:var(--bg2); border:1px solid var(--line2); color:var(--fg); }

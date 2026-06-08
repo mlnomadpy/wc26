@@ -1,52 +1,18 @@
 ---
-import Base from '@app/layouts/Base.astro';
-import Flag from '@shared/ui/Flag.astro';
-import DB from '../../public/data.json';
-import { rating, tier, tierName, money } from '@shared/lib/wc.js';
+// Player ranking was merged into the Players page. Keep this path as a redirect
+// so existing links / shares still resolve.
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
-const ranked = [...DB.players].map(p => ({ p, r: rating(p), t: tier(p) })).sort((a, b) => b.r - a.r);
-const top = ranked[0];
+const to = B + 'players/';
 ---
-<Base title="Player ranking — top-rated at the 2026 World Cup" description="Every 2026 World Cup player ranked by a data-driven overall rating, with earned card tiers (Legend, Superstar, Centurion, Marksman and more).">
-  <div class="app-page">
-    <header class="phead">
-      <div>
-        <div class="pe">Data ranking</div>
-        <h1>Player ranking</h1>
-        <p class="psub">All 1,247 players ordered by a population-ranked overall (position-normalised). {top.p.player_name} tops the chart at {top.r}.</p>
-      </div>
-      <div class="pstat"><div class="s"><b>1,247</b><span>Ranked</span></div></div>
-    </header>
-    <div class="panel app-grow">
-      <div class="controls">
-        <div class="chips" id="pc">{['', 'GK', 'DF', 'MF', 'FW'].map(p => <span class={`chip ${p === '' ? 'on' : ''}`} data-p={p}>{p || 'All'}</span>)}</div>
-        <span class="count" id="cnt"></span>
-      </div>
-      <div class="tablewrap">
-        <table>
-          <thead><tr><th>#</th><th>OVR</th><th>Player</th><th>Team</th><th>Pos</th><th>Tier</th><th>Caps</th><th>Goals</th></tr></thead>
-          <tbody id="lb">
-            {ranked.map((x, i) => (
-              <tr data-pos={x.p.position} onclick={`location.href='${B}players/${x.p.player_id}/'`}>
-                <td class="mono faint">{i + 1}</td>
-                <td><span class={`lbovr ${x.t}`}>{x.r}</span></td>
-                <td>{x.p.player_name}{x.p.is_captain ? ' (C)' : ''}</td>
-                <td><span class="nat"><Flag code={x.p.fifa_code} cls="sm" /> <span class="mono faint">{x.p.fifa_code}</span></span></td>
-                <td><span class={`pill ${x.p.position}`}>{x.p.position}</span></td>
-                <td><span class={`tchip ${x.t}`}>{tierName(x.t)}</span></td>
-                <td class="mono">{x.p.caps ?? ''}</td><td class="mono">{x.p.international_goals ?? ''}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  <script>
-    const rows = [...document.getElementById('lb').children], cnt = document.getElementById('cnt');
-    let pos = '';
-    function draw() { let n = 0, rank = 0; rows.forEach(r => { const ok = !pos || r.dataset.pos === pos; r.style.display = ok ? '' : 'none'; if (ok) { rank++; r.firstElementChild.textContent = rank; n++; } }); cnt.textContent = n + ' players'; }
-    document.querySelectorAll('#pc .chip').forEach(c => c.addEventListener('click', () => { pos = c.dataset.p; document.querySelectorAll('#pc .chip').forEach(x => x.classList.toggle('on', x === c)); draw(); }));
-    draw();
-  </script>
-</Base>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Player ranking → Players</title>
+  <meta http-equiv="refresh" content={`0; url=${to}`} />
+  <link rel="canonical" href={to} />
+  <meta name="robots" content="noindex, follow" />
+</head>
+<body>Redirecting to the <a href={to}>player ranking</a>…</body>
+</html>
+</content>
