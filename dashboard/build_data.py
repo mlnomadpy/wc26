@@ -133,27 +133,49 @@ def _score(p):
     if pos == "MF": return ca * 1.8 + cg * 1.5 + vol * 0.55
     if pos == "DF": return cs * 1.1 + (cg + ca) * 1.0 + vol * 0.7 - rc * 0.6
     return cs * 1.6 + vol * 0.8             # GK
-# Normal-score (rankit) transform WITHIN position (normalises GK vs FW etc. and
-# kills the right-skew of goals/assists): rank -> percentile -> inverse-normal z.
-# This yields a clean bell — most players mid-60s, a smooth elite tail, no pile-up
-# of identical 99s. Tied scores share their average rank so equal seasons rate equally.
+# Overall rating blends three signals so it reflects real quality — not just one
+# club season: current club FORM (_score), career INTERNATIONAL pedigree (caps +
+# international goals), and MARKET VALUE (a strong quality proxy where present).
+# Each signal is normal-scored (rankit: rank -> percentile -> inverse-normal z) so
+# positions and right-skewed counts compare fairly, then weighted. A small anchor
+# map floors the marquee names so the very top of the chart always stays credible.
 from statistics import NormalDist
 _N = NormalDist()
 posg = {}
 for p in players: posg.setdefault(p.get("position"), []).append(p)
-zmap = {}
-for grp in posg.values():
-    ranked = sorted(grp, key=lambda p: _score(p))
-    n = len(ranked)
-    i = 0
-    while i < n:
-        j = i
-        while j + 1 < n and _score(ranked[j + 1]) == _score(ranked[i]): j += 1
-        avg_rank = (i + j) / 2.0                       # average rank for ties
-        pp = (avg_rank + 0.5) / n
-        z = _N.inv_cdf(min(0.99995, max(0.00005, pp)))
-        for k in range(i, j + 1): zmap[ranked[k]["player_id"]] = z
-        i = j + 1
+def _rankit(scoref):
+    out = {}
+    for grp in posg.values():
+        ranked = sorted(grp, key=scoref)
+        n = len(ranked); i = 0
+        while i < n:
+            j = i
+            while j + 1 < n and scoref(ranked[j + 1]) == scoref(ranked[i]): j += 1
+            pp = ((i + j) / 2.0 + 0.5) / n              # average percentile for ties
+            z = _N.inv_cdf(min(0.99995, max(0.00005, pp)))
+            for k in range(i, j + 1): out[ranked[k]["player_id"]] = z
+            i = j + 1
+    return out
+def _intl(p): return nv(p, "caps") * 0.35 + nv(p, "international_goals") * 1.1
+z_form = _rankit(_score)                                # current club form (per position)
+z_intl = _rankit(_intl)                                 # career international pedigree
+_mvs = sorted(math.log10(nv(p, "market_value_eur") + 1) for p in players if nv(p, "market_value_eur") > 0)
+def _zval(p):
+    mv = nv(p, "market_value_eur")
+    if mv <= 0 or len(_mvs) < 2: return None
+    pct = bisect.bisect_left(_mvs, math.log10(mv + 1)) / (len(_mvs) - 1)
+    return _N.inv_cdf(min(0.99995, max(0.00005, pct)))
+ANCHOR = {
+  "Lionel Messi": 91, "Cristiano Ronaldo": 87, "Kylian Mbappé": 92, "Erling Haaland": 91,
+  "Vinícius Júnior": 90, "Jude Bellingham": 90, "Kevin De Bruyne": 88, "Rodri": 90,
+  "Harry Kane": 90, "Mohamed Salah": 89, "Heung-min Son": 87, "Son Heung-min": 87,
+  "Lautaro Martínez": 89, "Bruno Fernandes": 87, "Bernardo Silva": 87, "Federico Valverde": 89,
+  "Antoine Griezmann": 87, "Bukayo Saka": 87, "Phil Foden": 88, "Pedri": 88, "Florian Wirtz": 88,
+  "Jamal Musiala": 88, "Alisson": 89, "Thibaut Courtois": 90, "Virgil van Dijk": 89,
+  "Joško Gvardiol": 86, "Achraf Hakimi": 86, "Declan Rice": 87, "Nico Williams": 85,
+  "Rúben Dias": 88, "Emiliano Martínez": 87, "Lamine Yamal": 86, "Julián Álvarez": 87,
+  "Manuel Neuer": 86, "Luka Modrić": 85, "Ángel Di María": 83,
+}
 goals_sorted = sorted(nv(p, "international_goals") for p in players)
 val_sorted = sorted(nv(p, "market_value_eur") for p in players if nv(p, "market_value_eur"))
 def gpct(v): return bisect.bisect_left(goals_sorted, v) / max(1, len(goals_sorted) - 1)
@@ -168,7 +190,12 @@ for grp in byteam.values():
     ty = min(ages, key=lambda x: x["age"]) if ages else None
     for p in grp: tflag[p["player_id"]] = (p is tc, p is tv, ty is not None and p is ty)
 for p in players:
-    p["data_rating"] = max(48, min(99, round(65 + zmap[p["player_id"]] * 10.5)))
+    zf, zi, zv = z_form[p["player_id"]], z_intl[p["player_id"]], _zval(p)
+    comp = (0.42 * zf + 0.28 * zi + 0.30 * zv) if zv is not None else (0.60 * zf + 0.40 * zi)
+    r = round(68 + comp * 9.5)
+    anchor = ANCHOR.get(p["player_name"])
+    if anchor is not None: r = max(r, anchor)
+    p["data_rating"] = max(48, min(99, r))
     fun = []
     g, c, age = nv(p, "international_goals"), nv(p, "caps"), p.get("age")
     isCap, isVal, isYng = tflag[p["player_id"]]

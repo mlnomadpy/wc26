@@ -207,6 +207,40 @@ tbody tr:last-child td{ border-bottom:0; }
 .gcard{ background:var(--bg1); border:1px solid var(--line2); border-radius:var(--r); padding:14px; box-shadow:var(--e1); transition:var(--t); }
 .gcard:hover{ border-color:color-mix(in srgb,var(--accent2) 45%,var(--line2)); }
 .gh{ font-family:var(--fmono); font-weight:600; color:var(--accent2); font-size:12px; letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px; }
+.tgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:14px; padding-bottom:8px; }
+
+/* team directory (teams index) — visual nation grid, conf-colored HUD cards */
+.teamdir{ display:grid; grid-template-columns:repeat(auto-fill,minmax(186px,1fr)); gap:13px; padding-bottom:10px; }
+.teamcard{ position:relative; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; min-height:190px;
+  padding:20px 14px 12px; overflow:hidden; text-decoration:none; color:var(--fg);
+  background:linear-gradient(180deg, color-mix(in srgb,var(--cc,var(--accent)) 13%,var(--bg1)), var(--bg1) 62%);
+  border:1px solid color-mix(in srgb,var(--cc,var(--accent)) 38%,var(--line2)); border-radius:12px;
+  clip-path:polygon(0 0,100% 0,100% 86%,calc(100% - 15px) 100%,0 100%); box-shadow:var(--e2); transition:var(--t); }
+.teamcard::before{ content:""; position:absolute; inset:0 0 auto 0; height:3px; z-index:1;
+  background:linear-gradient(90deg,var(--cc,var(--accent2)),transparent); box-shadow:0 0 12px var(--cc,var(--accent2)); }
+.teamcard::after{ content:""; position:absolute; inset:0; z-index:6; pointer-events:none; border-radius:inherit; opacity:0;
+  transition:opacity .35s var(--ease); mix-blend-mode:overlay;
+  background:radial-gradient(200px 200px at var(--mx,50%) var(--my,50%), rgba(132,214,255,.7), transparent 56%); }
+.teamcard:hover{ transform:translateY(-4px); border-color:var(--accent2); box-shadow:var(--e3),var(--glow); }
+.teamcard:hover::after{ opacity:.9; }
+.tc-rank{ position:absolute; top:10px; right:0; z-index:3; font-family:var(--fmono); font-weight:700; font-size:10px; letter-spacing:.03em;
+  color:var(--on-accent); background:var(--cc,var(--accent2)); padding:3px 9px 3px 8px; border-radius:5px 0 0 5px; box-shadow:0 0 14px -4px var(--cc,var(--accent2)); }
+.tc-flag .flagi{ width:58px; height:auto; border-radius:6px; box-shadow:var(--e2),0 0 0 1px rgba(0,0,0,.4); }
+.tc-name{ font-family:var(--fdisp); font-weight:800; font-size:15px; letter-spacing:-.01em; line-height:1.12; margin-top:3px; }
+.tc-meta{ display:flex; align-items:center; gap:7px; font-family:var(--fmono); font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--fg-mute); }
+.tc-grp{ color:var(--accent2); }
+.tc-ovr{ display:flex; align-items:baseline; justify-content:center; gap:5px; margin:auto -14px -12px; width:auto; align-self:stretch; padding:9px 14px 11px;
+  font-family:var(--fdisp2); font-weight:800; font-size:23px; line-height:1;
+  border-top:1px solid color-mix(in srgb,var(--cc,var(--accent2)) 22%,var(--line)); background:color-mix(in srgb,var(--cc,var(--accent)) 8%,transparent); }
+.tc-ovr i{ font-style:normal; font-family:var(--fmono); font-weight:600; font-size:9px; letter-spacing:.1em; color:var(--fg-mute); }
+.tc-ovr.hi{ color:var(--gold); } .tc-ovr.mid{ color:var(--accent2); } .tc-ovr.lo{ color:var(--fg-dim); } .tc-ovr.na{ color:var(--fg-mute); }
+.teamcard.hide{ display:none; }
+/* confederation filter chips: colour dot + conf-tinted active state */
+.chips[data-role="conf"] .chip{ display:inline-flex; align-items:center; gap:7px; }
+.chips[data-role="conf"] .chip[data-conf]:not([data-conf=""])::before{ content:""; width:7px; height:7px; border-radius:50%; background:var(--cc,var(--accent2)); box-shadow:0 0 8px var(--cc,var(--accent2)); }
+.chips[data-role="conf"] .chip.on{ background:linear-gradient(135deg, color-mix(in srgb,var(--cc,var(--accent2)) 78%,#fff), var(--cc,var(--accent))); border-color:transparent; color:var(--on-accent); }
+.chips[data-role="conf"] .chip.on::before{ background:var(--on-accent); box-shadow:none; }
+@media(prefers-reduced-motion:reduce){ .teamcard::after{ display:none; } }
 .stat{ background:var(--bg2); border:1px solid var(--line); border-radius:var(--r-sm); padding:10px 12px; }
 .stat .v{ font-size:19px; font-weight:700; color:#fff; } .stat .k{ font-size:11px; color:var(--fg-dim); }
 .statgrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-top:9px; }
