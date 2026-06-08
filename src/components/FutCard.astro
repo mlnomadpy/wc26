@@ -18,17 +18,16 @@ const stats = p.position === 'GK'
 <a class={`fut ${tr}${big ? ' big' : ''}`} href={`${B}players/${p.player_id}/`} title={p.player_name}>
   <div class="fut-sheen"></div>
   {badge && <span class="fut-badge">{badge}</span>}
-  <div class="fut-top">
-    <div class="fut-ovr"><b>{r}</b><span>{p.position}</span></div>
-    <div class="fut-id">
+  <div class="fut-hero">
+    <span class="fut-mono">{monogram(p.player_name)}</span>
+    <img class="fut-img" src={faceUrl} alt="" loading="lazy" onerror={`this.onerror=null;this.src='${avatar}'`} />
+    <div class="fut-rail">
+      <div class="fut-ovr"><b>{r}</b><span>{p.position}</span></div>
+      <span class="fut-rdiv"></span>
       <Flag code={p.fifa_code} />
-      <span class="fut-num">#{p.shirt_number ?? '–'}</span>
+      {p.shirt_number != null && <span class="fut-num">{p.shirt_number}</span>}
       {p.is_captain && <span class="fut-cap">C</span>}
     </div>
-  </div>
-  <div class="fut-face">
-    <span class="fut-mono">{monogram(p.player_name)}</span>
-    <img src={faceUrl} alt="" loading="lazy" onerror={`this.onerror=null;this.src='${avatar}'`} />
   </div>
   <div class="fut-name">{p.player_name}</div>
   <div class="fut-stats">

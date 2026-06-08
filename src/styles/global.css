@@ -9,9 +9,9 @@
   --warn:#ffb454; --pink:#ff6b9d; --violet:#b48cff;
   --radius:14px; --sh:0 10px 34px rgba(0,0,0,.5);
   --glow:0 0 28px -8px rgba(233,187,76,.55);
-  --fdisp:'Archivo',system-ui,sans-serif; --fdisp2:'Anton','Archivo',system-ui,sans-serif;
+  --fdisp:'Bricolage Grotesque','Archivo',system-ui,sans-serif; --fdisp2:'Saira Condensed','Bricolage Grotesque',system-ui,sans-serif;
   --fmono:'IBM Plex Mono',ui-monospace,monospace;
-  --fbody:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --fbody:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
 }
 html[data-theme="light"]{
   --bg:#f6f4ee; --bg1:#ffffff; --bg2:#f1eee5; --bg3:#e8e4d8; --line:#e2ddd0; --line2:#cfc9b8;
@@ -853,3 +853,95 @@ h2.sec{margin:11px 2px 7px}
 .fut-stats span{display:flex;align-items:baseline;gap:6px;justify-content:flex-start}
 .fut-stats b{font-weight:700;font-variant-numeric:tabular-nums;min-width:24px;text-align:right}
 .fut-stats i{font-style:normal;font-weight:500;font-size:.78em;opacity:.7;letter-spacing:.05em}
+
+/* ============================================================================
+   v15 — refined typography + authentic FUT card (portrait-hero + OVR rail)
+   ============================================================================ */
+/* tighter, more premium global type */
+h1{letter-spacing:-.025em;font-weight:800}
+h2.sec{letter-spacing:.12em;font-weight:700}
+body{letter-spacing:-.005em}
+
+/* card: portrait fills a hero zone, name band + stats below */
+.fut,.fut.big{padding:0;justify-content:flex-start;gap:0}
+.fut-hero{position:relative;flex:1;width:100%;min-height:0;overflow:hidden;border-radius:16px 16px 0 0;
+  display:flex;align-items:center;justify-content:center}
+.fut-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 16%;
+  border-radius:0;box-shadow:none;filter:none;background:transparent;z-index:0}
+.fut.big .fut-img{width:100%}
+.fut-mono{position:absolute;z-index:0;font-family:var(--fdisp2);font-weight:700;font-size:52px;opacity:.45}
+.fut.big .fut-mono{font-size:76px}
+/* scrim: card colour bleeds in from the left so the OVR rail always reads */
+.fut-hero::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(102deg,color-mix(in srgb,var(--c1) 88%,transparent) 0 18%,color-mix(in srgb,var(--c1) 30%,transparent) 34%,transparent 50%),
+             linear-gradient(0deg,color-mix(in srgb,var(--c2) 50%,transparent),transparent 26%)}
+.fut.special .fut-hero::after,.fut.maestro .fut-hero::after,.fut.centurion .fut-hero::after{
+  background:linear-gradient(102deg,color-mix(in srgb,var(--c2) 90%,transparent) 0 18%,color-mix(in srgb,var(--c2) 35%,transparent) 36%,transparent 52%),
+             linear-gradient(0deg,color-mix(in srgb,var(--c2) 60%,transparent),transparent 28%)}
+/* left vertical rail: OVR · POS · flag · number */
+.fut-rail{position:absolute;top:10px;left:11px;z-index:2;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1;color:var(--ct)}
+.fut.big .fut-rail{top:14px;left:15px;gap:4px}
+.fut-ovr{display:flex;flex-direction:column;align-items:center;line-height:.82}
+.fut-ovr b{font-family:var(--fdisp2);font-weight:800;font-size:31px;letter-spacing:.5px;line-height:.82}
+.fut.big .fut-ovr b{font-size:46px}
+.fut-ovr span{font-family:var(--fdisp2);font-weight:700;font-size:12px;letter-spacing:.07em;margin-top:1px}
+.fut.big .fut-ovr span{font-size:15px}
+.fut-rdiv{width:22px;height:2px;background:currentColor;opacity:.45;margin:2px 0}
+.fut-rail .flagi{width:23px;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.fut.big .fut-rail .flagi{width:30px}
+.fut-num{font-family:var(--fdisp2);font-weight:700;font-size:12px;opacity:.85}
+.fut.big .fut-num{font-size:15px}
+.fut-cap{font-family:var(--fdisp2);font-weight:800;font-size:10px;background:rgba(0,0,0,.32);color:#fff;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center}
+/* name band */
+.fut-name{font-family:var(--fdisp);font-weight:800;text-transform:uppercase;letter-spacing:.005em;
+  font-size:14px;width:100%;text-align:center;padding:7px 8px 4px;border-top:none;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:2}
+.fut.big .fut-name{font-size:19px;padding:10px 10px 5px}
+/* FUT-style 2×3 stat grid */
+.fut-stats{font-family:var(--fdisp2);display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;
+  width:100%;margin:0;padding:0 13px 12px;font-size:14.5px;z-index:2}
+.fut.big .fut-stats{font-size:18px;gap:3px 22px;padding:0 18px 17px}
+.fut-stats span{display:flex;align-items:baseline;gap:7px;justify-content:flex-start}
+.fut-stats b{font-weight:800;font-variant-numeric:tabular-nums;min-width:20px;text-align:right;letter-spacing:.3px}
+.fut-stats i{font-style:normal;font-weight:600;font-size:.62em;opacity:.6;letter-spacing:.08em;text-transform:uppercase}
+
+/* compact, content-hugging player header (was full-bleed banner) */
+.dhero{max-width:840px}
+.dhero h1{letter-spacing:-.03em}
+@media(max-width:920px){.dhero{max-width:none}}
+
+/* ============================================================================
+   v16 — restructured player page: one unified hero (card + identity + stats),
+   then a clean two-column stat board (no disconnected boxes / dead space)
+   ============================================================================ */
+.phero{position:relative;display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;
+  padding:22px 28px;border:1px solid var(--line);border-radius:20px;overflow:hidden;margin:2px 0 14px;
+  background:linear-gradient(180deg,var(--bg1),color-mix(in srgb,var(--bg1) 80%,var(--bg)))}
+.phero::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;z-index:2;
+  background:linear-gradient(90deg,var(--c),color-mix(in srgb,var(--c) 0%,transparent))}
+.phero-bg{position:absolute;right:-30px;top:50%;transform:translateY(-50%);width:340px;height:230px;z-index:0;
+  background-size:cover;background-position:center;opacity:.12;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 85%);mask-image:linear-gradient(90deg,transparent,#000 85%)}
+.phero > .fut{z-index:1}
+.phero-id{position:relative;z-index:1;min-width:0}
+.phero-eye{display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+  font-family:var(--fmono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-mute)}
+.phero-eye .nat{display:inline-flex;align-items:center;gap:6px;color:var(--accent)}
+.phero-eye .pill{font-family:var(--fdisp2);font-weight:700}
+.phero-eye .cap{color:var(--gold);font-weight:700}
+.phero h1{font-size:clamp(2.1rem,4.6vw,3.6rem);line-height:.98;margin:9px 0 6px;letter-spacing:-.035em}
+.phero-sub{color:var(--fg-dim);font-size:14.5px}
+.phero-sub a{color:var(--fg);font-weight:600}
+.phero-id .funbar{margin:15px 0 0}
+.phero-stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:17px}
+.phero-stats .thstat{min-width:76px;padding:10px 16px}
+.phero-stats .thstat b{font-size:26px}
+.pcols{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.pcols .span{grid-column:1/-1}
+.pcols .srcs .src{font-size:12px}
+@media(max-width:860px){
+  .phero{grid-template-columns:1fr;justify-items:center;text-align:center;gap:18px;padding:18px}
+  .phero-eye,.phero-stats,.phero-id .funbar{justify-content:center}
+  .phero-bg{opacity:.07}
+  .pcols{grid-template-columns:1fr}
+}

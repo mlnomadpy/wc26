@@ -30,25 +30,28 @@ const StatGrid = (items) => items;
 ---
 <Base title={`${p.player_name} — ${p.team_name} | 2026 World Cup profile & stats`} description={desc} jsonld={jsonld}>
   <a class="btn back" href={`${B}teams/${p.fifa_code.toLowerCase()}/`}>← {p.team_name}</a>
-  <header class="dhero" style={`--c:${POSC[p.position]}`}>
-    <div class="dh-bg" style={`background-image:url(${flagImg(p.fifa_code, 320)})`}></div>
-    <div class="dh-main">
-      <div class="dh-num">{p.shirt_number ?? '–'}</div>
-      <div>
-        <div class="dh-eye"><a class="nat" href={`${B}teams/${p.fifa_code.toLowerCase()}/`}><Flag code={p.fifa_code} cls="sm" /> {p.team_name}</a> · Group {p.group_letter} · <span class={`pill ${p.position}`}>{p.position}</span>{p.is_captain && ' · CAPTAIN'}</div>
-        <h1>{p.player_name}</h1>
-        <div class="dh-meta"><a href={`${B}clubs/${slugify(p.club)}/`}>{p.club}</a> · {p.club_league || ''}</div>
+  <section class="phero" style={`--c:${POSC[p.position]}`}>
+    <div class="phero-bg" style={`background-image:url(${flagImg(p.fifa_code, 320)})`}></div>
+    <FutCard p={p} big />
+    <div class="phero-id">
+      <div class="phero-eye">
+        <a class="nat" href={`${B}teams/${p.fifa_code.toLowerCase()}/`}><Flag code={p.fifa_code} cls="sm" /> {p.team_name}</a>
+        <span>Group {p.group_letter}</span><span>#{p.shirt_number ?? '–'}</span>
+        <span class={`pill ${p.position}`}>{p.position}</span>{p.is_captain && <span class="cap">Captain</span>}
+      </div>
+      <h1>{p.player_name}</h1>
+      <div class="phero-sub"><a href={`${B}clubs/${slugify(p.club)}/`}>{p.club}</a>{p.club_league ? ' · ' + p.club_league : ''}</div>
+      {p.fun && p.fun.length > 0 && <div class="funbar">{p.fun.map((f: string) => <span class="funchip">{f}</span>)}</div>}
+      <div class="phero-stats">
+        <div class="thstat"><b>{p.caps ?? '—'}</b><span>Caps</span></div>
+        <div class="thstat"><b>{p.international_goals ?? '—'}</b><span>Goals</span></div>
+        {p.market_value_eur && <div class="thstat"><b>{money(p.market_value_eur)}</b><span>Value</span></div>}
+        {p.age && <div class="thstat"><b>{p.age}</b><span>Age</span></div>}
+        {p.height_cm && <div class="thstat"><b>{p.height_cm}</b><span>Height cm</span></div>}
       </div>
     </div>
-    <div class="dh-stats">
-      <div class="thstat"><b>{p.caps ?? '—'}</b><span>Caps</span></div>
-      <div class="thstat"><b>{p.international_goals ?? '—'}</b><span>Goals</span></div>
-      {p.market_value_eur && <div class="thstat"><b>{money(p.market_value_eur)}</b><span>Value</span></div>}
-    </div>
-  </header>
-  {p.fun && p.fun.length > 0 && <div class="funbar">{p.fun.map((f: string) => <span class="funchip">{f}</span>)}</div>}
-  <div class="pgrid">
-    <FutCard p={p} big />
+  </section>
+  <div class="pcols">
     <div class="panel">
       <h3>Profile</h3>
       <div class="kv">
@@ -68,13 +71,13 @@ const StatGrid = (items) => items;
       {career.length > 0 && <><div class="sublabel">Club career totals</div><div class="statgrid">{career.map(s => <div class="stat"><div class="v mono">{s.v}</div><div class="k">{s.l}</div></div>)}</div></>}
       {p.form_note && <><div class="sublabel">Form</div><div class="faint">{p.form_note}</div></>}
     </div>
+    {p.backstory && (
+      <div class="panel span">
+        <h3>The journey</h3>
+        <p class="journey">{p.backstory}</p>
+        {p.facts && p.facts.length > 0 && <ul class="pfacts">{p.facts.map((f: string) => <li>{f}</li>)}</ul>}
+      </div>
+    )}
+    {srcs.length > 0 && <div class="panel span srcs"><h3>Sources</h3>{srcs.map(s => <div class="src"><a href={s} target="_blank" rel="noopener">{s}</a></div>)}</div>}
   </div>
-  {p.backstory && (
-    <div class="panel">
-      <h3>The journey</h3>
-      <p class="journey">{p.backstory}</p>
-      {p.facts && p.facts.length > 0 && <ul class="pfacts">{p.facts.map((f: string) => <li>{f}</li>)}</ul>}
-    </div>
-  )}
-  {srcs.length > 0 && <div class="panel"><h3>Sources</h3>{srcs.map(s => <div class="src"><a href={s} target="_blank" rel="noopener">{s}</a></div>)}</div>}
 </Base>
