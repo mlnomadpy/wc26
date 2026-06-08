@@ -21,7 +21,8 @@ src/app/styles/
    ├─ 04-controls.css      buttons, inputs, chips, subtabs, pills
    ├─ 05-tables.css        data tables, sticky headers, zebra, .trow
    ├─ 06-cards.css         .panel, .gcard, .stat, .bar, flags, tier chips, team directory
-   ├─ 07-landing.css       .home hero, countdown, "Last Dance" face-off, bento, FX
+   ├─ 07-landing.css       .home hero, countdown, "Last Dance" face-off, bento
+   ├─ 07b-landing-fx.css   landing ambient/interaction FX (beam, scan, spotlight)
    ├─ 08-detail-heroes.css .phead, .dhero, .phero, group page, team dashboard (.tv2)
    ├─ 09-fut-cards.css     the collectible player card (.fut) + 3-D tilt/foil
    ├─ 10-pitch.css         football pitch, energy tokens, XI readout, bench
