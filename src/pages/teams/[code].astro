@@ -3,7 +3,7 @@ import Base from '@app/layouts/Base.astro';
 import Flag from '@shared/ui/Flag.astro';
 import FutCard from '@entities/player/ui/FutCard.astro';
 import DB from '../../../public/data.json';
-import { indexes, autoForm, pickXI, strength, FORMATIONS, FORMNAMES, POSC, POSNAME, CONF, surname, num, money, avgAge, flagImg, teamRating, rating } from '@shared/lib/wc.js';
+import { indexes, autoForm, pickXI, strength, FORMATIONS, FORMNAMES, POSC, POSNAME, CONF, surname, num, money, avgAge, flagImg, teamRating } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const IDX = indexes(DB);
 export function getStaticPaths() {
@@ -26,7 +26,6 @@ const abroad = sq.filter(p => p.club_country && p.club_country !== t.team_name).
 const topCap = [...sq].sort((a, b) => (b.caps || 0) - (a.caps || 0))[0];
 const topSc = [...sq].sort((a, b) => (b.international_goals || 0) - (a.international_goals || 0))[0];
 const tRating = teamRating(t.fifa_ranking);
-const keyPlayers = [...sq].sort((a, b) => rating(b) - rating(a)).slice(0, 5);
 const desc = `${t.team_name} 2026 FIFA World Cup squad (Group ${t.group_letter}): all ${sq.length} players, projected XI, coach ${t.head_coach || ''}. Caps, goals and 2025/26 club stats.`;
 const jsonld = {
   '@context': 'https://schema.org', '@type': 'SportsTeam', name: t.team_name, sport: 'Association football',
@@ -59,16 +58,14 @@ const jsonld = {
   </header>
 
   <div class="subtabs" id="tsubs">
-    <button class="subtab on" data-t="lineup">Lineup</button>
-    <button class="subtab" data-t="squad">Squad ({sq.length})</button>
+    <button class="subtab on" data-t="squad">Squad ({sq.length})</button>
+    <button class="subtab" data-t="lineup">Projected XI</button>
     <button class="subtab" data-t="info">Team info</button>
   </div>
 
   <div class="app-grow scroll" id="tbody">
   <div class="tsec" data-sec="lineup" id="teamroot" data-form={form}>
-    <h2 class="sec" style="margin-top:6px">Key players <span class="tag">top rated in the squad</span></h2>
-    <div class="keystrip">{keyPlayers.map(p => <FutCard p={p} />)}</div>
-    <h2 class="sec">Projected XI <span class="tag">{form} · auto-picked from squad data, not an official lineup</span></h2>
+    <h2 class="sec" style="margin-top:6px">Projected XI <span class="tag">{form} · auto-picked from squad data, not an official lineup</span></h2>
     <div class="pitchwrap">
       <div class="panel">
         <div class="formrow">{FORMNAMES.map(f => <span class={`chip ${f === form ? 'on' : ''}`} data-f={f}>{f}</span>)}</div>
@@ -168,7 +165,7 @@ const jsonld = {
         document.getElementById('tbody')?.scrollTo(0, 0);
       };
       subs.querySelectorAll('.subtab').forEach(b => b.addEventListener('click', () => show(b.dataset.t)));
-      show('lineup');
+      show('squad');
     }
   </script>
 </Base>

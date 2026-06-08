@@ -671,8 +671,6 @@ tbody tr:last-child td{ border-bottom:0; }
 .dh-glink{ color:var(--accent2); } .dh-glink:hover{ color:var(--fg); }
 .thstat-hero{ background:color-mix(in srgb,var(--accent2) 13%,transparent); border-color:color-mix(in srgb,var(--accent2) 46%,var(--line2)); }
 .thstat-hero b{ color:var(--gold); }
-.keystrip{ display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; margin:2px 0 18px; }
-@media(max-width:760px){ .keystrip{ justify-content:center; } }
 
 .phero{ display:grid; grid-template-columns:auto 1fr; gap:28px; align-items:center; padding:22px 28px; }
 .phero-bg{ width:340px; height:230px; opacity:.12; }

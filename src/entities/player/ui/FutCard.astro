@@ -6,8 +6,8 @@ const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const r = rating(p);
 const tr = tier(p);
 const badge = SPECIAL.has(tr) ? tierName(tr) : null;
-// face: real photo if present (public/faces/<id>.png), else an avatar placeholder, else monogram
-const avatar = `https://api.dicebear.com/9.x/micah/svg?seed=${encodeURIComponent(p.player_name)}&radius=0&backgroundColor=transparent`;
+// face: real photo if present (public/faces/<id>.jpg), else fall back to the
+// clean monogram behind it (no cartoon avatars — they clash with real photos)
 const faceUrl = `${B}faces/${p.player_id}.jpg`;
 const stats = p.position === 'GK'
   ? [['CS', p.club_clean_sheets_2025_26], ['GC', p.club_goals_conceded_2025_26],
@@ -21,7 +21,7 @@ const stats = p.position === 'GK'
   {badge && <span class="fut-badge">{badge}</span>}
   <div class="fut-hero">
     <span class="fut-mono">{monogram(p.player_name)}</span>
-    <img class="fut-img" src={faceUrl} alt="" loading="lazy" onerror={`this.onerror=null;this.src='${avatar}'`} />
+    <img class="fut-img" src={faceUrl} alt="" loading="lazy" onerror="this.onerror=null;this.remove()" />
     <div class="fut-rail">
       <div class="fut-ovr"><b>{r}</b><span>{p.position}</span></div>
       <span class="fut-rdiv"></span>
