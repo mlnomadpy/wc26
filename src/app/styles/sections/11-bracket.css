@@ -1,0 +1,22 @@
+/* ============================ 11. BRACKET ============================= */
+.brkhead{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-top:6px; }
+.bktwrap{ overflow-x:auto; padding:6px 2px 14px; margin:6px 0; }
+.bktree{ position:relative; }
+.bcons{ position:absolute; inset:0; pointer-events:none; z-index:0; overflow:visible; }
+.bcon{ fill:none; stroke:color-mix(in srgb,var(--accent2) 26%,var(--line2)); stroke-width:1.6; }
+.bcon.win{ stroke:var(--accent2); stroke-width:2; filter:drop-shadow(0 0 3px var(--accent2)); }
+.bhead{ position:absolute; top:8px; font-family:var(--fmono); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.16em; color:var(--accent2); text-align:center; }
+.bnode{ position:absolute; z-index:1; display:flex; flex-direction:column; justify-content:center; gap:3px; padding:7px 10px; cursor:pointer; text-align:left;
+  background:var(--bg1); border:1px solid var(--line2); border-left:3px solid var(--line2); border-radius:8px; color:var(--fg); box-shadow:var(--e2); transition:var(--t); }
+.bnode:hover{ border-color:var(--accent2); border-left-color:var(--accent2); transform:translateY(-2px); box-shadow:var(--e2),0 0 22px -8px var(--accent2); }
+.bnode.r1{ border-left-color:#7fb6ff; } .bnode.r2{ border-left-color:#b48cff; } .bnode.r3{ border-left-color:var(--gold); } .bnode.r4{ border-left-color:var(--accent2); }
+.brow{ display:flex; align-items:center; gap:7px; min-width:0; }
+.bchip{ flex:none; min-width:26px; height:18px; padding:0 5px; display:inline-flex; align-items:center; justify-content:center; border-radius:5px; font-family:var(--fmono); font-size:10px; font-weight:600; color:#e7eef8; }
+.blabel{ font-size:11.5px; color:var(--fg-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bvs{ display:flex; align-items:center; gap:6px; font-size:8.5px; color:var(--fg-mute); text-transform:uppercase; letter-spacing:.1em; }
+.bvs::before,.bvs::after{ content:""; flex:1; height:1px; background:var(--line); }
+.bnum{ font-family:var(--fmono); font-size:9.5px; color:var(--fg-mute); margin-top:1px; }
+.bchamp{ position:absolute; z-index:1; width:170px; text-align:center; padding:14px 12px; border-radius:12px;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--gold) 18%,var(--bg1)),var(--bg1)); border:1px solid var(--gold); box-shadow:0 0 30px -10px var(--gold); }
+.bchamp .trophy{ font-size:30px; } .bchamp .ct{ font-family:var(--fdisp); font-weight:700; margin-top:4px; } .bchamp .cs{ font-size:11px; margin-top:4px; }
+.kv .bchip{ align-self:center; }

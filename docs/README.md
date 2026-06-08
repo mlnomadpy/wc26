@@ -26,8 +26,9 @@ deployed to GitHub Pages at `https://www.tahabouhsine.com/wc26/`.
 
 ## TL;DR for editing styles
 
-All styling is in **one file: `src/app/styles/app.css`** — one palette, one
-clean pass, organized into 14 numbered sections. There are **no `<style>`
+All styling is in **`src/app/styles/`** — one palette, one clean pass, split
+into 14 ordered section partials under `sections/` and bundled into one file by
+`app.css`'s `@import` index. There are **no `<style>`
 blocks** in any component or page; styling is fully centralized.
 
 - **Palette / theme** → §1 (`:root` tokens) + the `html[data-theme="light"]` block.

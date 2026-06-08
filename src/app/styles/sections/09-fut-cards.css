@@ -1,0 +1,74 @@
+/* ============================ 9. FUT CARDS ============================= */
+.futgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; }
+.pgrid{ display:grid; grid-template-columns:262px 1fr 1fr; gap:15px; align-items:start; perspective:1400px; }
+@media(max-width:920px){ .pgrid{ grid-template-columns:1fr; } .fut.big{ margin:0 auto; } }
+.futgrid,.phero{ perspective:1400px; }
+.fut{ --edge:var(--accent2);
+  position:relative; display:flex; flex-direction:column; aspect-ratio:5/7; width:152px; max-width:100%;
+  overflow:hidden; border-radius:15px; text-decoration:none; color:var(--fg);
+  background:linear-gradient(180deg,var(--bg2),var(--bg));
+  border:1px solid color-mix(in srgb,var(--edge) 42%,var(--line2));
+  box-shadow:0 16px 38px -18px #000, 0 0 0 1px color-mix(in srgb,var(--edge) 16%,transparent), 0 0 24px -16px var(--edge);
+  --rx:0deg; --ry:0deg; --lift:0px; --mx:50%; --my:50%;
+  transform:perspective(820px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(var(--lift));
+  transform-style:preserve-3d; transition:transform .45s var(--ease), box-shadow .3s ease; }
+.fut.big{ width:272px; }
+.fut:hover{ --lift:-8px; }
+.fut.tilting{ transition:box-shadow .3s ease; }
+.fut.gold,.fut.silver,.fut.bronze{ --edge:var(--accent2); }
+.fut.special{ --edge:var(--accent2); } .fut.legend{ --edge:var(--gold); } .fut.rising{ --edge:var(--magenta); }
+.fut.centurion{ --edge:#ff7f97; } .fut.glove{ --edge:#5fe6d2; } .fut.marksman{ --edge:#ffb061; } .fut.maestro{ --edge:#c4a0ff; } .fut.icon{ --edge:var(--gold); }
+.fut-hero{ position:relative; flex:1; min-height:0; width:100%; overflow:hidden; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(120% 80% at 50% 0, color-mix(in srgb,var(--edge) 16%,transparent), transparent 60%), linear-gradient(180deg,var(--bg3),var(--bg1)); }
+.fut-hero::before{ content:""; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background:linear-gradient(180deg, rgba(4,9,20,.82) 0, rgba(4,9,20,.18) 26%, transparent 50%, color-mix(in srgb,var(--bg) 85%,transparent) 100%); }
+.fut-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 16%; z-index:1; }
+.fut-mono{ position:absolute; z-index:0; font-family:var(--fdisp2); font-weight:800; font-size:66px; letter-spacing:-.02em; color:color-mix(in srgb,var(--edge) 24%,transparent); }
+.fut.big .fut-mono{ font-size:120px; }
+.fut-rail{ position:absolute; top:9px; left:11px; z-index:3; display:flex; flex-direction:column; align-items:flex-start; gap:3px; line-height:1; transform:translateZ(28px); }
+.fut.big .fut-rail{ top:13px; left:15px; gap:4px; }
+.fut-ovr{ display:flex; align-items:baseline; gap:5px; }
+.fut-ovr b{ font-family:var(--fdisp2); font-weight:800; font-size:31px; line-height:.82; color:#fff; text-shadow:0 2px 12px rgba(0,0,0,.7); }
+.fut-ovr span{ font-family:var(--fdisp2); font-weight:700; font-size:12px; letter-spacing:.05em; color:var(--edge); text-shadow:0 1px 6px rgba(0,0,0,.8); }
+.fut.big .fut-ovr b{ font-size:48px; } .fut.big .fut-ovr span{ font-size:16px; }
+.fut-rdiv{ width:26px; height:2px; background:var(--edge); box-shadow:0 0 8px var(--edge); margin:1px 0; }
+.fut.big .fut-rdiv{ width:42px; }
+.fut-meta{ display:flex; align-items:center; gap:6px; }
+.fut .flagi{ width:21px; border-radius:3px; box-shadow:0 0 0 1px rgba(0,0,0,.45); }
+.fut.big .flagi{ width:27px; }
+.fut-num{ font-family:var(--fmono); font-weight:700; font-size:10px; color:rgba(255,255,255,.85); text-shadow:0 1px 4px rgba(0,0,0,.8); }
+.fut.big .fut-num{ font-size:12px; }
+.fut-cap{ display:flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; font-family:var(--fdisp2); font-weight:800; font-size:9px; color:var(--bg); background:var(--edge); box-shadow:0 0 8px -1px var(--edge); }
+.fut.big .fut-cap{ width:19px; height:19px; font-size:11px; }
+.fut-badge{ position:absolute; top:10px; right:11px; z-index:4; font-family:var(--fmono); font-weight:700; font-size:8px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--bg); background:var(--edge); padding:3px 8px; border-radius:4px; box-shadow:0 0 14px -3px var(--edge); }
+.fut.big .fut-badge{ font-size:10px; padding:4px 11px; top:14px; right:15px; }
+.fut-name{ position:relative; z-index:3; font-family:var(--fdisp); font-weight:800; text-transform:uppercase; letter-spacing:.012em; font-size:14px;
+  text-align:center; padding:7px 10px 4px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transform:translateZ(20px);
+  background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--bg) 78%,transparent)); }
+.fut.big .fut-name{ font-size:20px; padding:9px 12px 5px; }
+.fut-stats{ position:relative; z-index:3; display:grid; grid-template-columns:repeat(3,1fr); gap:7px 4px; width:100%; margin:0; padding:6px 9px 12px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--bg) 72%,transparent),var(--bg)); font-family:var(--fdisp2); transform:translateZ(14px); }
+.fut.big .fut-stats{ gap:10px 6px; padding:8px 16px 16px; }
+.fut-stats span{ display:flex; flex-direction:column; align-items:center; gap:1px; }
+.fut-stats b{ font-weight:800; font-size:17px; line-height:1; color:#fff; font-variant-numeric:tabular-nums; text-align:center; }
+.fut.big .fut-stats b{ font-size:24px; }
+.fut-stats i{ font-style:normal; font-family:var(--fmono); font-weight:600; font-size:8px; letter-spacing:.07em; text-transform:uppercase; color:var(--edge); opacity:.85; }
+.fut.big .fut-stats i{ font-size:9.5px; }
+/* pointer tilt: glare + holo foil (JS sets --mx/--my/--rx/--ry) */
+.fut-glare{ position:absolute; inset:0; z-index:7; pointer-events:none; border-radius:15px; opacity:0; transition:opacity .25s; mix-blend-mode:overlay;
+  background:radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.55), rgba(255,255,255,.12) 26%, transparent 46%); }
+.fut.tilting .fut-glare{ opacity:.9; }
+.fut-sheen{ position:absolute; inset:0; z-index:6; pointer-events:none; border-radius:15px; opacity:0; transition:opacity .3s; mix-blend-mode:color-dodge;
+  background:conic-gradient(from calc(var(--ry)*8 + 120deg) at var(--mx) var(--my), rgba(86,224,255,.5),rgba(43,140,255,.4),rgba(255,61,139,.35),rgba(255,210,61,.3),rgba(86,224,255,.5));
+  -webkit-mask:radial-gradient(circle at var(--mx) var(--my),#000,rgba(0,0,0,.25) 55%,transparent 75%); mask:radial-gradient(circle at var(--mx) var(--my),#000,rgba(0,0,0,.25) 55%,transparent 75%); }
+.fut.tilting .fut-sheen{ opacity:.5; }
+.fut.tilting{ box-shadow:0 0 0 1px color-mix(in srgb,var(--edge) 40%,transparent), 0 26px 50px -18px rgba(0,0,0,.85), 0 0 46px -10px var(--edge); }
+@media (hover:none){ .fut{ transform:none; } .fut:hover{ --lift:0px; } }
+@media (prefers-reduced-motion:reduce){ .fut,.fut *{ transform:none !important; } .fut-glare,.fut-sheen{ display:none; } }
+
+/* squad position heading */
+.poshead{ display:flex; align-items:center; gap:9px; margin:18px 0 10px; }
+.poshead .pdot{ width:10px; height:10px; border-radius:3px; background:var(--pc,var(--accent2)); }
+.poshead h3{ margin:0; font-size:13px; text-transform:uppercase; letter-spacing:.08em; }
+.poshead .pn{ font-family:var(--fmono); font-size:11px; color:var(--fg-mute); }

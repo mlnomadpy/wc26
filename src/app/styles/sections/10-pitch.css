@@ -1,0 +1,59 @@
+/* ============================ 10. PITCH =============================== */
+.pitchwrap{ display:grid; grid-template-columns:minmax(290px,1.05fr) .95fr; gap:15px; }
+@media(max-width:920px){ .pitchwrap{ grid-template-columns:1fr; } }
+.formrow{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:13px; }
+.pitch{ position:relative; aspect-ratio:68/104; height:clamp(340px,calc(100dvh - 330px),680px); width:auto; margin:0 auto; border-radius:16px; overflow:hidden;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 9.09%, rgba(88,221,255,.03) 9.09% 18.18%),
+    radial-gradient(130% 72% at 50% -6%, color-mix(in srgb,var(--accent) 22%,transparent), transparent 56%),
+    radial-gradient(130% 72% at 50% 106%, color-mix(in srgb,var(--accent2) 13%,transparent), transparent 56%),
+    linear-gradient(180deg,#071a30,#040e1c);
+  border:1px solid color-mix(in srgb,var(--accent2) 46%,var(--line2));
+  box-shadow:inset 0 0 90px rgba(0,0,0,.62), 0 0 46px -18px var(--accent2); }
+.pitch::before{ content:""; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.5;
+  background:linear-gradient(rgba(88,221,255,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(88,221,255,.055) 1px, transparent 1px);
+  background-size:32px 32px; -webkit-mask:radial-gradient(120% 92% at 50% 50%,#000,transparent 94%); mask:radial-gradient(120% 92% at 50% 50%,#000,transparent 94%); }
+.pitch::after{ content:""; position:absolute; left:0; right:0; top:0; height:34%; z-index:1; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(180deg, transparent, rgba(88,221,255,.1), transparent); animation:pitchscan 6.5s linear infinite; }
+@keyframes pitchscan{ 0%{ transform:translateY(-110%); } 100%{ transform:translateY(330%); } }
+@media(prefers-reduced-motion:reduce){ .pitch::after{ animation:none; opacity:0; } }
+.pitch.tall{ aspect-ratio:68/116; height:clamp(440px,calc(100dvh - 210px),820px); }
+.pitch .line{ position:absolute; z-index:2; border:1.5px solid color-mix(in srgb,var(--accent2) 52%,rgba(255,255,255,.22)); box-shadow:0 0 9px rgba(88,221,255,.16); }
+.pitch .ch{ left:6%; right:6%; top:50%; width:88%; height:0; border-width:1px 0 0 0; transform:translateY(-50%); }
+.pitch .cc{ left:50%; top:50%; width:22%; aspect-ratio:1; border-radius:50%; transform:translate(-50%,-50%); }
+.pitch .box{ left:22%; width:56%; height:14%; } .pitch .box.top{ top:0; border-top:0; } .pitch .box.bot{ bottom:0; border-bottom:0; }
+.pitch .six{ left:36%; width:28%; height:6%; } .pitch .six.top{ top:0; border-top:0; } .pitch .six.bot{ bottom:0; border-bottom:0; }
+.token{ position:absolute; transform:translate(-50%,-50%); width:60px; text-align:center; cursor:pointer; z-index:3; transition:.12s; }
+.token.sm{ width:48px; }
+.token .sh{ width:40px; height:40px; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center;
+  font-family:var(--fmono); font-weight:600; color:#062a1c; font-size:14px; position:relative;
+  background:radial-gradient(circle at 38% 26%,rgba(255,255,255,.5),transparent 44%),var(--tc,var(--accent2));
+  border:2px solid rgba(255,255,255,.9); box-shadow:0 4px 12px rgba(0,0,0,.55),inset 0 -3px 6px rgba(0,0,0,.25),0 0 16px -3px var(--tc,var(--accent2)); transition:.14s var(--ease); }
+.token.sm .sh{ width:30px; height:30px; font-size:12px; }
+.token .tov{ position:absolute; top:-7px; left:-7px; z-index:5; min-width:18px; padding:0 3px; line-height:15px; text-align:center;
+  font-family:var(--fdisp2); font-weight:800; font-size:10px; color:#fff; background:linear-gradient(180deg,var(--bg2),var(--bg1));
+  border:1px solid var(--tc,var(--accent2)); border-radius:5px; box-shadow:0 0 9px -2px var(--tc,var(--accent2)); }
+.token.sm .tov{ font-size:9px; min-width:16px; line-height:13px; top:-5px; left:-5px; }
+.token:hover{ transform:translate(-50%,-50%) scale(1.16); z-index:6; }
+.token:hover .sh{ box-shadow:0 8px 22px rgba(0,0,0,.6),0 0 0 3px var(--accent2),0 0 22px var(--accent2); }
+/* XI strength readout */
+.xistat{ flex:none; display:flex; gap:7px; margin-top:10px; }
+.xistat span{ flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 4px; border-radius:8px; background:var(--bg2); border:1px solid var(--line2); }
+.xistat b{ font-family:var(--fdisp2); font-weight:800; font-size:19px; line-height:1; color:var(--fg); }
+.xistat i{ font-style:normal; font-family:var(--fmono); font-size:8.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-mute); }
+.xistat .xis-ov{ background:color-mix(in srgb,var(--accent2) 14%,transparent); border-color:color-mix(in srgb,var(--accent2) 46%,var(--line2)); }
+.xistat .xis-ov b{ color:var(--accent2); }
+.token .cap{ position:absolute; top:-5px; right:-5px; background:var(--accent2); color:#062a1c; font-size:8px; font-style:normal; width:14px; height:14px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; border:1px solid var(--bg); }
+.token .nm{ font-size:10px; margin-top:3px; color:#fff; white-space:nowrap; font-weight:600; background:rgba(0,0,0,.45); padding:1px 6px; border-radius:5px; backdrop-filter:blur(2px); }
+.token.sel .sh{ outline:3px solid #fff; outline-offset:1px; }
+.token.cpt .sh{ animation:capglow 2.4s ease-in-out infinite; }
+@keyframes capglow{ 0%,100%{ box-shadow:0 4px 12px rgba(0,0,0,.55),0 0 0 0 transparent; } 50%{ box-shadow:0 4px 12px rgba(0,0,0,.55),0 0 0 4px color-mix(in srgb,var(--accent2) 35%,transparent); } }
+.hint{ margin-top:11px; font-size:12.5px; } .hint.live{ color:var(--accent2); }
+.benchlist{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:9px; max-height:calc(100dvh - 300px); overflow:auto; }
+.pcard{ background:var(--bg2); border:1px solid var(--line); border-radius:11px; padding:9px 11px; cursor:pointer; transition:var(--t); }
+.pcard:hover{ border-color:var(--accent2); } .pcard.sel{ border-color:#fff; background:var(--bg3); }
+.pcard .pcrow{ display:flex; justify-content:space-between; align-items:center; }
+.pcard .nm{ font-weight:600; font-size:12.5px; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pcard .meta{ font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pcard .mini{ font-size:11px; color:var(--accent2); }

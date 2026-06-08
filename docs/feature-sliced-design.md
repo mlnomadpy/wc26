@@ -28,7 +28,8 @@ src/
 │  │  └─ Base.astro            # HTML shell: <head>, fonts, topbar, footer,
 │  │                           #   command palette, theme toggle, card-tilt JS
 │  └─ styles/
-│     └─ app.css               # the whole stylesheet — one clean pass
+│     ├─ app.css               # @import index for the section partials
+│     └─ sections/01..14-*.css # the stylesheet, split by concern (one bundle)
 │
 ├─ pages/                      # Astro file-based routes (unchanged location).
 │  ├─ index.astro              # Thin route entries that import from the layers

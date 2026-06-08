@@ -1,0 +1,10 @@
+/* ============================ 14. COMMAND PALETTE ===================== */
+.palette{ position:fixed; inset:0; z-index:120; display:none; align-items:flex-start; justify-content:center; background:rgba(4,7,11,.6); backdrop-filter:blur(4px); padding-top:12vh; }
+.palette.show{ display:flex; }
+.palbox{ width:min(620px,92vw); background:var(--bg1); border:1px solid var(--accent2); border-radius:var(--r); box-shadow:0 30px 80px -30px #000, var(--glow); overflow:hidden; }
+.palbox input{ width:100%; border:0; border-bottom:1px solid var(--line); border-radius:0; padding:15px 18px; font-size:15px; background:transparent; }
+.palres{ max-height:50vh; overflow:auto; }
+.palrow{ display:grid; grid-template-columns:30px 1fr auto auto; gap:10px; align-items:center; padding:9px 16px; cursor:pointer; font-size:13px; transition:background var(--t); }
+.palrow.sel,.palrow:hover{ background:color-mix(in srgb,var(--accent) 12%,transparent); box-shadow:inset 2px 0 0 var(--accent2); }
+.palk{ font-size:15px; text-align:center; } .palsub{ font-size:11px; } .palt{ font-size:10px; text-transform:uppercase; letter-spacing:.08em; }
+.palfoot{ padding:9px 16px; border-top:1px solid var(--line); font-size:11px; font-family:var(--fmono); }

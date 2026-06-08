@@ -8,10 +8,27 @@
 
 ## 1. Overview
 
-All styling lives in **one hand-authored stylesheet**:
+All styling lives under **one stylesheet folder**, split into ordered section
+partials and bundled into a single file at build:
 
 ```
-src/app/styles/app.css        (~66 KB source · ~58 KB built, un-gzipped)
+src/app/styles/
+├─ app.css                 ← index: @imports the 14 partials in order (nothing else)
+└─ sections/
+   ├─ 01-tokens.css        :root custom properties + light theme
+   ├─ 02-base.css          reset, body background, headings, a11y, reduced-motion
+   ├─ 03-shell.css         topbar, nav, search/theme buttons, main scroll, footer
+   ├─ 04-controls.css      buttons, inputs, chips, subtabs, pills
+   ├─ 05-tables.css        data tables, sticky headers, zebra, .trow
+   ├─ 06-cards.css         .panel, .gcard, .stat, .bar, flags, tier chips, team directory
+   ├─ 07-landing.css       .home hero, countdown, "Last Dance" face-off, bento, FX
+   ├─ 08-detail-heroes.css .phead, .dhero, .phero, group page, team dashboard (.tv2)
+   ├─ 09-fut-cards.css     the collectible player card (.fut) + 3-D tilt/foil
+   ├─ 10-pitch.css         football pitch, energy tokens, XI readout, bench
+   ├─ 11-bracket.css       tournament bracket (absolute nodes + SVG connectors)
+   ├─ 12-match.css         scoreboard, tale-of-the-tape, prediction bar, key-man duel
+   ├─ 13-map-compare.css   host-city map dots, SVG radar comparison
+   └─ 14-palette.css       ⌘K search modal
 ```
 
 It is imported exactly once, at the top of the shared layout:
@@ -21,38 +38,25 @@ It is imported exactly once, at the top of the shared layout:
 import '../styles/app.css';
 ```
 
-Every page renders inside `Base.astro`, so this one stylesheet covers the whole
-site. There are **no scoped `<style>` blocks** in any `.astro` component or page
-— styling is fully centralized. There is no preprocessor, PostCSS, Tailwind, or
-CSS-in-JS.
+Vite inlines the `@import`s into **one hashed bundle** (`dist/assets/Base.*.css`),
+so there is no extra request and the cascade is identical to a single file. Every
+page renders inside `Base.astro`, so this one bundle covers the whole site. There
+are **no scoped `<style>` blocks** in any `.astro` component or page. No
+preprocessor, PostCSS, Tailwind, or CSS-in-JS.
 
-### A single clean pass
+### One clean pass, split by concern
 
-`app.css` is **one palette, one cascade, no legacy/dead code**. It is organized
-top-to-bottom into **14 numbered sections** (the banners are greppable):
+The stylesheet is **one palette, one cascade, no legacy/dead code**. The look is
+**last-writer-wins by source order**, so the `@import` order in `app.css` is
+**load-bearing** — keep the section numbers in sequence; don't reorder them.
+To change an area, edit its partial (`grep` the section banner or open the file).
 
-```
- 1  TOKENS            :root custom properties + light theme
- 2  BASE / TYPE       reset, body background, headings, a11y, reduced-motion
- 3  SHELL             topbar, nav, search/theme buttons, main scroll, footer, app-page
- 4  CONTROLS          buttons, inputs, chips, subtabs, pills
- 5  TABLES            data tables, sticky headers, zebra, .trow
- 6  CARDS / PANELS    .panel, .gcard, .stat, .bar, flags, tier chips, .funbar
- 7  LANDING           .home hero, countdown, "Last Dance" face-off, stats, bento
- 8  DETAIL HEROES     .phead, .dhero (team), .phero (player)
- 9  FUT CARDS         the collectible player card (.fut) + 3-D tilt/foil
-10  PITCH             football pitch, player tokens, bench
-11  BRACKET           tournament bracket (absolute nodes + SVG connectors)
-12  MATCH             scoreboard, tale-of-the-tape bars, key-man duel
-13  MAP / COMPARE     host-city map dots, SVG radar comparison
-14  COMMAND PALETTE   ⌘K search modal
-```
-
-> History: this file began as an append-only stack of ~23 redesign layers
-> (`src/styles/global.css`, ~1,874 lines, with three shadowed palettes). It was
-> later **consolidated into the current single clean pass** — one palette, the
-> dead/shadowed layers removed, `!important` reduced to a few legitimate
-> accessibility guards. The earlier "modular partials" era is gone.
+> History: this began as an append-only stack of ~23 redesign layers
+> (`src/styles/global.css`, ~1,874 lines, three shadowed palettes), was
+> **consolidated into one clean pass** (one palette, dead layers removed,
+> `!important` down to a few reduced-motion guards), and then **split back into
+> the ordered `sections/` partials above** purely for navigability — the bundle
+> is unchanged.
 
 ### Key conventions at a glance
 | Concern | Approach |
@@ -347,7 +351,7 @@ src/
 ├─ app/
 │  ├─ layouts/Base.astro    ← layout: <head>, fonts, topbar, footer, palette,
 │  │                          theme toggle, ⌘K search, card-tilt JS, row a11y
-│  └─ styles/app.css        ← the entire stylesheet (14 sections; imported once)
+│  └─ styles/               ← app.css (@import index) + sections/01..14-*.css
 ├─ entities/player/ui/
 │  └─ FutCard.astro         ← collectible player card markup (.fut)
 ├─ shared/
