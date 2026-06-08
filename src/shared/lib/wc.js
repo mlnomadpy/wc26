@@ -29,6 +29,9 @@ export const flag = c => FLAG[c]||'🏳️';
 export const surname = n => {const w=(n||'').trim().split(/\s+/);return w.length>1?w[w.length-1]:(w[0]||'');};
 export const slugify = s => String(s).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 export const groupColor = L => `hsl(${(L.charCodeAt(0)-65)*30},44%,30%)`;
+// team strength rating derived from FIFA world ranking (#1≈95, decaying) — shared
+// by the teams directory and group pages so a team rates the same everywhere.
+export const teamRating = (rank) => rank ? Math.max(58, Math.min(95, Math.round(95 - 13 * Math.log10(rank)))) : null;
 
 export function strength(p){
   let s=0;

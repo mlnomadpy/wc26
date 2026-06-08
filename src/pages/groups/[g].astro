@@ -1,0 +1,116 @@
+---
+import Base from '@app/layouts/Base.astro';
+import Flag from '@shared/ui/Flag.astro';
+import DB from '../../../public/data.json';
+import { CONF, teamRating, indexes, rating } from '@shared/lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+
+export function getStaticPaths() {
+  const gs = [...new Set(DB.teams.map(t => t.group_letter))].sort();
+  return gs.map(g => ({ params: { g } }));
+}
+const { g } = Astro.params;
+const IX = indexes(DB);
+
+// projected expected points from a rating gap (Elo expected score, bundles draws):
+// an even match yields ~1.5 each; the pair always splits ~3 pts, so the table is conserved.
+const expScore = (dr) => 1 / (1 + Math.pow(10, -dr / 11));
+const xPtsVs = (dr) => 3 * expScore(dr);
+
+const teams = DB.teams.filter(t => t.group_letter === g).map(t => {
+  const sq = IX.playersByTeam[t.fifa_code] || [];
+  const star = sq.slice().sort((a, b) => rating(b) - rating(a))[0];
+  return { ...t, rating: teamRating(t.fifa_ranking) ?? 60, star };
+});
+// projected points: round-robin, each team vs the other three
+teams.forEach(t => {
+  t.xpts = teams.filter(o => o !== t).reduce((s, o) => s + xPtsVs(t.rating - o.rating), 0);
+});
+const table = teams.slice().sort((a, b) => b.xpts - a.xpts || (a.fifa_ranking || 999) - (b.fifa_ranking || 999));
+const ratings = teams.map(t => t.rating);
+const rMin = Math.min(...ratings) - 4, rMax = Math.max(...ratings) + 1;
+const barPct = (r) => Math.round(((r - rMin) / (rMax - rMin)) * 100);
+const outlook = (i) => i < 2 ? { c: 'adv', t: 'Advance · R32' } : i === 2 ? { c: 'thrd', t: '3rd — playoff' } : { c: 'out', t: 'Eliminated' };
+
+const fixtures = DB.matches
+  .filter(m => m.match_label === 'Group ' + g)
+  .sort((a, b) => a.match_number - b.match_number);
+const fmtDay = (s) => { const d = new Date((s || '').replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00')); return isNaN(d) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+const fav = table[0];
+const gs = [...new Set(DB.teams.map(t => t.group_letter))].sort();
+---
+<Base title={`Group ${g} — projected standings · FIFA World Cup 2026`} description={`Group ${g} at the 2026 FIFA World Cup: the four teams, their projected finishing order and qualification outlook, plus all six group fixtures.`}>
+  <div class="app-page">
+    <a class="btn back" href={B + 'groups/'}>← All groups</a>
+
+    <div class="dhero ghero">
+      <div class="dh-main">
+        <div class="dh-num">{g}</div>
+        <div>
+          <div class="dh-eye">Group stage · projected</div>
+          <h1>Group {g}</h1>
+          <div class="dh-meta">{table.length} teams · {fixtures.length} fixtures · {fav.team_name} favoured to top</div>
+        </div>
+      </div>
+      <div class="ghero-flags">
+        {table.map(t => <a href={`${B}teams/${t.fifa_code.toLowerCase()}/`} title={t.team_name}><Flag code={t.fifa_code} cls="lg" /></a>)}
+      </div>
+    </div>
+
+    <div class="grp-jump">
+      {gs.map(x => <a class={`gj ${x === g ? 'on' : ''}`} href={B + 'groups/' + x + '/'}>{x}</a>)}
+    </div>
+
+    <div class="app-grow scroll">
+    <div class="grid2 grp-grid">
+      <section class="panel">
+        <h3><span class="tag">Projected table</span></h3>
+        <table class="grp-table">
+          <thead><tr><th>#</th><th>Team</th><th>FIFA</th><th>Rating</th><th>xPts</th><th>Outlook</th></tr></thead>
+          <tbody>
+            {table.map((t, i) => {
+              const o = outlook(i);
+              return (
+                <tr class={`grp-row ${o.c}`} onclick={`location.href='${B}teams/${t.fifa_code.toLowerCase()}/'`} style={`--cc:${CONF[t.confederation] || '#6b7a90'}`}>
+                  <td class="grp-pos">{i + 1}</td>
+                  <td>
+                    <span class="nat"><Flag code={t.fifa_code} cls="sm" /> <b>{t.team_name}</b></span>
+                    {t.star && <div class="grp-star">★ {t.star.player_name}</div>}
+                  </td>
+                  <td class="mono faint">{t.fifa_ranking ? '#' + t.fifa_ranking : '—'}</td>
+                  <td>
+                    <div class="grp-rate"><span class="grp-rnum">{t.rating}</span>
+                      <span class="bartrack grp-bar"><span class="bar" style={`width:${barPct(t.rating)}%`}></span></span>
+                    </div>
+                  </td>
+                  <td class="mono"><b>{t.xpts.toFixed(1)}</b></td>
+                  <td><span class={`qual ${o.c}`}>{o.t}</span></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <p class="grp-note faint">Projected from squad strength (FIFA world ranking). Top two advance to the Round of 32; the eight best third-placed teams also qualify.</p>
+      </section>
+
+      <section class="panel">
+        <h3><span class="tag">Fixtures</span></h3>
+        <div class="fxlist">
+          {fixtures.map(m => (
+            <a class="fxrow" href={`${B}matches/${m.match_number}/`}>
+              <span class="fx-day mono">{fmtDay(m.kickoff_at)}</span>
+              <span class="fx-match">
+                <span class="fx-side fx-home"><b>{m.home_team}</b> <Flag code={m.home_code} cls="sm" /></span>
+                <span class="fx-vs mono">vs</span>
+                <span class="fx-side fx-away"><Flag code={m.away_code} cls="sm" /> <b>{m.away_team}</b></span>
+              </span>
+              <span class="fx-city faint">{m.city}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    </div>
+    </div>
+  </div>
+</Base>
+</content>

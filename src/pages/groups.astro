@@ -21,7 +21,7 @@ const fixtures = g => DB.matches.filter(m => m.match_label === 'Group ' + g).len
   <div class="tgrid">
     {groups.map(g => (
       <div class="gcard">
-        <div class="gh">Group {g}</div>
+        <a class="gh gh-link" href={`${B}groups/${g}/`}>Group {g} →</a>
         <table class="gtable">
           <thead><tr><th>Team</th><th>Conf</th><th>Rk</th></tr></thead>
           <tbody>
@@ -34,7 +34,7 @@ const fixtures = g => DB.matches.filter(m => m.match_label === 'Group ' + g).len
             ))}
           </tbody>
         </table>
-        <div class="sublabel">{fixtures(g)} fixtures →</div>
+        <a class="sublabel gh-link" href={`${B}groups/${g}/`}>{fixtures(g)} fixtures · projected standings →</a>
       </div>
     ))}
   </div>

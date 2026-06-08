@@ -2,13 +2,12 @@
 import Base from '@app/layouts/Base.astro';
 import Flag from '@shared/ui/Flag.astro';
 import DB from '../../../public/data.json';
-import { CONF } from '@shared/lib/wc.js';
+import { CONF, teamRating } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
-// strength rating is derived from FIFA world ranking, so it agrees with the rank badge
-// (#1 ≈ 95, decaying with rank) — one coherent strength signal, no contradiction.
-const fifaRating = (rank) => rank ? Math.max(58, Math.min(95, Math.round(95 - 13 * Math.log10(rank)))) : null;
+// strength rating is derived from FIFA world ranking (teamRating), so it agrees
+// with the rank badge — one coherent strength signal, no contradiction.
 const teams = [...DB.teams]
-  .map(t => ({ ...t, rating: fifaRating(t.fifa_ranking) }))
+  .map(t => ({ ...t, rating: teamRating(t.fifa_ranking) }))
   .sort((a, b) => (a.fifa_ranking || 999) - (b.fifa_ranking || 999));
 const confs = [...new Set(DB.teams.map(t => t.confederation))].sort();
 const rClass = (o) => o == null ? 'na' : o >= 84 ? 'hi' : o >= 76 ? 'mid' : 'lo';
