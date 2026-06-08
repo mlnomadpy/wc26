@@ -1,0 +1,474 @@
+<!doctype html><html><head><meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Saira+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>:root{--bg:#050a16;--bg1:#0a1326;--bg2:#0f1f3e;--bg3:#173058;--line:#1b3260;--line2:#2c4d8c;--fg:#e9f2ff;--fg-dim:#90a6d0;--fg-mute:#5e7099;--accent:#2b8cff;--accent2:#56e0ff;--gold:#ffd23d;--magenta:#ff3d8b;--fdisp:'Bricolage Grotesque',sans-serif;--fdisp2:'Saira Condensed',sans-serif;--fmono:'IBM Plex Mono',monospace;--on-accent:#04122b;--sh:0 16px 44px -14px rgba(0,0,0,.78)}
+  *{box-sizing:border-box} body{margin:0;background:radial-gradient(900px 500px at 50% -10%,rgba(43,140,255,.14),transparent 60%),var(--bg);font-family:var(--fdisp);min-height:100vh;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;padding:34px}
+  .lbl{color:var(--accent2);font-family:var(--fmono);font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+  .row{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+  a.fut{text-decoration:none}
+  /* ===== VARIANT: energy-shard ===== */
+  /* ============================================================
+   BLUE LOCK — "ENERGY SHARD" collectible card
+   Direction: aggressive diagonal crystal/blade clip-path,
+   diagonal energy sweep, faceted highlights, angled OVR slab.
+   Tokens used: --accent #2b8cff / --accent2 #56e0ff / --gold
+   --magenta / --bg.. / --line.. / --fg.. / --fdisp / --fdisp2
+   (literal fallbacks baked in so it renders standalone).
+   ============================================================ */
+
+.fut{
+  --c1:var(--bg2,#0f1f3e);
+  --c2:var(--bg,#050a16);
+  --edge:var(--accent,#2b8cff);
+  --glow:var(--accent2,#56e0ff);
+  --ink:var(--fg,#e9f2ff);
+  /* blade silhouette: sheared TR + BL corners, micro-notches */
+  --shard:polygon(
+    0 0,
+    72% 0, 100% 13%,
+    100% 88%,
+    100% 100%, 28% 100%, 0 87%,
+    0 12%);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  aspect-ratio:5/7;
+  padding:0;
+  overflow:hidden;
+  isolation:isolate;
+  text-decoration:none;
+  color:var(--ink);
+  -webkit-clip-path:var(--shard);
+  clip-path:var(--shard);
+  background:
+    linear-gradient(152deg,
+      color-mix(in srgb,var(--c1) 92%,var(--edge) 8%) 0%,
+      var(--c2) 58%,
+      color-mix(in srgb,#000 35%,var(--c2)) 100%);
+  font-family:var(--fdisp,'Bricolage Grotesque',system-ui,sans-serif);
+  transition:transform .22s cubic-bezier(.2,.7,.2,1.2),filter .22s ease;
+  filter:drop-shadow(0 14px 30px rgba(0,0,0,.6))
+         drop-shadow(0 0 16px color-mix(in srgb,var(--edge) 30%,transparent));
+}
+.fut:hover{
+  transform:translateY(-8px) scale(1.012) rotate(-.6deg);
+  filter:drop-shadow(0 22px 46px rgba(0,0,0,.7))
+         drop-shadow(0 0 26px color-mix(in srgb,var(--glow) 55%,transparent));
+}
+
+/* ---- glowing shard frame (pseudo outline that follows the clip) ---- */
+.fut::before{
+  content:"";position:absolute;inset:0;z-index:5;pointer-events:none;
+  -webkit-clip-path:var(--shard);clip-path:var(--shard);
+  padding:2px;
+  background:linear-gradient(150deg,
+    var(--glow) 0%,
+    var(--edge) 26%,
+    transparent 42%,
+    transparent 60%,
+    var(--edge) 78%,
+    var(--glow) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  opacity:.9;
+}
+/* faceted highlight wedges + inner energy glow */
+.fut::after{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    /* top-right facet sheen */
+    linear-gradient(218deg,color-mix(in srgb,var(--glow) 26%,transparent) 0%,transparent 22%),
+    /* bottom-left facet sheen */
+    linear-gradient(38deg,color-mix(in srgb,var(--edge) 22%,transparent) 0%,transparent 20%),
+    /* core energy bloom */
+    radial-gradient(120% 80% at 50% 38%,color-mix(in srgb,var(--edge) 16%,transparent),transparent 70%);
+}
+
+/* ---- foil / scanline overlay ---- */
+.fut-sheen{
+  position:absolute;inset:0;z-index:6;pointer-events:none;
+  -webkit-clip-path:var(--shard);clip-path:var(--shard);
+  background-image:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.045) 0 1px,transparent 1px 3px),
+    linear-gradient(115deg,transparent 38%,rgba(255,255,255,.32) 48%,transparent 58%);
+  background-size:100% 100%,260% 260%;
+  background-position:0 0,135% 0;
+  mix-blend-mode:screen;opacity:.6;
+  transition:background-position .65s ease;
+}
+.fut:hover .fut-sheen{background-position:0 0,-35% 0}
+
+/* ============================ HERO ============================ */
+.fut-hero{
+  position:relative;flex:1;min-height:0;width:100%;
+  display:flex;align-items:center;justify-content:center;
+  z-index:2;overflow:hidden;
+  /* diagonal energy sweep across the portrait area */
+  background:
+    linear-gradient(125deg,
+      color-mix(in srgb,var(--glow) 22%,transparent) 0%,
+      transparent 30%,
+      transparent 64%,
+      color-mix(in srgb,var(--edge) 30%,transparent) 100%),
+    repeating-linear-gradient(122deg,
+      transparent 0 22px,
+      color-mix(in srgb,var(--edge) 7%,transparent) 22px 23px);
+}
+/* angled energy beam shooting through the hero */
+.fut-hero::before{
+  content:"";position:absolute;top:-20%;left:-30%;width:80%;height:160%;z-index:0;
+  background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--glow) 55%,transparent),transparent);
+  transform:rotate(24deg);filter:blur(14px);opacity:.45;
+  animation:shardBeam 6s ease-in-out infinite;
+}
+@keyframes shardBeam{
+  0%,100%{transform:rotate(24deg) translateX(-30%);opacity:.28}
+  50%{transform:rotate(24deg) translateX(70%);opacity:.6}
+}
+
+/* huge ghosted monogram = HUD focal graphic */
+.fut-mono{
+  position:relative;z-index:1;
+  font-family:var(--fdisp2,'Saira Condensed',system-ui,sans-serif);
+  font-weight:800;font-size:84px;line-height:.8;letter-spacing:-.04em;
+  text-transform:uppercase;
+  color:transparent;
+  background:linear-gradient(180deg,
+    color-mix(in srgb,var(--glow) 80%,#fff) 0%,
+    color-mix(in srgb,var(--edge) 70%,transparent) 60%,
+    transparent 100%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-stroke:1px color-mix(in srgb,var(--glow) 45%,transparent);
+  opacity:.5;
+  text-shadow:0 0 26px color-mix(in srgb,var(--edge) 45%,transparent);
+  transform:translateY(-2%);
+  transition:opacity .25s,letter-spacing .25s;
+}
+.fut:hover .fut-mono{opacity:.72;letter-spacing:-.02em}
+/* faint HUD targeting brackets framing the monogram */
+.fut-mono::before,.fut-mono::after{
+  content:"";position:absolute;width:18px;height:18px;
+  border:2px solid color-mix(in srgb,var(--glow) 60%,transparent);opacity:.5;
+}
+.fut-mono::before{top:-12px;left:-16px;border-right:0;border-bottom:0}
+.fut-mono::after{bottom:-12px;right:-16px;border-left:0;border-top:0}
+
+/* player photo (when present) */
+.fut-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:top center;z-index:1;
+  -webkit-mask:linear-gradient(180deg,#000 70%,transparent 100%);
+  mask:linear-gradient(180deg,#000 70%,transparent 100%);
+}
+
+/* ============================ RAIL ============================ */
+.fut-rail{
+  position:absolute;top:0;left:0;z-index:4;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  padding:13px 9px 13px 8px;
+  background:linear-gradient(180deg,
+    color-mix(in srgb,#000 42%,transparent),
+    color-mix(in srgb,var(--c2) 70%,transparent));
+  -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+  -webkit-clip-path:polygon(0 0,100% 0,100% 88%,0 100%);
+  clip-path:polygon(0 0,100% 0,100% 88%,0 100%);
+  border-right:1px solid color-mix(in srgb,var(--edge) 45%,transparent);
+}
+
+/* OVR on an angled energy slab */
+.fut-ovr{
+  position:relative;display:flex;flex-direction:column;align-items:center;
+  line-height:.82;padding:6px 8px 5px;margin:-2px -3px 1px;
+  background:linear-gradient(140deg,var(--edge),color-mix(in srgb,var(--glow) 60%,var(--edge)));
+  -webkit-clip-path:polygon(0 8%,100% 0,100% 92%,0 100%);
+  clip-path:polygon(0 8%,100% 0,100% 92%,0 100%);
+  box-shadow:0 0 14px -2px color-mix(in srgb,var(--glow) 70%,transparent);
+  transform:skewY(-4deg);
+}
+.fut-ovr b{
+  font-family:var(--fdisp2,'Saira Condensed',system-ui,sans-serif);
+  font-weight:800;font-size:26px;color:#031022;
+  text-shadow:0 1px 0 color-mix(in srgb,#fff 40%,transparent);
+  font-variant-numeric:tabular-nums;
+}
+.fut-ovr span{
+  font-weight:800;font-size:9.5px;letter-spacing:.12em;
+  color:#03142b;text-transform:uppercase;
+}
+
+.fut-rdiv{
+  width:20px;height:2px;
+  background:linear-gradient(90deg,transparent,var(--glow),transparent);
+  box-shadow:0 0 6px color-mix(in srgb,var(--glow) 80%,transparent);
+}
+
+.flagi{
+  width:24px;height:16px;object-fit:cover;display:block;
+  border-radius:2px;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--edge) 70%,transparent),0 1px 4px rgba(0,0,0,.5);
+}
+
+.fut-num{
+  font-family:var(--fmono,'IBM Plex Mono',monospace);
+  font-size:10px;font-weight:700;color:var(--glow,#56e0ff);
+  letter-spacing:.04em;
+  text-shadow:0 0 8px color-mix(in srgb,var(--glow) 60%,transparent);
+}
+.fut-cap{
+  display:flex;align-items:center;justify-content:center;
+  width:16px;height:16px;font-size:9px;font-weight:800;color:#031022;
+  background:linear-gradient(140deg,var(--gold,#ffd23d),#caa01f);
+  -webkit-clip-path:polygon(50% 0,100% 30%,82% 100%,18% 100%,0 30%);
+  clip-path:polygon(50% 0,100% 30%,82% 100%,18% 100%,0 30%);
+  box-shadow:0 0 8px -1px color-mix(in srgb,var(--gold,#ffd23d) 70%,transparent);
+}
+
+/* ============================ NAME ============================ */
+.fut-name{
+  position:relative;z-index:4;width:100%;
+  font-family:var(--fdisp,'Bricolage Grotesque',system-ui,sans-serif);
+  font-weight:800;text-transform:uppercase;font-size:13.5px;letter-spacing:.01em;
+  text-align:center;padding:7px 14px 6px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:var(--ink,#e9f2ff);
+  background:linear-gradient(90deg,
+    transparent,
+    color-mix(in srgb,var(--edge) 18%,transparent) 50%,
+    transparent);
+  border-top:1px solid color-mix(in srgb,var(--edge) 55%,transparent);
+  border-bottom:1px solid color-mix(in srgb,var(--edge) 35%,transparent);
+  text-shadow:0 0 14px color-mix(in srgb,var(--edge) 45%,transparent);
+}
+/* angled accent tick under the name */
+.fut-name::after{
+  content:"";position:absolute;left:50%;bottom:2px;transform:translateX(-50%) skewX(-22deg);
+  width:34px;height:2px;background:var(--glow,#56e0ff);
+  box-shadow:0 0 8px var(--glow,#56e0ff);
+}
+
+/* ============================ STATS ============================ */
+.fut-stats{
+  position:relative;z-index:4;
+  display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;
+  width:100%;padding:9px 16px 16px;
+  background:linear-gradient(180deg,transparent,color-mix(in srgb,#000 30%,transparent));
+}
+.fut-stats span{
+  display:flex;align-items:baseline;justify-content:space-between;gap:6px;
+  padding-bottom:3px;
+  border-bottom:1px solid color-mix(in srgb,var(--edge) 16%,transparent);
+}
+.fut-stats b{
+  font-family:var(--fdisp2,'Saira Condensed',system-ui,sans-serif);
+  font-weight:800;font-size:15px;color:var(--glow,#56e0ff);
+  font-variant-numeric:tabular-nums;line-height:1;
+}
+.fut-stats i{
+  font-style:normal;font-size:8.5px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--fg-dim,#90a6d0);
+}
+
+/* ============================ BADGE ============================ */
+.fut-badge{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:7;
+  font-family:var(--fdisp,'Bricolage Grotesque',system-ui,sans-serif);
+  font-weight:800;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+  padding:4px 16px 5px;color:#031022;
+  background:linear-gradient(135deg,var(--glow,#56e0ff),var(--edge,#2b8cff));
+  -webkit-clip-path:polygon(12% 0,88% 0,100% 100%,0 100%);
+  clip-path:polygon(12% 0,88% 0,100% 100%,0 100%);
+  box-shadow:0 0 16px -2px color-mix(in srgb,var(--glow) 70%,transparent);
+}
+
+/* ============================================================
+   TIER VARIANTS — each clearly distinct
+   ============================================================ */
+
+/* GOLD — cobalt base with warm gold energy edges */
+.fut.gold{
+  --c1:#13284a;--c2:#070f22;
+  --edge:var(--gold,#ffd23d);
+  --glow:#ffe487;
+  --ink:#fff4d6;
+}
+.fut.gold .fut-mono{
+  -webkit-text-stroke-color:color-mix(in srgb,var(--gold,#ffd23d) 50%,transparent);
+}
+
+/* SILVER — cool steel / ice */
+.fut.silver{
+  --c1:#1a2740;--c2:#0a1322;
+  --edge:#b9cbe6;
+  --glow:#e6f0ff;
+  --ink:#eef4ff;
+}
+
+/* BRONZE — dim copper-blue, low energy */
+.fut.bronze{
+  --c1:#1c2236;--c2:#0a0f1c;
+  --edge:#c98a5a;
+  --glow:#e8b07c;
+  --ink:#f3dcc6;
+}
+.fut.bronze::before{opacity:.7}
+.fut.bronze .fut-mono{opacity:.4}
+
+/* SPECIAL — peak electric cyan superstar (the signature look) */
+.fut.special{
+  --c1:#0d2444;--c2:#04101f;
+  --edge:var(--accent,#2b8cff);
+  --glow:var(--accent2,#56e0ff);
+  --ink:#eafaff;
+  filter:drop-shadow(0 16px 34px rgba(0,0,0,.65))
+         drop-shadow(0 0 22px color-mix(in srgb,var(--accent2,#56e0ff) 45%,transparent));
+}
+.fut.special::before{
+  opacity:1;
+  background:linear-gradient(150deg,
+    var(--glow) 0%,var(--edge) 22%,transparent 40%,
+    transparent 58%,var(--edge) 76%,var(--glow) 100%);
+  animation:shardBeamFrame 4.5s linear infinite;
+  background-size:100% 300%;
+}
+.fut.special .fut-mono{opacity:.62}
+@keyframes shardBeamFrame{
+  0%{background-position:0 0}
+  100%{background-position:0 300%}
+}
+
+/* LEGEND — regal gold/white royalty, max prestige */
+.fut.legend{
+  --c1:#1a2238;--c2:#0a0d1a;
+  --edge:var(--gold,#ffd23d);
+  --glow:#fff3c4;
+  --ink:#fff6dd;
+  filter:drop-shadow(0 16px 36px rgba(0,0,0,.7))
+         drop-shadow(0 0 26px color-mix(in srgb,var(--gold,#ffd23d) 50%,transparent));
+}
+.fut.legend::before{
+  opacity:1;padding:2.5px;
+  background:linear-gradient(150deg,
+    #fff7dd 0%,var(--gold,#ffd23d) 24%,#a87f12 44%,
+    transparent 54%,#a87f12 66%,var(--gold,#ffd23d) 82%,#fff7dd 100%);
+}
+.fut.legend .fut-hero{
+  background:
+    linear-gradient(125deg,
+      color-mix(in srgb,#fff3c4 24%,transparent) 0%,transparent 32%,
+      transparent 62%,color-mix(in srgb,var(--gold,#ffd23d) 32%,transparent) 100%),
+    repeating-linear-gradient(122deg,transparent 0 22px,
+      color-mix(in srgb,var(--gold,#ffd23d) 8%,transparent) 22px 23px);
+}
+.fut.legend .fut-ovr b,.fut.legend .fut-ovr span{color:#2a1d02}
+.fut.legend .fut-num,.fut.legend .fut-stats b{color:var(--glow)}
+
+/* RISING — youthful cyan→magenta upward energy */
+.fut.rising{
+  --c1:#142a44;--c2:#0a1020;
+  --edge:var(--magenta,#ff3d8b);
+  --glow:var(--accent2,#56e0ff);
+  --ink:#fdeaf3;
+}
+.fut.rising::before{
+  background:linear-gradient(150deg,
+    var(--accent2,#56e0ff) 0%,var(--accent,#2b8cff) 30%,transparent 46%,
+    transparent 56%,var(--magenta,#ff3d8b) 74%,#ff7fb4 100%);
+  opacity:1;
+}
+.fut.rising .fut-hero{
+  background:
+    linear-gradient(125deg,
+      color-mix(in srgb,var(--accent2,#56e0ff) 24%,transparent) 0%,transparent 34%,
+      transparent 60%,color-mix(in srgb,var(--magenta,#ff3d8b) 30%,transparent) 100%),
+    repeating-linear-gradient(122deg,transparent 0 22px,
+      color-mix(in srgb,var(--accent,#2b8cff) 8%,transparent) 22px 23px);
+}
+.fut.rising .fut-ovr{
+  background:linear-gradient(140deg,var(--magenta,#ff3d8b),var(--accent,#2b8cff));
+}
+.fut.rising .fut-ovr b,.fut.rising .fut-ovr span{color:#fff}
+
+/* ============================ BIG SIZE ============================ */
+.fut.big{width:264px;max-width:100%}
+.fut.big .fut-mono{font-size:108px}
+.fut.big .fut-ovr b{font-size:34px}
+.fut.big .fut-ovr span{font-size:11px}
+.fut.big .fut-name{font-size:17px;padding:9px 16px 8px}
+.fut.big .fut-stats{padding:11px 20px 20px;gap:6px 14px}
+.fut.big .fut-stats b{font-size:19px}
+.fut.big .fut-stats i{font-size:9.5px}
+.fut.big .flagi{width:30px;height:20px}
+.fut.big .fut-num{font-size:12px}
+.fut.big .fut-badge{font-size:10px;padding:5px 20px 6px}
+
+/* ============================ A11Y ============================ */
+@media (prefers-reduced-motion:reduce){
+  .fut,.fut-sheen,.fut-mono{transition:none}
+  .fut-hero::before,.fut.special::before{animation:none}
+  .fut:hover{transform:translateY(-4px)}
+}
+  </style></head><body>
+  <div class="lbl">energy-shard — Energy Shard</div>
+  <div class="row"><a class="fut special big" href="#">
+    <div class="fut-sheen"></div>
+    <span class="fut-badge">SUPERSTAR</span>
+    <div class="fut-hero">
+      <span class="fut-mono">LM</span>
+      <div class="fut-rail">
+        <div class="fut-ovr"><b>92</b><span>FW</span></div>
+        <span class="fut-rdiv"></span>
+        <img class="flagi" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20'%3E%3Crect width='10' height='20' fill='%2375aadb'/%3E%3Crect x='10' width='10' height='20' fill='%23fff'/%3E%3Crect x='20' width='10' height='20' fill='%2375aadb'/%3E%3C/svg%3E" alt=""/>
+        <span class="fut-num">10</span>
+        <span class="fut-cap">C</span>
+      </div>
+    </div>
+    <div class="fut-name">LIONEL MESSI</div>
+    <div class="fut-stats"><span><b>43</b><i>GLS</i></span><span><b>8</b><i>AST</i></span><span><b>12</b><i>CG</i></span><span><b>34</b><i>APP</i></span><span><b>112</b><i>CAP</i></span><span><b>31</b><i>AGE</i></span></div>
+  </a><a class="fut legend big" href="#">
+    <div class="fut-sheen"></div>
+    <span class="fut-badge">LEGEND</span>
+    <div class="fut-hero">
+      <span class="fut-mono">BF</span>
+      <div class="fut-rail">
+        <div class="fut-ovr"><b>97</b><span>MF</span></div>
+        <span class="fut-rdiv"></span>
+        <img class="flagi" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20'%3E%3Crect width='10' height='20' fill='%2375aadb'/%3E%3Crect x='10' width='10' height='20' fill='%23fff'/%3E%3Crect x='20' width='10' height='20' fill='%2375aadb'/%3E%3C/svg%3E" alt=""/>
+        <span class="fut-num">8</span>
+        
+      </div>
+    </div>
+    <div class="fut-name">BRUNO FERNANDES</div>
+    <div class="fut-stats"><span><b>43</b><i>GLS</i></span><span><b>8</b><i>AST</i></span><span><b>12</b><i>CG</i></span><span><b>34</b><i>APP</i></span><span><b>112</b><i>CAP</i></span><span><b>31</b><i>AGE</i></span></div>
+  </a><a class="fut gold big" href="#">
+    <div class="fut-sheen"></div>
+    
+    <div class="fut-hero">
+      <span class="fut-mono">VD</span>
+      <div class="fut-rail">
+        <div class="fut-ovr"><b>86</b><span>DF</span></div>
+        <span class="fut-rdiv"></span>
+        <img class="flagi" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20'%3E%3Crect width='10' height='20' fill='%2375aadb'/%3E%3Crect x='10' width='10' height='20' fill='%23fff'/%3E%3Crect x='20' width='10' height='20' fill='%2375aadb'/%3E%3C/svg%3E" alt=""/>
+        <span class="fut-num">4</span>
+        
+      </div>
+    </div>
+    <div class="fut-name">VIRGIL VAN DIJK</div>
+    <div class="fut-stats"><span><b>43</b><i>GLS</i></span><span><b>8</b><i>AST</i></span><span><b>12</b><i>CG</i></span><span><b>34</b><i>APP</i></span><span><b>112</b><i>CAP</i></span><span><b>31</b><i>AGE</i></span></div>
+  </a><a class="fut silver big" href="#">
+    <div class="fut-sheen"></div>
+    
+    <div class="fut-hero">
+      <span class="fut-mono">GD</span>
+      <div class="fut-rail">
+        <div class="fut-ovr"><b>74</b><span>GK</span></div>
+        <span class="fut-rdiv"></span>
+        <img class="flagi" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20'%3E%3Crect width='10' height='20' fill='%2375aadb'/%3E%3Crect x='10' width='10' height='20' fill='%23fff'/%3E%3Crect x='20' width='10' height='20' fill='%2375aadb'/%3E%3C/svg%3E" alt=""/>
+        <span class="fut-num">1</span>
+        
+      </div>
+    </div>
+    <div class="fut-name">GIANLUIGI DONNARUMMA</div>
+    <div class="fut-stats"><span><b>43</b><i>GLS</i></span><span><b>8</b><i>AST</i></span><span><b>12</b><i>CG</i></span><span><b>34</b><i>APP</i></span><span><b>112</b><i>CAP</i></span><span><b>31</b><i>AGE</i></span></div>
+  </a></div>
+  </body></html>
