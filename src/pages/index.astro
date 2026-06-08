@@ -17,10 +17,6 @@ const topScorer = [...P].sort((a, b) => (b.international_goals || 0) - (a.intern
 const clubCount = {}; P.forEach(p => { if (p.club) clubCount[p.club] = (clubCount[p.club] || 0) + 1; });
 const topClub = Object.entries(clubCount).sort((a, b) => b[1] - a[1])[0];
 const pUrl = p => `${B}players/${p.player_id}/`;
-// hero clash: Messi vs Ronaldo
-const find = n => P.find(p => p.player_name.includes(n));
-const messi = find('Messi'), ronaldo = find('Cristiano Ronaldo');
-const ARGc = '#7cb0e0', PORc = '#d2342c';
 
 const tiles = [
   { big: youngest?.age, img: flagImg(youngest?.fifa_code), lab: 'Youngest player', sub: youngest?.player_name + ' · ' + youngest?.club, href: pUrl(youngest) },
@@ -60,40 +56,45 @@ const jsonld = [
 ---
 <Base title="WC26 Matchday — FIFA World Cup 2026 Squads, Lineups & Bracket" description="Explore every 2026 FIFA World Cup squad, projected lineup, club and match — 1,247 players across 48 teams and 104 matches, with a live countdown, interactive bracket and comparisons." jsonld={jsonld}>
   <div class="app-page">
-  <section class="clash reveal" data-target={target}>
-    <a class="clash-side left" style={`--col:${ARGc}`} href={messi ? pUrl(messi) : B + 'teams/arg/'}>
-      <img class="clash-photo" src={B + 'hero/messi.png'} alt="Lionel Messi" onerror="this.remove()" />
-      <span class="clash-num">10</span>
-      <div class="clash-info">
-        <div class="clash-nm"><img class="flagi" src={flagImg('ARG')} alt="" /> Messi</div>
-        <div class="clash-club">Argentina · Inter Miami</div>
-        <div class="clash-st"><span><b>{messi?.international_goals ?? 116}</b>goals</span><span><b>{messi?.caps ?? 198}</b>caps</span><span><b>{messi?.age ?? 38}</b>age</span></div>
-      </div>
-    </a>
-
-    <div class="clash-mid">
-      <div class="clash-tag">The last dance</div>
-      <div class="clash-vs">VS</div>
-      <div class="clash-cd" id="cd" data-target={target}>
-        <span class="clash-cdt">Kickoff in</span>
-        <span><b id="cd-d">–</b>d</span><span><b id="cd-h">–</b>h</span><span><b id="cd-m">–</b>m</span><span><b id="cd-s">–</b>s</span>
-      </div>
-      <div class="clash-lede">Two icons, likely their final World Cup. Explore every squad, lineup and match of the first 48-team finals.</div>
+  <section class="lhero2 reveal">
+    <div class="lh-bg" aria-hidden="true"></div>
+    <div class="lh-main">
+      <div class="lh-eye"><span class="lh-dot"></span> Jun 11 – Jul 19, 2026 · United States · Canada · Mexico</div>
+      <h1>The first <span class="accent">48-team</span><br /> World Cup.</h1>
+      <p class="lh-lede">Every squad, projected lineup, club and match of the 2026 finals — researched, ranked and mapped. {num(P.length)} players, {DB.teams.length} teams, {DB.matches.length} matches.</p>
       <div class="lbtns">
         <a class="btn primary" href={B + 'teams/'}>Explore teams</a>
-        <a class="btn" href={B + 'compare/'}>Compare them</a>
+        <a class="btn" href={B + 'leaderboard/'}>Player ranking</a>
+        <a class="btn" href={B + 'bracket/'}>View bracket</a>
+      </div>
+      <div class="lh-stats">
+        <a href={B + 'teams/'}><b>{DB.teams.length}</b><span>Teams</span></a>
+        <a href={B + 'players/'}><b>{num(P.length)}</b><span>Players</span></a>
+        <a href={B + 'matches/'}><b>{DB.matches.length}</b><span>Matches</span></a>
+        <a href={B + 'map/'}><b>{(DB.cities && DB.cities.length) || 16}</b><span>Host cities</span></a>
       </div>
     </div>
-
-    <a class="clash-side right" style={`--col:${PORc}`} href={ronaldo ? pUrl(ronaldo) : B + 'teams/por/'}>
-      <img class="clash-photo" src={B + 'hero/ronaldo.png'} alt="Cristiano Ronaldo" onerror="this.remove()" />
-      <span class="clash-num">7</span>
-      <div class="clash-info">
-        <div class="clash-nm">Ronaldo <img class="flagi" src={flagImg('POR')} alt="" /></div>
-        <div class="clash-club">Portugal · Al-Nassr</div>
-        <div class="clash-st"><span><b>{ronaldo?.international_goals ?? 143}</b>goals</span><span><b>{ronaldo?.caps ?? 227}</b>caps</span><span><b>{ronaldo?.age ?? 41}</b>age</span></div>
-      </div>
-    </a>
+    <aside class="lh-side">
+      <a class="lh-cd" href={B + 'matches/1/'} id="cd" data-target={target}>
+        <div class="cd-lab">Kickoff in</div>
+        <div class="cd-clock">
+          <span><b id="cd-d">–</b><i>days</i></span>
+          <span><b id="cd-h">–</b><i>hrs</i></span>
+          <span><b id="cd-m">–</b><i>min</i></span>
+          <span><b id="cd-s">–</b><i>sec</i></span>
+        </div>
+        <div class="cd-match">
+          <img class="flagi" src={flagImg(ht.fifa_code)} alt="" /><span>{ht.team_name}</span>
+          <em>vs</em>
+          <span>{at.team_name}</span><img class="flagi" src={flagImg(at.fifa_code)} alt="" />
+        </div>
+        <div class="cd-meta">{c1 ? c1.city_name + ' · ' : ''}Opening match</div>
+      </a>
+      <a class="duel" href={B + 'compare/'}>
+        <div class="duel-flags"><img class="flagi" src={flagImg('ARG')} alt="Argentina" /><span>×</span><img class="flagi" src={flagImg('POR')} alt="Portugal" /></div>
+        <div class="duel-txt"><b>The last dance</b><span class="faint">Messi &amp; Ronaldo — likely their final World Cup. Compare them →</span></div>
+      </a>
+    </aside>
   </section>
 
   <div class="marquee reveal d1" aria-hidden="true">
