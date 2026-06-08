@@ -2,7 +2,7 @@
 import Base from '@app/layouts/Base.astro';
 import Flag from '@shared/ui/Flag.astro';
 import DB from '../../../public/data.json';
-import { indexes, autoForm, pickXI, FORMATIONS, surname, num, money, avgAge } from '@shared/lib/wc.js';
+import { indexes, autoForm, pickXI, FORMATIONS, surname, num, money, avgAge, rating, teamRating } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const HOME = '#e9bb4c', AWAY = '#5b9cff';
 const IDX = indexes(DB);
@@ -44,9 +44,23 @@ const tape = (ht && at) ? [
   metric('Intl goals', sum(ht, 'international_goals'), sum(at, 'international_goals'), num, 'high'),
   metric('Avg age', aa(ht), aa(at), x => x ? x.toFixed(1) : '—', null),
 ] : [];
-// key man per side
-const star = t => [...(IDX.playersByTeam[t.fifa_code] || [])].sort((a, b) => (b.international_goals || 0) - (a.international_goals || 0))[0];
+// key man per side = highest-rated player
+const star = t => [...(IDX.playersByTeam[t.fifa_code] || [])].sort((a, b) => rating(b) - rating(a))[0];
 const sH = ht && star(ht), sA = at && star(at);
+
+// match prediction — win probabilities from the squad-strength gap
+const tr = t => teamRating(t.fifa_ranking) ?? 60;
+let pred = null, fav = null;
+if (ht && at) {
+  const e = 1 / (1 + Math.pow(10, -(tr(ht) - tr(at)) / 11));   // home expected score
+  const pd = 0.32 * (1 - Math.abs(2 * e - 1));                 // draw likeliest when even
+  let ph = Math.max(0, e - pd / 2), pa = Math.max(0, (1 - e) - pd / 2);
+  const s = ph + pd + pa;
+  pred = { h: Math.round(ph / s * 100), d: Math.round(pd / s * 100), a: 0 };
+  pred.a = 100 - pred.h - pred.d;
+  fav = pred.h > pred.a && pred.h >= pred.d ? ht.team_name
+      : pred.a > pred.h && pred.a >= pred.d ? at.team_name : null;
+}
 
 const lbl = (m.match_label || '').split(/\s+vs\s+/);
 const titleTeams = ht && at ? `${ht.team_name} vs ${at.team_name}` : m.match_label;
@@ -60,7 +74,7 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
     <div class="ms-team">
       {ht ? <Flag code={ht.fifa_code} cls="lg" /> : <div class="ms-slot">{lbl[0]}</div>}
       <div class="ms-name">{ht ? ht.team_name : 'TBD'}</div>
-      {ht && <div class="ms-sub">{ht.head_coach} · FIFA {ht.fifa_ranking ? '#' + ht.fifa_ranking : '—'}</div>}
+      {ht && <div class="ms-sub">{ht.head_coach} · FIFA {ht.fifa_ranking ? '#' + ht.fifa_ranking : '—'} · <b class="ms-rate">{tr(ht)}</b> rating</div>}
     </div>
     <div class="ms-vs">
       <div class="ms-stage">{m.stage}</div>
@@ -71,14 +85,30 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
     <div class="ms-team">
       {at ? <Flag code={at.fifa_code} cls="lg" /> : <div class="ms-slot">{lbl[1]}</div>}
       <div class="ms-name">{at ? at.team_name : 'TBD'}</div>
-      {at && <div class="ms-sub">{at.head_coach} · FIFA {at.fifa_ranking ? '#' + at.fifa_ranking : '—'}</div>}
+      {at && <div class="ms-sub">{at.head_coach} · FIFA {at.fifa_ranking ? '#' + at.fifa_ranking : '—'} · <b class="ms-rate">{tr(at)}</b> rating</div>}
     </div>
   </section>
   <div class="ms-meta faint">{m.venue}, {m.city}, {m.country} · {(m.kickoff_at || '').replace('T', ' ')}</div>
 
   <div class="app-grow scroll">
+  {pred && (
+    <section class="panel predict">
+      <h3><span class="tag">Match prediction</span> <span class="faint">projected from squad strength</span></h3>
+      <div class="pred-bar">
+        {pred.h > 0 && <div class="pred-seg pred-h" style={`width:${pred.h}%`}>{pred.h}%</div>}
+        {pred.d > 0 && <div class="pred-seg pred-d" style={`width:${pred.d}%`}>{pred.d}%</div>}
+        {pred.a > 0 && <div class="pred-seg pred-a" style={`width:${pred.a}%`}>{pred.a}%</div>}
+      </div>
+      <div class="pred-leg">
+        <span><span class="dotg" style={`background:${HOME}`}></span> {ht.team_name} win</span>
+        <span>Draw</span>
+        <span>{at.team_name} win <span class="dotb" style={`background:${AWAY}`}></span></span>
+      </div>
+      <div class="pred-call faint">{fav ? `${fav} favoured` : 'Too close to call — a coin-flip'} · {Math.abs(tr(ht) - tr(at)) <= 2 ? 'even matchup' : 'clear rating edge'}.</div>
+    </section>
+  )}
   {ht && at ? (
-    <div class="grid2" style="margin-top:16px">
+    <div class="grid2">
       <div class="panel">
         <h3>Tale of the tape</h3>
         <div class="tot-head"><span class="dotg"></span>{ht.team_name}<span style="flex:1"></span>{at.team_name}<span class="dotb"></span></div>
@@ -95,12 +125,12 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
           {[[sH, ht, HOME], [sA, at, AWAY]].map(([s, t, c]) => s && (
             <a class="duelman" href={`${B}players/${s.player_id}/`}>
               <div class="duel-num" style={`color:${c}`}>{s.shirt_number ?? ''}</div>
-              <div><div class="duel-nm">{s.player_name}</div><div class="faint" style="font-size:12px">{s.club}</div>
+              <div><div class="duel-nm">{s.player_name} <span class="duel-ovr">{rating(s)}</span></div><div class="faint" style="font-size:12px">{s.club}</div>
                 <div class="duel-st"><b>{s.international_goals ?? 0}</b> goals · <b>{s.caps ?? 0}</b> caps</div></div>
             </a>
           ))}
         </div>
-        <div class="faint" style="font-size:12px;margin-top:10px">Top international scorer in each squad.</div>
+        <div class="faint" style="font-size:12px;margin-top:10px">Best-rated player in each squad.</div>
       </div>
     </div>
   ) : (
