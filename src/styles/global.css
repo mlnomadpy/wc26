@@ -797,3 +797,40 @@ body{background:
 .pfacts{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:8px}
 .pfacts li{position:relative;padding:9px 13px 9px 34px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;font-size:13px}
 .pfacts li::before{content:"★";position:absolute;left:13px;color:var(--accent)}
+
+/* ============================================================================
+   v12 — full-width app layout + compact headers (less chrome, more content)
+   ============================================================================ */
+main{max-width:none;padding:10px 20px 20px}
+.foot{max-width:none;padding:7px 20px}
+.topbar{height:54px;padding:0 18px}
+/* compact page headers (index pages) */
+.phead{padding:12px 2px 10px}
+.phead::before{display:none}
+.phead h1{font-size:clamp(1.35rem,2.3vw,1.85rem);margin:2px 0}
+.phead .pe{font-size:10px;letter-spacing:.14em}
+.phead .psub{font-size:12px;margin-top:2px;max-width:80ch}
+.phead .pstat .s b{font-size:17px}
+.phead .pstat .s span{font-size:9px}
+/* compact detail hero (team / player) */
+.dhero{padding:13px 16px;gap:16px;margin-bottom:2px}
+.dhero .dh-flag{width:50px}
+.dhero .dh-num{font-size:34px;width:52px}
+.dhero h1{font-size:clamp(1.45rem,2.6vw,2rem);margin:2px 0 3px}
+.dhero .dh-eye{font-size:10px}
+.dhero .dh-meta{font-size:12.5px}
+.dhero .dh-bg{width:220px;height:150px}
+.thstat{padding:8px 13px;min-width:62px}
+.thstat b{font-size:18px}
+/* compact match scoreboard */
+.mscore2{padding:16px 18px}
+.ms-team .flagi{width:50px}
+.ms-name{font-size:clamp(1.05rem,2vw,1.5rem)}
+.ms-meta{margin:7px 0 2px}
+/* compact home hero */
+.clash{min-height:clamp(250px,38vh,360px)}
+.lhero{padding:18px 4px 12px}
+/* tighter rhythm */
+h2.sec{margin:11px 2px 7px}
+.panel{margin:10px 0;padding:15px 17px}
+.subtabs{margin:8px 0 2px}
