@@ -2,30 +2,30 @@
 import Base from '@app/layouts/Base.astro';
 import Flag from '@shared/ui/Flag.astro';
 import DB from '../../../public/data.json';
-import { CONF, teamRating, indexes, rating, surname } from '@shared/lib/wc.js';
+import { CONF, teamRating, indexes, rating, surname, money } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const IX = indexes(DB);
-// rating is derived from FIFA world rank (teamRating) so it agrees with the badge.
 const star = (code) => {
   const sq = IX.playersByTeam[code] || [];
   if (!sq.length) return null;
   const p = [...sq].sort((a, b) => rating(b) - rating(a))[0];
-  return { name: p.player_name, surn: surname(p.player_name), ovr: rating(p), id: p.player_id };
+  return { surn: surname(p.player_name), name: p.player_name, ovr: rating(p) };
 };
+const sqVal = (code) => (IX.playersByTeam[code] || []).reduce((s, p) => s + (p.market_value_eur || 0), 0);
 const teams = [...DB.teams]
-  .map(t => ({ ...t, rating: teamRating(t.fifa_ranking), star: star(t.fifa_code) }))
+  .map(t => ({ ...t, rating: teamRating(t.fifa_ranking), star: star(t.fifa_code), val: sqVal(t.fifa_code) }))
   .sort((a, b) => (a.fifa_ranking || 999) - (b.fifa_ranking || 999));
 const confs = [...new Set(DB.teams.map(t => t.confederation))].sort();
 const rClass = (o) => o == null ? 'na' : o >= 84 ? 'hi' : o >= 76 ? 'mid' : 'lo';
-const SORTS = [['rank', 'Rank'], ['rating', 'Rating'], ['az', 'A–Z'], ['group', 'Group']];
+const SORTS = [['rank', 'Rank'], ['rating', 'Rating'], ['value', 'Value'], ['az', 'A–Z']];
 ---
-<Base title="Teams — FIFA World Cup 2026 (all 48 nations)" description="Browse and search all 48 FIFA World Cup 2026 nations by FIFA world rank, confederation, group and squad rating, each with its standout player. Open a team for its full squad, projected lineup and bench.">
+<Base title="Teams — FIFA World Cup 2026 (all 48 nations)" description="Browse, search and compare all 48 FIFA World Cup 2026 nations by FIFA world rank, confederation, group, squad rating, value and star player. View the field as a grid or by group.">
   <div class="app-page">
   <header class="phead">
     <div>
       <div class="pe">The field</div>
       <h1>All 48 nations</h1>
-      <p class="psub">Search by nation, confederation, group or star player — ranked by FIFA world rank with a squad rating and each side's standout name.</p>
+      <p class="psub">Search by nation, confederation, group or star player; sort by rank, rating or value; view as a grid or by group; or pick two to compare.</p>
     </div>
     <div class="pstat">
       <div class="s"><b>48</b><span>Teams</span></div>
@@ -43,6 +43,11 @@ const SORTS = [['rank', 'Rank'], ['rating', 'Rating'], ['az', 'A–Z'], ['group'
     <div class="chips" data-role="sort">
       {SORTS.map(([k, l], i) => <button class={`chip ${i === 0 ? 'on' : ''}`} data-sort={k}>{l}</button>)}
     </div>
+    <div class="chips" data-role="view">
+      <button class="chip on" data-view="grid">Grid</button>
+      <button class="chip" data-view="groups">Groups</button>
+    </div>
+    <button class="chip cmptoggle" id="cmpToggle">⊕ Compare</button>
     <span class="count" id="teamcount"></span>
   </div>
 
@@ -51,13 +56,15 @@ const SORTS = [['rank', 'Rank'], ['rating', 'Rating'], ['az', 'A–Z'], ['group'
       {teams.map(t => (
         <a class="teamcard" href={`${B}teams/${t.fifa_code.toLowerCase()}/`}
            data-conf={t.confederation} data-name={t.team_name} data-rank={t.fifa_ranking || 999}
-           data-rating={t.rating || 0} data-group={t.group_letter}
+           data-rating={t.rating || 0} data-value={t.val || 0} data-group={t.group_letter} data-code={t.fifa_code}
            data-search={`${t.team_name} ${t.confederation} group ${t.group_letter} ${t.head_coach || ''} ${t.star ? t.star.name : ''}`.toLowerCase()}
            style={`--cc:${CONF[t.confederation] || '#6b7a90'}`}>
           <span class="tc-rank">{t.fifa_ranking ? '#' + t.fifa_ranking : '—'}</span>
+          <span class="tc-sel" aria-hidden="true"></span>
           <span class="tc-flag"><Flag code={t.fifa_code} w={80} /></span>
           <span class="tc-name">{t.team_name}</span>
           <span class="tc-meta"><span class="tc-grp">Grp {t.group_letter}</span> · <span>{t.confederation}</span></span>
+          <span class="tc-coach">{t.head_coach || '—'}{t.val ? ' · ' + money(t.val) : ''}</span>
           {t.star && <span class="tc-star">★ {t.star.surn} <b>{t.star.ovr}</b></span>}
           <span class={`tc-ovr ${rClass(t.rating)}`}>{t.rating ?? '–'}<i>RATING</i></span>
         </a>
@@ -67,28 +74,46 @@ const SORTS = [['rank', 'Rank'], ['rating', 'Rating'], ['az', 'A–Z'], ['group'
   </div>
   </div>
 
+  <div class="cmpbar" id="cmpbar" hidden>
+    <span class="cmpbar-t" id="cmpsel">Pick two nations to compare</span>
+    <a class="btn primary" id="cmpgo" hidden>Compare →</a>
+    <button class="btn ghost" id="cmpclear">Cancel</button>
+  </div>
+
   <script>
+    const B = window.__B__ || '/';
     const dir = document.getElementById('teamdir');
     const cards = [...dir.querySelectorAll('.teamcard')];
     const countEl = document.getElementById('teamcount');
     const emptyEl = document.getElementById('teamempty');
     const q = document.getElementById('tq');
-    const confChips = [...document.querySelectorAll('#teamfilters .chips[data-role="conf"] .chip')];
-    const sortChips = [...document.querySelectorAll('#teamfilters .chips[data-role="sort"] .chip')];
-    let conf = '', sort = 'rank', term = '';
+    const grp = (sel) => [...document.querySelectorAll(`#teamfilters .chips[data-role="${sel}"] .chip`)];
+    const confChips = grp('conf'), sortChips = grp('sort'), viewChips = grp('view');
+    let conf = '', sort = 'rank', view = 'grid', term = '';
 
+    function cmp(a, b) {
+      if (sort === 'rating') return (+b.dataset.rating) - (+a.dataset.rating);
+      if (sort === 'value') return (+b.dataset.value) - (+a.dataset.value);
+      if (sort === 'az') return a.dataset.name.localeCompare(b.dataset.name);
+      return (+a.dataset.rank) - (+b.dataset.rank);
+    }
     function render() {
-      const arr = [...cards].sort((a, b) => {
-        if (sort === 'rating') return (+b.dataset.rating) - (+a.dataset.rating);
-        if (sort === 'az') return a.dataset.name.localeCompare(b.dataset.name);
-        if (sort === 'group') return a.dataset.group.localeCompare(b.dataset.group) || (+a.dataset.rank) - (+b.dataset.rank);
-        return (+a.dataset.rank) - (+b.dataset.rank);
-      });
-      let n = 0;
+      const groups = view === 'groups';
+      const arr = [...cards].sort((a, b) => groups
+        ? (a.dataset.group.localeCompare(b.dataset.group) || (+a.dataset.rank) - (+b.dataset.rank))
+        : cmp(a, b));
+      dir.querySelectorAll('.grouphead').forEach(h => h.remove());
+      let n = 0, lastG = null;
       arr.forEach(c => {
         const show = (!conf || c.dataset.conf === conf) && (!term || c.dataset.search.includes(term));
         c.classList.toggle('hide', !show);
-        if (show) n++;
+        if (show) {
+          if (groups && c.dataset.group !== lastG) {
+            const h = document.createElement('div'); h.className = 'grouphead'; h.textContent = 'Group ' + c.dataset.group;
+            dir.appendChild(h); lastG = c.dataset.group;
+          }
+          n++;
+        }
         dir.appendChild(c);
       });
       countEl.textContent = n + ' team' + (n === 1 ? '' : 's');
@@ -96,18 +121,37 @@ const SORTS = [['rank', 'Rank'], ['rating', 'Rating'], ['az', 'A–Z'], ['group'
     }
 
     q.addEventListener('input', () => { term = q.value.toLowerCase().trim(); render(); });
-    confChips.forEach(ch => ch.addEventListener('click', () => {
-      confChips.forEach(x => x.classList.remove('on')); ch.classList.add('on');
-      conf = ch.dataset.conf || ''; render();
-    }));
-    sortChips.forEach(ch => ch.addEventListener('click', () => {
-      sortChips.forEach(x => x.classList.remove('on')); ch.classList.add('on');
-      sort = ch.dataset.sort; render();
-    }));
+    confChips.forEach(ch => ch.addEventListener('click', () => { confChips.forEach(x => x.classList.remove('on')); ch.classList.add('on'); conf = ch.dataset.conf || ''; render(); }));
+    sortChips.forEach(ch => ch.addEventListener('click', () => { sortChips.forEach(x => x.classList.remove('on')); ch.classList.add('on'); sort = ch.dataset.sort; if (view !== 'groups') render(); }));
+    viewChips.forEach(ch => ch.addEventListener('click', () => { viewChips.forEach(x => x.classList.remove('on')); ch.classList.add('on'); view = ch.dataset.view; render(); }));
     render();
 
-    if (window.matchMedia('(hover:hover) and (pointer:fine)').matches &&
-        !window.matchMedia('(prefers-reduced-motion:reduce)').matches) {
+    // multi-select compare
+    const cmpBtn = document.getElementById('cmpToggle'), bar = document.getElementById('cmpbar');
+    const cmpSel = document.getElementById('cmpsel'), cmpGo = document.getElementById('cmpgo'), cmpClear = document.getElementById('cmpclear');
+    let comparing = false, sel = [];
+    function syncSel() {
+      cards.forEach(c => c.classList.toggle('sel', sel.includes(c.dataset.code)));
+      if (sel.length === 2) { cmpGo.hidden = false; cmpGo.href = `${B}compare/?a=${sel[0]}&b=${sel[1]}`; cmpSel.textContent = sel[0] + ' vs ' + sel[1]; }
+      else { cmpGo.hidden = true; cmpSel.textContent = sel.length ? sel[0] + ' — pick one more nation' : 'Pick two nations to compare'; }
+    }
+    function setCompare(on) {
+      comparing = on; dir.classList.toggle('comparing', on); bar.hidden = !on; cmpBtn.classList.toggle('on', on);
+      if (!on) { sel = []; cards.forEach(c => c.classList.remove('sel')); }
+    }
+    cmpBtn.addEventListener('click', () => setCompare(!comparing));
+    cmpClear.addEventListener('click', () => setCompare(false));
+    cards.forEach(c => c.addEventListener('click', e => {
+      if (!comparing) return;
+      e.preventDefault();
+      const code = c.dataset.code, i = sel.indexOf(code);
+      if (i >= 0) sel.splice(i, 1);
+      else if (sel.length < 2) sel.push(code);
+      syncSel();
+    }));
+
+    // cursor spotlight
+    if (window.matchMedia('(hover:hover) and (pointer:fine)').matches && !window.matchMedia('(prefers-reduced-motion:reduce)').matches) {
       cards.forEach(card => card.addEventListener('pointermove', e => {
         const r = card.getBoundingClientRect();
         card.style.setProperty('--mx', (e.clientX - r.left) + 'px');

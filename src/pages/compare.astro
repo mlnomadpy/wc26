@@ -61,8 +61,11 @@ const playerMetrics = DB.players.map(p => ({ id: p.player_id, name: p.player_nam
         out.innerHTML = `<div class="cmpwrap"><div>${radar(M.map(m => m[0]), av.map((v, i) => v / mx[i]), bv.map((v, i) => v / mx[i]), A.color, B.color)}</div><div><div class="cmpleg"><span style="color:${A.color}">● ${A.name} (${A.team})</span><span style="color:${B.color}">● ${B.name} (${B.team})</span></div>${M.map(([l, k]) => { const va = A[k], vb = B[k]; return `<div class="taperow"><span class="mono ${va > vb ? 'win' : ''}">${va.toLocaleString()}</span><span class="tl">${l}</span><span class="mono ${vb > va ? 'win' : ''}">${vb.toLocaleString()}</span></div>`; }).join('')}</div></div>`;
       }
     }
+    const PARAMS = new URLSearchParams(location.search);
     function build() {
-      if (mode === 'team') { a = a || 'ARG'; b = b || 'FRA';
+      if (mode === 'team') {
+        a = a || (TM.some(x => x.code === PARAMS.get('a')) ? PARAMS.get('a') : 'ARG');
+        b = b || (TM.some(x => x.code === PARAMS.get('b')) ? PARAMS.get('b') : 'FRA');
         selA.innerHTML = `<select id="ca">${opts(TM, a)}</select>`; selB.innerHTML = `<select id="cb">${opts(TM, b)}</select>`;
         document.getElementById('ca').onchange = e => { a = e.target.value; draw(); };
         document.getElementById('cb').onchange = e => { b = e.target.value; draw(); };
