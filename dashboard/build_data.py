@@ -120,29 +120,40 @@ def nv(p, k):
     v = p.get(k)
     return v if isinstance(v, (int, float)) else 0
 def _score(p):
-    g, c = nv(p, "international_goals"), nv(p, "caps")
-    cg, ca = nv(p, "club_goals_2025_26"), nv(p, "club_assists_2025_26")
-    ap, mn = nv(p, "club_apps_2025_26"), nv(p, "club_minutes_2025_26")
-    mv, cs = nv(p, "market_value_eur"), nv(p, "club_clean_sheets_2025_26")
-    val = math.log10(mv / 1e6 + 1) if mv else 0       # market value carries quality
-    invol = ap * 0.14 + (mn / 90) * 0.1 + c * 0.05    # caps weighted lightly
-    att = cg * 1.2 + ca * 0.8 + g * 0.4
+    # 2025/26 CLUB SEASON ONLY — no market value, no career caps/intl goals
+    ap = nv(p, "club_apps_2025_26")
+    mn = nv(p, "club_minutes_2025_26")
+    cg = nv(p, "club_goals_2025_26")
+    ca = nv(p, "club_assists_2025_26")
+    cs = nv(p, "club_clean_sheets_2025_26")
+    rc = nv(p, "club_red_2025_26")
+    vol = (mn / 90) if mn else ap * 0.85    # 90s played (regular-starter signal), fall back to apps
     pos = p.get("position")
-    if pos == "FW": return val * 9 + att + g * 0.4 + invol * 0.3
-    if pos == "MF": return val * 9 + att * 0.7 + ca * 0.4 + invol * 0.5 + c * 0.1
-    if pos == "DF": return val * 9 + invol * 0.7 + (cg + ca) * 0.4 + c * 0.1
-    return val * 9 + cs * 1.2 + ap * 0.25 + c * 0.08  # GK
-# z-score within position (normalises positions), then global percentile -> rating
+    if pos == "FW": return cg * 2.2 + ca * 1.1 + vol * 0.45
+    if pos == "MF": return ca * 1.8 + cg * 1.5 + vol * 0.55
+    if pos == "DF": return cs * 1.1 + (cg + ca) * 1.0 + vol * 0.7 - rc * 0.6
+    return cs * 1.6 + vol * 0.8             # GK
+# Normal-score (rankit) transform WITHIN position (normalises GK vs FW etc. and
+# kills the right-skew of goals/assists): rank -> percentile -> inverse-normal z.
+# This yields a clean bell — most players mid-60s, a smooth elite tail, no pile-up
+# of identical 99s. Tied scores share their average rank so equal seasons rate equally.
+from statistics import NormalDist
+_N = NormalDist()
 posg = {}
 for p in players: posg.setdefault(p.get("position"), []).append(p)
 zmap = {}
 for grp in posg.values():
-    sc = [_score(p) for p in grp]
-    m = statistics.mean(sc); sd = statistics.pstdev(sc) or 1
-    for p in grp: zmap[p["player_id"]] = (_score(p) - m) / sd
-# ordinal-rank percentile (smooth spread, only the very top reaches 99)
-_order = sorted(players, key=lambda p: zmap[p["player_id"]])
-_rankpct = {p["player_id"]: i / max(1, len(_order) - 1) for i, p in enumerate(_order)}
+    ranked = sorted(grp, key=lambda p: _score(p))
+    n = len(ranked)
+    i = 0
+    while i < n:
+        j = i
+        while j + 1 < n and _score(ranked[j + 1]) == _score(ranked[i]): j += 1
+        avg_rank = (i + j) / 2.0                       # average rank for ties
+        pp = (avg_rank + 0.5) / n
+        z = _N.inv_cdf(min(0.99995, max(0.00005, pp)))
+        for k in range(i, j + 1): zmap[ranked[k]["player_id"]] = z
+        i = j + 1
 goals_sorted = sorted(nv(p, "international_goals") for p in players)
 val_sorted = sorted(nv(p, "market_value_eur") for p in players if nv(p, "market_value_eur"))
 def gpct(v): return bisect.bisect_left(goals_sorted, v) / max(1, len(goals_sorted) - 1)
@@ -157,7 +168,7 @@ for grp in byteam.values():
     ty = min(ages, key=lambda x: x["age"]) if ages else None
     for p in grp: tflag[p["player_id"]] = (p is tc, p is tv, ty is not None and p is ty)
 for p in players:
-    p["data_rating"] = max(55, min(99, round(55 + (_rankpct[p["player_id"]] ** 1.25) * 44)))
+    p["data_rating"] = max(48, min(99, round(65 + zmap[p["player_id"]] * 10.5)))
     fun = []
     g, c, age = nv(p, "international_goals"), nv(p, "caps"), p.get("age")
     isCap, isVal, isYng = tflag[p["player_id"]]

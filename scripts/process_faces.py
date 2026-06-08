@@ -20,7 +20,7 @@ API = "https://en.wikipedia.org/w/api.php"
 S = requests.Session()
 S.headers["User-Agent"] = "WC26Matchday/1.0 (Astro WC2026 data explorer; image processing)"
 
-def square(path, out, size=512):
+def square(path, out, size=320):
     im = ImageOps.exif_transpose(Image.open(path)).convert("RGB")
     w, h = im.size
     s = min(w, h)
@@ -28,7 +28,7 @@ def square(path, out, size=512):
     left = (w - s) // 2
     top = max(0, (h - s) // 2 - int(h * 0.08))
     im = im.crop((left, top, left + s, top + s)).resize((size, size), Image.LANCZOS)
-    im.save(out, "PNG")
+    im.save(out, "JPEG", quality=85, optimize=True)  # small, photo-friendly (~20KB)
 
 def credit(src):
     """given an image_url, fetch its Commons file license + author"""
@@ -63,7 +63,7 @@ def main():
         pid = os.path.splitext(os.path.basename(f))[0]
         if os.path.getsize(f) < 2000: continue
         try:
-            square(f, os.path.join(OUT, f"{pid}.png"))
+            square(f, os.path.join(OUT, f"{pid}.jpg"))
             lic, art = credit(src.get(pid, "")) if src.get(pid) else ("", "")
             credits[pid] = {"src": src.get(pid, ""), "license": lic, "artist": art}
             n += 1

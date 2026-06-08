@@ -226,3 +226,6 @@ npm-debug.log*
 # Installed agent skills (local tooling, not part of the site)
 .agents/
 skills-lock.json
+
+# raw reference photos (inputs for scripts/process_faces.py)
+refs/
