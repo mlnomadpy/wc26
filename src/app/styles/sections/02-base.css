@@ -38,3 +38,12 @@ tr[role="link"]:focus-visible,.chip:focus-visible,.xrow:focus-visible,.trow:focu
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{ animation-duration:.01ms !important; transition-duration:.01ms !important; }
 }
+
+/* ---- cross-page View Transitions: the whole MPA cross-fades + glides between
+   routes like a single app (progressive — ignored where unsupported) ---- */
+@view-transition{ navigation:auto; }
+::view-transition-old(root){ animation:vtOut .26s var(--ease) both; }
+::view-transition-new(root){ animation:vtIn .34s var(--ease) both; }
+@keyframes vtOut{ to{ opacity:0; transform:translateY(-6px) scale(.995); } }
+@keyframes vtIn{ from{ opacity:0; transform:translateY(10px) scale(.992); } }
+@media (prefers-reduced-motion:reduce){ @view-transition{ navigation:none; } }

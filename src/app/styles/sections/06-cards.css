@@ -1,5 +1,13 @@
 /* ============================ 6. CARDS / PANELS ========================= */
-.panel{ background:var(--bg1); border:1px solid var(--line2); border-radius:var(--r); padding:18px 20px; margin:12px 0; box-shadow:var(--e2); }
+.panel{ position:relative; background:var(--bg1); border:1px solid var(--line2); border-radius:var(--r); padding:18px 20px; margin:12px 0; box-shadow:var(--e2); }
+/* Blue Lock HUD corner ticks (top-left + bottom-right) */
+.panel::after{ content:""; position:absolute; inset:6px; pointer-events:none; opacity:.22;
+  background:
+    linear-gradient(var(--accent2) 0 0) 0 0/13px 1.5px,
+    linear-gradient(var(--accent2) 0 0) 0 0/1.5px 13px,
+    linear-gradient(var(--accent2) 0 0) 100% 100%/13px 1.5px,
+    linear-gradient(var(--accent2) 0 0) 100% 100%/1.5px 13px;
+  background-repeat:no-repeat; }
 .panel h3,.gcard h3{ color:var(--accent2); }
 .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:15px; }
 @media(max-width:900px){ .grid2{ grid-template-columns:1fr; } }

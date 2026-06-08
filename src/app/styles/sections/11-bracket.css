@@ -4,7 +4,8 @@
 .bktree{ position:relative; }
 .bcons{ position:absolute; inset:0; pointer-events:none; z-index:0; overflow:visible; }
 .bcon{ fill:none; stroke:color-mix(in srgb,var(--accent2) 26%,var(--line2)); stroke-width:1.6; }
-.bcon.win{ stroke:var(--accent2); stroke-width:2; filter:drop-shadow(0 0 3px var(--accent2)); }
+.bcon.win{ stroke:var(--accent2); stroke-width:2; filter:drop-shadow(0 0 3px var(--accent2)); stroke-dasharray:7 7; animation:bflow 1.1s linear infinite; }
+@keyframes bflow{ to{ stroke-dashoffset:-14; } }
 .bhead{ position:absolute; top:8px; font-family:var(--fmono); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.16em; color:var(--accent2); text-align:center; }
 .bnode{ position:absolute; z-index:1; display:flex; flex-direction:column; justify-content:center; gap:3px; padding:7px 10px; cursor:pointer; text-align:left;
   background:var(--bg1); border:1px solid var(--line2); border-left:3px solid var(--line2); border-radius:8px; color:var(--fg); box-shadow:var(--e2); transition:var(--t); }
@@ -17,6 +18,8 @@
 .bvs::before,.bvs::after{ content:""; flex:1; height:1px; background:var(--line); }
 .bnum{ font-family:var(--fmono); font-size:9.5px; color:var(--fg-mute); margin-top:1px; }
 .bchamp{ position:absolute; z-index:1; width:170px; text-align:center; padding:14px 12px; border-radius:12px;
-  background:linear-gradient(160deg,color-mix(in srgb,var(--gold) 18%,var(--bg1)),var(--bg1)); border:1px solid var(--gold); box-shadow:0 0 30px -10px var(--gold); }
-.bchamp .trophy{ font-size:30px; } .bchamp .ct{ font-family:var(--fdisp); font-weight:700; margin-top:4px; } .bchamp .cs{ font-size:11px; margin-top:4px; }
+  background:linear-gradient(160deg,color-mix(in srgb,var(--gold) 18%,var(--bg1)),var(--bg1)); border:1px solid var(--gold); box-shadow:0 0 30px -10px var(--gold); animation:champpulse 3s ease-in-out infinite; }
+@keyframes champpulse{ 0%,100%{ box-shadow:0 0 30px -12px var(--gold); } 50%{ box-shadow:0 0 46px -6px var(--gold),0 0 0 1px color-mix(in srgb,var(--gold) 40%,transparent); } }
+.bchamp .trophy{ font-size:30px; filter:drop-shadow(0 0 10px color-mix(in srgb,var(--gold) 60%,transparent)); } .bchamp .ct{ font-family:var(--fdisp); font-weight:700; margin-top:4px; } .bchamp .cs{ font-size:11px; margin-top:4px; }
 .kv .bchip{ align-self:center; }
+@media(prefers-reduced-motion:reduce){ .bcon.win{ animation:none; stroke-dasharray:none; } .bchamp{ animation:none; } }

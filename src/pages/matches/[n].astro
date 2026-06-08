@@ -67,7 +67,7 @@ const titleTeams = ht && at ? `${ht.team_name} vs ${at.team_name}` : m.match_lab
 const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.kickoff_at || '').slice(0, 10)}, ${m.venue}, ${m.city}. Projected lineups and head-to-head.`;
 ---
 <Base title={`${titleTeams} — 2026 World Cup ${m.stage} (Match ${m.match_number})`} description={desc} ogImage={B + 'og/match/' + m.match_number + '.png'}>
-  <div class="app-page">
+  <div class="app-page tv2">
   <a class="btn back" href={B + 'matches/'}>← Schedule</a>
 
   <section class="mscore2">
@@ -80,7 +80,7 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
       <div class="ms-stage">{m.stage}</div>
       <div class="ms-vstxt">VS</div>
       {kick && <div class="ms-cd" id="mcd" data-kick={kick}>—</div>}
-      <div class="ms-when">{(m.kickoff_at || '').slice(0, 10)}</div>
+      <div class="ms-when">{m.venue} · {m.city} · {(m.kickoff_at || '').slice(0, 10)}</div>
     </div>
     <div class="ms-team">
       {at ? <Flag code={at.fifa_code} cls="lg" /> : <div class="ms-slot">{lbl[1]}</div>}
@@ -88,70 +88,78 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
       {at && <div class="ms-sub">{at.head_coach} · FIFA {at.fifa_ranking ? '#' + at.fifa_ranking : '—'} · <b class="ms-rate">{tr(at)}</b> rating</div>}
     </div>
   </section>
-  <div class="ms-meta faint">{m.venue}, {m.city}, {m.country} · {(m.kickoff_at || '').replace('T', ' ')}</div>
 
-  <div class="app-grow scroll">
-  {pred && (
-    <section class="panel predict">
-      <h3><span class="tag">Match prediction</span> <span class="faint">projected from squad strength</span></h3>
-      <div class="pred-bar">
-        {pred.h > 0 && <div class="pred-seg pred-h" style={`width:${pred.h}%`}>{pred.h}%</div>}
-        {pred.d > 0 && <div class="pred-seg pred-d" style={`width:${pred.d}%`}>{pred.d}%</div>}
-        {pred.a > 0 && <div class="pred-seg pred-a" style={`width:${pred.a}%`}>{pred.a}%</div>}
-      </div>
-      <div class="pred-leg">
-        <span><span class="dotg" style={`background:${HOME}`}></span> {ht.team_name} win</span>
-        <span>Draw</span>
-        <span>{at.team_name} win <span class="dotb" style={`background:${AWAY}`}></span></span>
-      </div>
-      <div class="pred-call faint">{fav ? `${fav} favoured` : 'Too close to call — a coin-flip'} · {Math.abs(tr(ht) - tr(at)) <= 2 ? 'even matchup' : 'clear rating edge'}.</div>
-    </section>
-  )}
   {ht && at ? (
-    <div class="grid2">
-      <div class="panel">
-        <h3>Tale of the tape</h3>
-        <div class="tot-head"><span class="dotg"></span>{ht.team_name}<span style="flex:1"></span>{at.team_name}<span class="dotb"></span></div>
-        {tape.map(t => (
-          <div class="tot">
-            <div class="tot-top"><b class={t.win === 'A' ? 'w' : ''}>{t.fa}</b><span class="tot-l">{t.label}</span><b class={t.win === 'B' ? 'w' : ''}>{t.fb}</b></div>
-            <div class="tot-bar"><i class="ta" style={`width:${t.shareA}%`}></i><i class="tb" style={`width:${100 - t.shareA}%`}></i></div>
-          </div>
-        ))}
-      </div>
-      <div class="panel">
-        <h3>Key man duel</h3>
-        <div class="duel">
-          {[[sH, ht, HOME], [sA, at, AWAY]].map(([s, t, c]) => s && (
-            <a class="duelman" href={`${B}players/${s.player_id}/`}>
-              <div class="duel-num" style={`color:${c}`}>{s.shirt_number ?? ''}</div>
-              <div><div class="duel-nm">{s.player_name} <span class="duel-ovr">{rating(s)}</span></div><div class="faint" style="font-size:12px">{s.club}</div>
-                <div class="duel-st"><b>{s.international_goals ?? 0}</b> goals · <b>{s.caps ?? 0}</b> caps</div></div>
+    <div class="app-grow mv-main">
+      <!-- LEFT — head-to-head pitch -->
+      <section class="panel mv-pitch">
+        <div class="tv2-h">
+          <h3>Projected XIs <span class="tag">{hf2} vs {af2}</span></h3>
+          <div class="mhead"><span><span class="dotg" style={`background:${HOME}`}></span> {ht.team_name}</span><span>{at.team_name} <span class="dotb" style={`background:${AWAY}`}></span></span></div>
+        </div>
+        <div class="pitch tall" id="pitch">
+          <div class="line ch"></div><div class="line cc"></div><div class="line box top"></div><div class="line box bot"></div><div class="line six top"></div><div class="line six bot"></div>
+          {tokens.map(tk => (
+            <a class="token sm" style={`left:${tk.x}%;top:${tk.y}%`} href={tk.id ? `${B}players/${tk.id}/` : '#'} title={tk.nm}>
+              <div class="sh" style={`--tc:${tk.col}`}>{tk.n}</div><div class="nm">{tk.nm}</div>
             </a>
           ))}
         </div>
-        <div class="faint" style="font-size:12px;margin-top:10px">Best-rated player in each squad.</div>
-      </div>
+      </section>
+
+      <!-- RIGHT — tabbed: Prediction / Tale of the tape / Key man -->
+      <section class="panel tv2-right">
+        <div class="rtabs" id="mtabs">
+          <button class="rtab on" data-r="pred">Prediction</button>
+          <button class="rtab" data-r="tape">Tale of the tape</button>
+          <button class="rtab" data-r="duel">Key man</button>
+        </div>
+
+        <div class="rpane" data-r="pred">
+          {pred && <>
+            <div class="pred-bar">
+              {pred.h > 0 && <div class="pred-seg pred-h" style={`width:${pred.h}%`}>{pred.h}%</div>}
+              {pred.d > 0 && <div class="pred-seg pred-d" style={`width:${pred.d}%`}>{pred.d}%</div>}
+              {pred.a > 0 && <div class="pred-seg pred-a" style={`width:${pred.a}%`}>{pred.a}%</div>}
+            </div>
+            <div class="pred-leg">
+              <span><span class="dotg" style={`background:${HOME}`}></span> {ht.team_name} win</span>
+              <span>Draw</span>
+              <span>{at.team_name} win <span class="dotb" style={`background:${AWAY}`}></span></span>
+            </div>
+            <div class="pred-call faint">{fav ? `${fav} favoured` : 'Too close to call — a coin-flip'} · {Math.abs(tr(ht) - tr(at)) <= 2 ? 'even matchup' : 'clear rating edge'}. Projected from squad strength.</div>
+          </>}
+        </div>
+
+        <div class="rpane" data-r="tape" hidden>
+          <div class="tot-head"><span class="dotg"></span>{ht.team_name}<span style="flex:1"></span>{at.team_name}<span class="dotb"></span></div>
+          {tape.map(t => (
+            <div class="tot">
+              <div class="tot-top"><b class={t.win === 'A' ? 'w' : ''}>{t.fa}</b><span class="tot-l">{t.label}</span><b class={t.win === 'B' ? 'w' : ''}>{t.fb}</b></div>
+              <div class="tot-bar"><i class="ta" style={`width:${t.shareA}%`}></i><i class="tb" style={`width:${100 - t.shareA}%`}></i></div>
+            </div>
+          ))}
+        </div>
+
+        <div class="rpane" data-r="duel" hidden>
+          <div class="duel">
+            {[[sH, ht, HOME], [sA, at, AWAY]].map(([s, t, c]) => s && (
+              <a class="duelman" href={`${B}players/${s.player_id}/`}>
+                <div class="duel-num" style={`color:${c}`}>{s.shirt_number ?? ''}</div>
+                <div><div class="duel-nm">{s.player_name} <span class="duel-ovr">{rating(s)}</span></div><div class="faint" style="font-size:12px">{s.club}</div>
+                  <div class="duel-st"><b>{s.international_goals ?? 0}</b> goals · <b>{s.caps ?? 0}</b> caps</div></div>
+              </a>
+            ))}
+          </div>
+          <div class="faint" style="font-size:12px;margin-top:10px">Best-rated player in each squad.</div>
+        </div>
+      </section>
     </div>
   ) : (
-    <div class="panel" style="margin-top:16px"><div class="faint">This is a knockout slot — the two teams are decided by earlier results ({m.match_label}). The matchup fills in once both are known.</div></div>
-  )}
-
-  {ht && at && (
-    <div class="panel">
-      <h3>Projected head-to-head XIs <span class="tag">auto-picked — not official lineups</span></h3>
-      <div class="mhead"><span><span class="dotg"></span> {ht.team_name} <span class="faint">{hf2}</span></span><span><span class="faint">{af2}</span> {at.team_name} <span class="dotb"></span></span></div>
-      <div class="pitch tall">
-        <div class="line ch"></div><div class="line cc"></div><div class="line box top"></div><div class="line box bot"></div><div class="line six top"></div><div class="line six bot"></div>
-        {tokens.map(tk => (
-          <a class="token sm" style={`left:${tk.x}%;top:${tk.y}%`} href={tk.id ? `${B}players/${tk.id}/` : '#'} title={tk.nm}>
-            <div class="sh" style={`--tc:${tk.col}`}>{tk.n}</div><div class="nm">{tk.nm}</div>
-          </a>
-        ))}
-      </div>
+    <div class="app-grow scroll">
+      <div class="panel" style="margin-top:16px"><div class="faint">This is a knockout slot — the two teams are decided by earlier results ({m.match_label}). The matchup fills in once both are known.</div></div>
     </div>
   )}
-  </div>
   </div>
 
   {kick && (
@@ -164,4 +172,16 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
       })();
     </script>
   )}
+  <script is:inline>
+    (function () {
+      var tabs = document.getElementById('mtabs'); if (!tabs) return;
+      var panes = document.querySelectorAll('.mv-main .rpane');
+      tabs.querySelectorAll('.rtab').forEach(function (b) {
+        b.addEventListener('click', function () {
+          tabs.querySelectorAll('.rtab').forEach(function (x) { x.classList.toggle('on', x === b); });
+          panes.forEach(function (p) { p.hidden = p.dataset.r !== b.dataset.r; });
+        });
+      });
+    })();
+  </script>
 </Base>

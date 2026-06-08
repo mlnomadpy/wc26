@@ -1,8 +1,19 @@
 /* ============================ 13. MAP / COMPARE ======================= */
-.mapbox{ position:relative; aspect-ratio:1.4; border:1px solid var(--line2); border-radius:var(--r); overflow:hidden;
-  background:radial-gradient(circle at 40% 35%, color-mix(in srgb,var(--accent) 10%,transparent), transparent 60%), var(--bg2); }
-.cdot2{ position:absolute; transform:translate(-50%,-50%); background:var(--accent2); border-radius:50%; box-shadow:0 0 0 3px color-mix(in srgb,var(--accent2) 25%,transparent); }
-.clab{ position:absolute; transform:translate(-50%,-160%); font-size:10px; color:var(--fg-dim); white-space:nowrap; }
+.mapbox{ position:relative; aspect-ratio:1.4; border:1px solid color-mix(in srgb,var(--accent2) 30%,var(--line2)); border-radius:var(--r); overflow:hidden;
+  background:radial-gradient(circle at 40% 35%, color-mix(in srgb,var(--accent) 12%,transparent), transparent 60%), var(--bg2);
+  box-shadow:inset 0 0 70px rgba(0,0,0,.4); }
+.mapbox::before{ content:""; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.4;
+  background:linear-gradient(rgba(88,221,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(88,221,255,.05) 1px,transparent 1px); background-size:40px 40px;
+  -webkit-mask:radial-gradient(120% 100% at 50% 50%,#000,transparent 95%); mask:radial-gradient(120% 100% at 50% 50%,#000,transparent 95%); }
+.cdot2{ position:absolute; z-index:2; transform:translate(-50%,-50%); background:var(--accent2); border-radius:50%; cursor:pointer; transition:transform .15s var(--ease);
+  animation:cdotpulse 2.8s ease-in-out infinite; }
+.cdot2::after{ content:""; position:absolute; inset:0; border-radius:50%; pointer-events:none; animation:cdotring 2.8s ease-out infinite; }
+@keyframes cdotpulse{ 0%,100%{ box-shadow:0 0 8px -1px var(--accent2),0 0 0 3px color-mix(in srgb,var(--accent2) 22%,transparent); } 50%{ box-shadow:0 0 16px 0 var(--accent2),0 0 0 5px color-mix(in srgb,var(--accent2) 13%,transparent); } }
+@keyframes cdotring{ 0%{ box-shadow:0 0 0 0 color-mix(in srgb,var(--accent2) 42%,transparent); } 70%,100%{ box-shadow:0 0 0 15px transparent; } }
+.cdot2:hover{ transform:translate(-50%,-50%) scale(1.45); z-index:4; }
+.clab{ position:absolute; z-index:3; transform:translate(-50%,-160%); font-size:10px; color:var(--fg-dim); white-space:nowrap; transition:var(--t); pointer-events:none; }
+.cdot2:hover + .clab{ color:var(--accent2); font-weight:700; text-shadow:0 0 10px color-mix(in srgb,var(--accent2) 60%,transparent); }
+@media(prefers-reduced-motion:reduce){ .cdot2,.cdot2::after{ animation:none; } }
 .cmpwrap{ display:grid; grid-template-columns:260px 1fr; gap:18px; align-items:center; }
 @media(max-width:760px){ .cmpwrap{ grid-template-columns:1fr; } }
 .radar{ width:100%; max-width:260px; }
