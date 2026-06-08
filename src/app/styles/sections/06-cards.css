@@ -49,6 +49,9 @@
 .tc-ovr i{ font-style:normal; font-family:var(--fmono); font-weight:600; font-size:9px; letter-spacing:.1em; color:var(--fg-mute); }
 .tc-ovr.hi{ color:var(--gold); } .tc-ovr.mid{ color:var(--accent2); } .tc-ovr.lo{ color:var(--fg-dim); } .tc-ovr.na{ color:var(--fg-mute); }
 .teamcard.hide{ display:none; }
+.tc-star{ display:block; max-width:100%; margin-top:2px; font-size:10.5px; color:var(--fg-dim); text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tc-star::first-letter{ color:var(--gold); }
+.tc-star b{ font-family:var(--fdisp2); font-weight:800; color:var(--accent2); margin-left:2px; }
 /* confederation filter chips: colour dot + conf-tinted active state */
 .chips[data-role="conf"] .chip{ display:inline-flex; align-items:center; gap:7px; }
 .chips[data-role="conf"] .chip[data-conf]:not([data-conf=""])::before{ content:""; width:7px; height:7px; border-radius:50%; background:var(--cc,var(--accent2)); box-shadow:0 0 8px var(--cc,var(--accent2)); }
