@@ -78,16 +78,35 @@ export function indexes(DB){
 }
 export const avgAge = ps => {const a=ps.map(p=>p.age).filter(Number.isFinite);return a.length?(a.reduce((x,y)=>x+y,0)/a.length):null;};
 
-/* FUT-style overall rating (derived from available data — not official) */
+/* All-time greats present at WC2026 -> special LEGEND cards */
+export const LEGENDS = new Set(['Lionel Messi','Cristiano Ronaldo','Manuel Neuer','Luka Modrić','Ángel Di María']);
+/* Curated overalls for well-known players so top cards read accurately
+   (EA/FIFA ratings are licensed; these are hand-set approximations) */
+export const OVR = {
+  'Lionel Messi':90,'Cristiano Ronaldo':86,'Manuel Neuer':87,'Luka Modrić':85,'Ángel Di María':84,
+  'Kylian Mbappé':91,'Erling Haaland':91,'Vinícius Júnior':90,'Jude Bellingham':90,'Kevin De Bruyne':88,
+  'Rodri':90,'Harry Kane':90,'Mohamed Salah':89,'Heung-min Son':87,'Son Heung-min':87,'Lautaro Martínez':89,
+  'Bruno Fernandes':86,'Bernardo Silva':87,'Federico Valverde':89,'Antoine Griezmann':87,'Bukayo Saka':87,
+  'Phil Foden':88,'Pedri':88,'Florian Wirtz':88,'Jamal Musiala':88,'Alisson':89,'Thibaut Courtois':90,
+  'Virgil van Dijk':89,'Joško Gvardiol':86,'Achraf Hakimi':85,'Declan Rice':87,'Nico Williams':84,
+  'Rúben Dias':88,'Emiliano Martínez':86,'Lamine Yamal':84,'Endrick':75,'Julián Álvarez':87,
+};
 export function rating(p){
+  if (OVR[p.player_name] != null) return OVR[p.player_name];
   const mv = p.market_value_eur || 0;
   let r = mv
     ? 74 + Math.log10(mv/1e6 + 1) * 11
     : 67 + (p.caps||0)*0.05 + (p.international_goals||0)*0.22 + (p.club_goals_2025_26||0)*0.3 + (p.club_apps_2025_26||0)*0.06;
-  r += Math.min(8, (p.international_goals||0)/20);   // legend bump for prolific scorers
+  r += Math.min(8, (p.international_goals||0)/20);
   if (p.is_captain) r += 1.5;
   return Math.max(58, Math.min(99, Math.round(r)));
 }
-export const tier = r => r>=88?'icon':r>=78?'gold':r>=70?'silver':'bronze';
-export const tierName = t => ({icon:'Legend',gold:'Gold',silver:'Silver',bronze:'Bronze'}[t]||'');
+export function tier(p){
+  const r = rating(p), age = p.age || 99;
+  if (LEGENDS.has(p.player_name)) return 'legend';
+  if (age <= 19 || (age <= 21 && r >= 76)) return 'rising';
+  if (r >= 88) return 'special';
+  return r >= 79 ? 'gold' : r >= 70 ? 'silver' : 'bronze';
+}
+export const tierName = t => ({legend:'Legend',special:'Star',rising:'Rising ★',gold:'Gold',silver:'Silver',bronze:'Bronze'}[t]||'');
 export function monogram(n){const w=(n||'').trim().split(/\s+/);return ((w[0]?.[0]||'')+(w.length>1?w[w.length-1][0]:'')).toUpperCase();}

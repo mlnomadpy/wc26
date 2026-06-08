@@ -1,10 +1,11 @@
 ---
 import Flag from './Flag.astro';
-import { rating, tier, monogram } from '../lib/wc.js';
+import { rating, tier, tierName, monogram } from '../lib/wc.js';
 const { p, big = false } = Astro.props;
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const r = rating(p);
-const tr = tier(r);
+const tr = tier(p);
+const badge = ['legend', 'rising', 'special'].includes(tr) ? tierName(tr) : null;
 const stats = [
   ['GLS', p.international_goals], ['DRI', p.club_assists_2025_26],
   ['CAP', p.caps], ['APP', p.club_apps_2025_26],
@@ -13,6 +14,7 @@ const stats = [
 ---
 <a class={`fut ${tr}${big ? ' big' : ''}`} href={`${B}players/${p.player_id}/`} title={p.player_name}>
   <div class="fut-sheen"></div>
+  {badge && <span class="fut-badge">{badge}</span>}
   <div class="fut-top">
     <div class="fut-ovr"><b>{r}</b><span>{p.position}</span></div>
     <div class="fut-id">

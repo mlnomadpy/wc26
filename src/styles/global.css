@@ -726,3 +726,18 @@ body{background:
 /* player page layout with the big card */
 .pgrid{display:grid;grid-template-columns:262px 1fr 1fr;gap:15px;align-items:start}
 @media(max-width:920px){.pgrid{grid-template-columns:1fr}.fut.big{margin:0 auto}}
+
+/* v10 — special card tiers: Legend / Star / Rising Star + badge */
+.fut.legend{--ct:#3a2a06;background:linear-gradient(160deg,#fff7dd,#e8c65f 46%,#9d7a20);box-shadow:0 0 0 1px rgba(255,224,130,.65),0 18px 44px -14px rgba(232,198,95,.5)}
+.fut.legend .fut-sheen{background-image:linear-gradient(115deg,transparent 28%,rgba(255,255,255,.65) 47%,transparent 60%)}
+.fut.special{--ct:#eafff6;background:linear-gradient(160deg,#12283f,#0a1322 58%,#07283f);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 55%,transparent),0 0 28px -8px var(--accent),var(--sh)}
+.fut.special .fut-ovr b,.fut.special .fut-name{color:var(--accent)}
+.fut.special .fut-name{border-top-color:color-mix(in srgb,var(--accent) 38%,transparent)}
+.fut.special .fut-mono{color:var(--accent);opacity:.32}
+.fut.rising{--ct:#062420;background:linear-gradient(160deg,#86f7c8,#33c8e2 52%,#7d6cff)}
+.fut.rising .fut-name{border-top-color:rgba(0,0,0,.32)}
+.fut-badge{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:4;font-family:var(--fdisp);font-weight:800;
+  font-size:9px;letter-spacing:.13em;text-transform:uppercase;padding:3px 11px;border-radius:0 0 9px 9px;background:rgba(0,0,0,.4);color:#fff}
+.fut.legend .fut-badge{background:#3a2a06;color:#ffe49a}
+.fut.special .fut-badge{background:var(--accent);color:var(--on-accent)}
+.fut.rising .fut-badge{background:#062420;color:#86f7c8}
