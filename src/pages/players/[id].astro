@@ -69,5 +69,12 @@ const StatGrid = (items) => items;
       {p.form_note && <><div class="sublabel">Form</div><div class="faint">{p.form_note}</div></>}
     </div>
   </div>
+  {p.backstory && (
+    <div class="panel">
+      <h3>The journey</h3>
+      <p class="journey">{p.backstory}</p>
+      {p.facts && p.facts.length > 0 && <ul class="pfacts">{p.facts.map((f: string) => <li>{f}</li>)}</ul>}
+    </div>
+  )}
   {srcs.length > 0 && <div class="panel"><h3>Sources</h3>{srcs.map(s => <div class="src"><a href={s} target="_blank" rel="noopener">{s}</a></div>)}</div>}
 </Base>

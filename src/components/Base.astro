@@ -10,7 +10,7 @@ const {
   ogImage = B + 'og.png',
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, SITE).href;
-const NAV = [['', 'Home'], ['teams/', 'Teams'], ['players/', 'Players'], ['clubs/', 'Clubs'], ['groups/', 'Groups'], ['bracket/', 'Bracket'], ['matches/', 'Matches'], ['map/', 'Map'], ['compare/', 'Compare'], ['insights/', 'Insights'], ['data/', 'Data']];
+const NAV = [['', 'Home'], ['teams/', 'Teams'], ['players/', 'Players'], ['leaderboard/', 'Ranking'], ['clubs/', 'Clubs'], ['groups/', 'Groups'], ['bracket/', 'Bracket'], ['matches/', 'Matches'], ['map/', 'Map'], ['compare/', 'Compare'], ['insights/', 'Insights'], ['data/', 'Data']];
 const here = Astro.url.pathname.replace(/\/$/, '') + '/';
 const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p === '' ? here === B : here.startsWith(full); };
 ---

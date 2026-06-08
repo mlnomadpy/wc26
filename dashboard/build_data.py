@@ -42,6 +42,8 @@ def coerce(row):
 
 teams = [coerce(t) for t in read_csv("teams.csv")]
 players = [coerce(p) for p in read_csv("players.csv")]
+for p in players:  # researched facts stored as " ; "-joined string -> array
+    p["facts"] = [x for x in (p.get("facts") or "").split(" ; ") if x] if isinstance(p.get("facts"), str) else (p.get("facts") or [])
 matches_raw = read_csv("matches.csv")
 cities = [coerce(c) for c in read_csv("host_cities.csv")]
 stages = [coerce(s) for s in read_csv("tournament_stages.csv")]
@@ -122,14 +124,14 @@ def _score(p):
     cg, ca = nv(p, "club_goals_2025_26"), nv(p, "club_assists_2025_26")
     ap, mn = nv(p, "club_apps_2025_26"), nv(p, "club_minutes_2025_26")
     mv, cs = nv(p, "market_value_eur"), nv(p, "club_clean_sheets_2025_26")
-    val = math.log10(mv / 1e6 + 1) if mv else 0
-    invol = ap * 0.3 + (mn / 90) * 0.2 + c * 0.15
-    att = cg * 1.0 + ca * 0.6 + g * 0.5
+    val = math.log10(mv / 1e6 + 1) if mv else 0       # market value carries quality
+    invol = ap * 0.14 + (mn / 90) * 0.1 + c * 0.05    # caps weighted lightly
+    att = cg * 1.2 + ca * 0.8 + g * 0.4
     pos = p.get("position")
-    if pos == "FW": return att + val * 6 + g * 0.6 + invol * 0.4
-    if pos == "MF": return att * 0.8 + invol * 0.7 + val * 6 + c * 0.2
-    if pos == "DF": return invol + c * 0.3 + val * 6 + (cg + ca) * 0.5
-    return cs * 1.5 + ap * 0.4 + c * 0.3 + val * 6  # GK
+    if pos == "FW": return val * 9 + att + g * 0.4 + invol * 0.3
+    if pos == "MF": return val * 9 + att * 0.7 + ca * 0.4 + invol * 0.5 + c * 0.1
+    if pos == "DF": return val * 9 + invol * 0.7 + (cg + ca) * 0.4 + c * 0.1
+    return val * 9 + cs * 1.2 + ap * 0.25 + c * 0.08  # GK
 # z-score within position (normalises positions), then global percentile -> rating
 posg = {}
 for p in players: posg.setdefault(p.get("position"), []).append(p)
@@ -138,8 +140,9 @@ for grp in posg.values():
     sc = [_score(p) for p in grp]
     m = statistics.mean(sc); sd = statistics.pstdev(sc) or 1
     for p in grp: zmap[p["player_id"]] = (_score(p) - m) / sd
-zs = sorted(zmap.values())
-def _pct(z): return bisect.bisect_left(zs, z) / max(1, len(zs) - 1)
+# ordinal-rank percentile (smooth spread, only the very top reaches 99)
+_order = sorted(players, key=lambda p: zmap[p["player_id"]])
+_rankpct = {p["player_id"]: i / max(1, len(_order) - 1) for i, p in enumerate(_order)}
 goals_sorted = sorted(nv(p, "international_goals") for p in players)
 val_sorted = sorted(nv(p, "market_value_eur") for p in players if nv(p, "market_value_eur"))
 def gpct(v): return bisect.bisect_left(goals_sorted, v) / max(1, len(goals_sorted) - 1)
@@ -154,7 +157,7 @@ for grp in byteam.values():
     ty = min(ages, key=lambda x: x["age"]) if ages else None
     for p in grp: tflag[p["player_id"]] = (p is tc, p is tv, ty is not None and p is ty)
 for p in players:
-    p["data_rating"] = max(58, min(99, round(60 + _pct(zmap[p["player_id"]]) * 39)))
+    p["data_rating"] = max(55, min(99, round(55 + (_rankpct[p["player_id"]] ** 1.25) * 44)))
     fun = []
     g, c, age = nv(p, "international_goals"), nv(p, "caps"), p.get("age")
     isCap, isVal, isYng = tflag[p["player_id"]]

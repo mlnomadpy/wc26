@@ -102,12 +102,21 @@ export function rating(p){
   if (p.is_captain) r += 1.5;
   return Math.max(58, Math.min(99, Math.round(r)));
 }
+/* Special FRAMES are EARNED by hitting real stat thresholds (priority order).
+   Otherwise the card falls back to gold/silver/bronze by rating. */
 export function tier(p){
-  const r = rating(p), age = p.age || 99;
-  if (LEGENDS.has(p.player_name)) return 'legend';
-  if (age <= 19 || (age <= 21 && r >= 80)) return 'rising';
-  if (r >= 91) return 'special';
+  const r = rating(p), age = p.age || 99, pos = p.position;
+  const g = p.international_goals||0, caps = p.caps||0;
+  const cg = p.club_goals_2025_26||0, ca = p.club_assists_2025_26||0, cs = p.club_clean_sheets_2025_26||0;
+  if (LEGENDS.has(p.player_name)) return 'legend';          // curated all-time greats
+  if (r >= 91) return 'special';                            // superstar (top of the data ranking)
+  if (caps >= 100) return 'centurion';                      // 100+ international caps
+  if (pos === 'GK' && cs >= 12) return 'glove';             // 12+ clean sheets (GK)
+  if (g >= 40 || cg >= 25) return 'marksman';               // prolific scorer
+  if (ca >= 12) return 'maestro';                           // 12+ assists (playmaker)
+  if (age <= 19 || (age <= 21 && r >= 80)) return 'rising'; // wonderkid
   return r >= 81 ? 'gold' : r >= 71 ? 'silver' : 'bronze';
 }
-export const tierName = t => ({legend:'Legend',special:'Star',rising:'Rising ★',gold:'Gold',silver:'Silver',bronze:'Bronze'}[t]||'');
+export const SPECIAL = new Set(['legend','special','centurion','glove','marksman','maestro','rising']);
+export const tierName = t => ({legend:'Legend',special:'Superstar',centurion:'Centurion',glove:'Golden Glove',marksman:'Marksman',maestro:'Maestro',rising:'Rising ★',gold:'Gold',silver:'Silver',bronze:'Bronze'}[t]||'');
 export function monogram(n){const w=(n||'').trim().split(/\s+/);return ((w[0]?.[0]||'')+(w.length>1?w[w.length-1][0]:'')).toUpperCase();}

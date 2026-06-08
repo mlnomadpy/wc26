@@ -25,6 +25,7 @@ PLAYER_SCHEMA = [
     ("club_goals_conceded_2025_26","int"),("club_competitions_2025_26","t"),("team_wins_2025_26","int"),
     ("team_draws_2025_26","int"),("team_losses_2025_26","int"),("career_club_apps","int"),
     ("career_club_goals","int"),("enrichment_confidence","t"),("form_note","t"),("enrichment_sources","t"),
+    ("backstory","t"),("facts","t"),
 ]
 PLAYER_COLS = [c for c, _ in PLAYER_SCHEMA]
 TEAM_COLS = ["id","team_name","fifa_code","group_letter","is_placeholder",

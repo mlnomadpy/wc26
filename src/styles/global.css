@@ -749,3 +749,51 @@ body{background:
 .funchip:nth-child(3n+1){border-color:color-mix(in srgb,var(--accent) 45%,var(--line2))}
 .funchip:nth-child(3n+2){border-color:color-mix(in srgb,var(--accent2) 45%,var(--line2))}
 .funchip:nth-child(3n){border-color:color-mix(in srgb,var(--magenta) 45%,var(--line2))}
+
+/* v11 — EARNED special frames (only unlocked by hitting stat thresholds) */
+.fut.legend,.fut.special,.fut.centurion,.fut.glove,.fut.marksman,.fut.maestro,.fut.rising{
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.22), 0 18px 40px -14px rgba(0,0,0,.7)}
+.fut.centurion{--ct:#ffe9d6;background:linear-gradient(160deg,#c33a52,#6a142a 60%,#3a0c1a);box-shadow:inset 0 0 0 2px #f6c46a,0 0 26px -8px #c33a52,var(--sh)}
+.fut.glove{--ct:#04231f;background:linear-gradient(160deg,#5fe6d2,#159b8f 55%,#0a5b54)}
+.fut.marksman{--ct:#2a0d03;background:linear-gradient(160deg,#ffb061,#ef5a23 52%,#a8260f)}
+.fut.maestro{--ct:#f4ecff;background:linear-gradient(160deg,#c4a0ff,#7a45d8 55%,#3f1f86);box-shadow:inset 0 0 0 2px rgba(220,200,255,.4),0 0 26px -8px #8a52e6,var(--sh)}
+.fut.maestro .fut-name{border-top-color:rgba(255,255,255,.3)}
+.fut.centurion .fut-badge{background:#3a0c1a;color:#f6c46a}
+.fut.glove .fut-badge{background:#04231f;color:#5fe6d2}
+.fut.marksman .fut-badge{background:#2a0d03;color:#ffd9b0}
+.fut.maestro .fut-badge{background:#2a1158;color:#d9c4ff}
+/* corner ornaments on special frames */
+.fut.legend::after,.fut.special::after,.fut.centurion::after,.fut.glove::after,.fut.marksman::after,.fut.maestro::after,.fut.rising::after{
+  content:"";position:absolute;inset:5px;border-radius:11px;pointer-events:none;z-index:2;
+  background:
+    linear-gradient(var(--ct),var(--ct)) left 0 top 0/12px 2px no-repeat,
+    linear-gradient(var(--ct),var(--ct)) left 0 top 0/2px 12px no-repeat,
+    linear-gradient(var(--ct),var(--ct)) right 0 top 0/12px 2px no-repeat,
+    linear-gradient(var(--ct),var(--ct)) right 0 top 0/2px 12px no-repeat,
+    linear-gradient(var(--ct),var(--ct)) left 0 bottom 0/12px 2px no-repeat,
+    linear-gradient(var(--ct),var(--ct)) left 0 bottom 0/2px 12px no-repeat,
+    linear-gradient(var(--ct),var(--ct)) right 0 bottom 0/12px 2px no-repeat,
+    linear-gradient(var(--ct),var(--ct)) right 0 bottom 0/2px 12px no-repeat;
+  opacity:.5}
+/* base metal cards stay simpler (no inset frame) so specials clearly stand out */
+.fut.gold,.fut.silver,.fut.bronze{box-shadow:var(--sh)}
+
+/* leaderboard tier colours */
+.lbovr{font-family:var(--fdisp2);font-size:18px;display:inline-block;min-width:30px}
+.tchip{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.lbovr.legend,.tchip.legend{color:#e8c65f}.tchip.legend{background:#3a2a0688}
+.lbovr.special,.tchip.special{color:var(--accent)}.tchip.special{background:#06243a}
+.lbovr.centurion,.tchip.centurion{color:#ff7f97}.tchip.centurion{background:#3a0c1a}
+.lbovr.glove,.tchip.glove{color:#5fe6d2}.tchip.glove{background:#04231f}
+.lbovr.marksman,.tchip.marksman{color:#ffb061}.tchip.marksman{background:#2a0d03}
+.lbovr.maestro,.tchip.maestro{color:#c4a0ff}.tchip.maestro{background:#2a1158}
+.lbovr.rising,.tchip.rising{color:#5fe6d2}.tchip.rising{background:#062420}
+.lbovr.gold,.tchip.gold{color:#f6d877}.tchip.gold{background:#3a2a0644}
+.lbovr.silver,.tchip.silver{color:#cdd6e0}.tchip.silver{background:#2a323d}
+.lbovr.bronze,.tchip.bronze{color:#d99a63}.tchip.bronze{background:#2a1c10}
+
+/* player journey + researched facts */
+.journey{font-size:14.5px;line-height:1.7;color:var(--fg-dim);max-width:75ch}
+.pfacts{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+.pfacts li{position:relative;padding:9px 13px 9px 34px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;font-size:13px}
+.pfacts li::before{content:"★";position:absolute;left:13px;color:var(--accent)}

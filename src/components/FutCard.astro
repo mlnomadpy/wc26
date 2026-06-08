@@ -1,11 +1,14 @@
 ---
 import Flag from './Flag.astro';
-import { rating, tier, tierName, monogram } from '../lib/wc.js';
+import { rating, tier, tierName, SPECIAL, monogram } from '../lib/wc.js';
 const { p, big = false } = Astro.props;
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const r = rating(p);
 const tr = tier(p);
-const badge = ['legend', 'rising', 'special'].includes(tr) ? tierName(tr) : null;
+const badge = SPECIAL.has(tr) ? tierName(tr) : null;
+// face: real photo if present (public/faces/<id>.png), else an avatar placeholder, else monogram
+const avatar = `https://api.dicebear.com/9.x/micah/svg?seed=${encodeURIComponent(p.player_name)}&radius=0&backgroundColor=transparent`;
+const faceUrl = `${B}faces/${p.player_id}.png`;
 const stats = [
   ['GLS', p.international_goals], ['DRI', p.club_assists_2025_26],
   ['CAP', p.caps], ['APP', p.club_apps_2025_26],
@@ -25,7 +28,7 @@ const stats = [
   </div>
   <div class="fut-face">
     <span class="fut-mono">{monogram(p.player_name)}</span>
-    <img src={`${B}faces/${p.player_id}.png`} alt="" loading="lazy" onerror="this.remove()" />
+    <img src={faceUrl} alt="" loading="lazy" onerror={`this.onerror=null;this.src='${avatar}'`} />
   </div>
   <div class="fut-name">{p.player_name}</div>
   <div class="fut-stats">
