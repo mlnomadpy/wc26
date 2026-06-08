@@ -1055,3 +1055,62 @@ main{min-width:0;max-width:100%}
 .app-page,.app-grow,.homescroll{min-width:0;max-width:100%}
 .marquee{min-width:0;max-width:100%;width:100%}
 .mtrack{max-width:none}
+
+/* ============================================================================
+   v20 — BLUE LOCK theme: electric-blue palette site-wide + energy hero
+   Palette ref: Blue Lock electric blue #1046a9 / cyan flares, dark navy.
+   ============================================================================ */
+:root{
+  --bg:#050a16; --bg1:#0a1326; --bg2:#0f1f3e; --bg3:#173058; --line:#1b3260; --line2:#2c4d8c;
+  --fg:#e9f2ff; --fg-dim:#90a6d0; --fg-mute:#5e7099;
+  --accent:#2b8cff; --accent2:#56e0ff; --gold:#ffd23d; --gold2:#ffe28a; --magenta:#ff3d8b;
+  --on-accent:#04122b;
+  --sh:0 16px 44px -14px rgba(0,0,0,.78); --glow:0 0 30px -6px rgba(43,140,255,.6);
+}
+html[data-theme="light"]{
+  --bg:#eef3fb; --bg1:#ffffff; --bg2:#eaf1fb; --bg3:#dde8f8; --line:#d3e0f2; --line2:#bcd0ec;
+  --fg:#0a1424; --fg-dim:#46577a; --fg-mute:#73849f; --accent:#1163d6; --accent2:#0aa5d6; --on-accent:#ffffff;
+}
+/* energy backdrop: blue stadium glow + scanning light beams */
+body{background:
+  radial-gradient(1200px 620px at 84% -14%,rgba(43,140,255,.16),transparent 60%),
+  radial-gradient(900px 520px at -6% 6%,rgba(86,224,255,.10),transparent 58%),
+  radial-gradient(800px 560px at 50% 122%,rgba(43,140,255,.10),transparent 60%),var(--bg) !important}
+body::before{
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cg fill='none' stroke='%232b8cff' stroke-width='1.4' stroke-opacity='0.07'%3E%3Cpath d='M0 64a64 64 0 0 1 64-64'/%3E%3Cpath d='M128 64a64 64 0 0 1-64 64'/%3E%3C/g%3E%3Crect x='63' y='63' width='2' height='2' fill='%2356e0ff' fill-opacity='0.18'/%3E%3C/svg%3E") !important;
+  background-size:128px 128px !important}
+
+/* HERO — Blue Lock energy */
+.lhero3{border-color:color-mix(in srgb,var(--accent) 30%,var(--line))}
+.lh3-bg{background-size:cover;background-position:50% 12%}
+.lh3-bg::before,.lh3-bg::after{content:"";position:absolute;inset:0;pointer-events:none}
+.lh3-bg::before{background:
+  radial-gradient(120% 85% at 50% -8%,rgba(43,140,255,.30),transparent 55%),
+  radial-gradient(60% 60% at 88% 8%,rgba(86,224,255,.22),transparent 60%);mix-blend-mode:screen}
+.lh3-bg::after{background:linear-gradient(180deg,rgba(5,10,22,.55) 0,rgba(5,10,22,.62) 55%,rgba(5,10,22,.9));transform:none;opacity:1}
+.lhero3 h1{text-shadow:0 2px 30px rgba(43,140,255,.35)}
+.lhero3 h1 .accent{color:var(--accent2);text-shadow:0 0 22px rgba(86,224,255,.65)}
+
+/* energy ball centerpiece (replaces the trophy) */
+.lh3-ball{position:relative;display:flex;align-items:center;justify-content:center;width:100%;max-width:230px;aspect-ratio:1;margin:0 auto}
+.ball-rays{position:absolute;inset:-34%;background:repeating-conic-gradient(from 0deg,transparent 0 5deg,rgba(86,224,255,.20) 5deg 7deg);
+  -webkit-mask:radial-gradient(closest-side,transparent 34%,#000 44%,transparent 80%);mask:radial-gradient(closest-side,transparent 34%,#000 44%,transparent 80%);
+  animation:ballspin 16s linear infinite}
+.ball-rays.r2{animation-direction:reverse;animation-duration:24s;background:repeating-conic-gradient(from 0deg,transparent 0 9deg,rgba(43,140,255,.16) 9deg 11deg)}
+.ball-glow{position:absolute;inset:6%;border-radius:50%;background:radial-gradient(circle,rgba(86,224,255,.6),rgba(43,140,255,.28) 46%,transparent 72%);filter:blur(10px);animation:ballpulse 2.6s ease-in-out infinite}
+.ball-svg{position:relative;z-index:1;width:56%;filter:drop-shadow(0 0 16px rgba(86,224,255,.85)) drop-shadow(0 8px 20px rgba(0,0,0,.5))}
+.lh3-tcap{margin-top:14px;color:var(--accent2)}
+@keyframes ballspin{to{transform:rotate(360deg)}}
+@keyframes ballpulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.09);opacity:1}}
+
+/* electric buttons + chips */
+.btn.primary{background:linear-gradient(135deg,var(--accent),#1f6fe0)!important;color:#fff!important;box-shadow:0 8px 26px -8px rgba(43,140,255,.8)!important}
+.btn.primary:hover{box-shadow:0 12px 34px -8px rgba(86,224,255,.95)!important}
+.lh-cd{border-color:color-mix(in srgb,var(--accent) 45%,var(--line2));box-shadow:0 0 32px -14px var(--accent)}
+.duel-big{border-color:color-mix(in srgb,var(--accent) 35%,var(--line2));
+  background:linear-gradient(125deg,color-mix(in srgb,var(--accent) 16%,var(--bg2)),var(--bg1) 52%,color-mix(in srgb,#ff3d8b 12%,var(--bg1)))}
+.db-vs{color:var(--accent2)}
+.db-face{border-color:color-mix(in srgb,var(--accent2) 60%,transparent)}
+/* electric FUT special/legend cards */
+.fut.special{box-shadow:0 0 0 1px color-mix(in srgb,var(--accent2) 60%,transparent),0 0 30px -8px var(--accent2),var(--sh)!important}
