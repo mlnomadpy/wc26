@@ -834,3 +834,22 @@ main{max-width:none;padding:10px 20px 20px}
 h2.sec{margin:11px 2px 7px}
 .panel{margin:10px 0;padding:15px 17px}
 .subtabs{margin:8px 0 2px}
+
+/* v13 — card face as a clean contained portrait (works for real photos & avatars) */
+.fut-face img{position:static;width:74%;aspect-ratio:1/1;height:auto;max-width:none;object-fit:cover;
+  border-radius:13px;box-shadow:0 5px 14px rgba(0,0,0,.45);filter:none;background:rgba(0,0,0,.15)}
+.fut.big .fut-face img{width:70%}
+.fut-mono{position:absolute}   /* sits behind the portrait as fallback */
+
+/* v14 — FUT card typography (condensed Oswald) + clean attribute block */
+.fut-ovr b{font-family:'Oswald',sans-serif;font-weight:700;font-size:33px;letter-spacing:.5px;line-height:.95}
+.fut.big .fut-ovr b{font-size:46px}
+.fut-ovr span{font-family:'Oswald',sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em;margin-top:1px}
+.fut-num,.fut-cap{font-family:'Oswald',sans-serif;font-weight:600}
+.fut-name{font-family:'Oswald',sans-serif;font-weight:600;letter-spacing:.015em;font-size:14.5px;padding-top:7px}
+.fut.big .fut-name{font-size:19px}
+.fut-stats{font-family:'Oswald',sans-serif;grid-template-columns:1fr 1fr;gap:3px 16px;font-size:13.5px;margin-top:6px}
+.fut.big .fut-stats{font-size:16px;gap:4px 22px}
+.fut-stats span{display:flex;align-items:baseline;gap:6px;justify-content:flex-start}
+.fut-stats b{font-weight:700;font-variant-numeric:tabular-nums;min-width:24px;text-align:right}
+.fut-stats i{font-style:normal;font-weight:500;font-size:.78em;opacity:.7;letter-spacing:.05em}

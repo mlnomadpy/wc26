@@ -9,11 +9,11 @@ const badge = SPECIAL.has(tr) ? tierName(tr) : null;
 // face: real photo if present (public/faces/<id>.png), else an avatar placeholder, else monogram
 const avatar = `https://api.dicebear.com/9.x/micah/svg?seed=${encodeURIComponent(p.player_name)}&radius=0&backgroundColor=transparent`;
 const faceUrl = `${B}faces/${p.player_id}.png`;
-const stats = [
-  ['GLS', p.international_goals], ['DRI', p.club_assists_2025_26],
-  ['CAP', p.caps], ['APP', p.club_apps_2025_26],
-  ['G26', p.club_goals_2025_26], ['AGE', p.age],
-];
+const stats = p.position === 'GK'
+  ? [['CS', p.club_clean_sheets_2025_26], ['GC', p.club_goals_conceded_2025_26],
+     ['APP', p.club_apps_2025_26], ['CAP', p.caps], ['MIN', p.club_minutes_2025_26], ['AGE', p.age]]
+  : [['GLS', p.international_goals], ['AST', p.club_assists_2025_26],
+     ['CG', p.club_goals_2025_26], ['APP', p.club_apps_2025_26], ['CAP', p.caps], ['AGE', p.age]];
 ---
 <a class={`fut ${tr}${big ? ' big' : ''}`} href={`${B}players/${p.player_id}/`} title={p.player_name}>
   <div class="fut-sheen"></div>
@@ -32,6 +32,6 @@ const stats = [
   </div>
   <div class="fut-name">{p.player_name}</div>
   <div class="fut-stats">
-    {stats.map(([k, v]) => <span><b>{v ?? '–'}</b>{k}</span>)}
+    {stats.map(([k, v]) => <span><b>{v ?? '–'}</b><i>{k}</i></span>)}
   </div>
 </a>
