@@ -9,7 +9,7 @@ th{ position:sticky; top:0; z-index:2; cursor:pointer; user-select:none;
 th:hover{ color:#fff; }
 td{ border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent); }
 tbody tr{ cursor:pointer; transition:background var(--t),box-shadow var(--t); content-visibility:auto; contain-intrinsic-size:auto 44px; }
-tbody tr:nth-child(2n){ background:color-mix(in srgb,#fff 1.6%,transparent); }
+tbody tr:nth-child(2n){ background:color-mix(in srgb,var(--fg) 3%,transparent); }
 tbody tr:hover{ background:color-mix(in srgb,var(--accent) 13%,transparent); box-shadow:inset 3px 0 0 var(--accent2); }
 tbody tr:last-child td{ border-bottom:0; }
 .rk{ color:var(--fg-mute); font-family:var(--fmono); }

@@ -98,6 +98,9 @@
 .bar.alt{ background:linear-gradient(90deg,var(--gold),var(--magenta)); }
 .barrow{ display:grid; grid-template-columns:140px 1fr 46px; gap:10px; align-items:center; margin:6px 0; font-size:12px; }
 .bartrack{ background:var(--bg3); border-radius:6px; overflow:hidden; height:10px; }
+.bartrack .bar{ transform-origin:left; animation:barGrow .7s var(--ease) both; }
+@keyframes barGrow{ from{ transform:scaleX(0); opacity:.4; } }
+@media(prefers-reduced-motion:reduce){ .bartrack .bar{ animation:none; } }
 .lead{ display:flex; justify-content:space-between; align-items:center; padding:8px 9px; border-radius:var(--r-sm); cursor:pointer; transition:var(--t); }
 .lead:hover{ background:var(--bg2); } .lead .rk{ width:22px; display:inline-block; }
 .flagi{ width:22px; height:auto; border-radius:3px; vertical-align:middle; box-shadow:0 0 0 1px rgba(0,0,0,.35); display:inline-block; }

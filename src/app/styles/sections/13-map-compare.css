@@ -14,13 +14,21 @@
 .clab{ position:absolute; z-index:3; transform:translate(-50%,-160%); font-size:10px; color:var(--fg-dim); white-space:nowrap; transition:var(--t); pointer-events:none; }
 .cdot2:hover + .clab{ color:var(--accent2); font-weight:700; text-shadow:0 0 10px color-mix(in srgb,var(--accent2) 60%,transparent); }
 @media(prefers-reduced-motion:reduce){ .cdot2,.cdot2::after{ animation:none; } }
-.cmpwrap{ display:grid; grid-template-columns:260px 1fr; gap:18px; align-items:center; }
+.cmpwrap{ display:grid; grid-template-columns:minmax(260px,1fr) 1.2fr; gap:26px; align-items:center; }
 @media(max-width:760px){ .cmpwrap{ grid-template-columns:1fr; } }
-.radar{ width:100%; max-width:260px; }
-.rring{ fill:none; stroke:var(--line2); stroke-width:1; }
+.cmpwrap>div:first-child{ position:relative; display:flex; align-items:center; justify-content:center; }
+.cmpwrap>div:first-child::before{ content:""; position:absolute; width:74%; aspect-ratio:1; border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, color-mix(in srgb,var(--accent2) 10%,transparent), transparent 70%); }
+.radar{ position:relative; width:100%; max-width:360px; overflow:visible; }
+.rring{ fill:none; stroke:color-mix(in srgb,var(--line2) 85%,transparent); stroke-width:1; }
 .raxis{ stroke:var(--line); stroke-width:1; }
-.rlab{ fill:var(--fg-dim); font-size:9px; font-family:var(--fbody); }
-.cmpleg{ display:flex; flex-direction:column; gap:4px; margin-bottom:10px; font-weight:600; }
+.rlab{ fill:var(--fg-dim); font-size:9.5px; font-family:var(--fmono); text-transform:uppercase; letter-spacing:.04em; }
+.rpoly{ transform-box:fill-box; transform-origin:center; animation:radarIn .55s var(--ease) both; }
+.rpoly-a{ animation-delay:.07s; }
+@keyframes radarIn{ from{ transform:scale(.55); opacity:0; } to{ transform:scale(1); opacity:1; } }
+@media(prefers-reduced-motion:reduce){ .rpoly{ animation:none; } }
+.cmpleg{ display:flex; gap:16px; margin-bottom:14px; font-weight:700; flex-wrap:wrap; }
+.taperow .mono.win{ color:var(--accent2); font-weight:700; }
 .vsrow{ display:flex; justify-content:space-between; }
 .meth{ margin:0; padding-left:18px; font-size:13px; color:var(--fg-dim); } .meth li{ margin:6px 0; }
 .boot{ padding:40px; color:var(--fg-dim); }

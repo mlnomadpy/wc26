@@ -32,6 +32,7 @@ html[data-theme="light"]{
   --bg:#eef2f9; --bg1:#ffffff; --bg2:#f1f5fc; --bg3:#e6edf8; --line:#d8e1f0; --line2:#c2d0e8;
   --fg:#0c1626; --fg-dim:#48597a; --fg-mute:#76859f;
   --accent:#1163d6; --accent2:#0a9fd0; --spark:#12a35e; --on-accent:#ffffff;
+  --gold:#b8860b; --magenta:#d61f6b;   /* darker on light so gold/pink text stays legible */
   --e2:0 6px 20px -12px rgba(30,50,90,.18), 0 1px 3px rgba(30,50,90,.1);
   --e3:0 20px 44px -22px rgba(30,50,90,.22);
 }

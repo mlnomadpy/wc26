@@ -36,12 +36,16 @@ const playerMetrics = DB.players.map(p => ({ id: p.player_id, name: p.player_nam
     const FLAG = {}; // optional; names are enough
     let mode = 'team', a, b;
     function radar(labels, av, bv, ca, cb) {
-      const N = labels.length, R = 92, cx = 120, cy = 120;
+      const N = labels.length, R = 104, cx = 130, cy = 130;
       const pt = (i, v) => { const ang = -Math.PI / 2 + i / N * 2 * Math.PI; return [cx + Math.cos(ang) * R * v, cy + Math.sin(ang) * R * v]; };
       const poly = v => v.map((x, i) => pt(i, Math.max(0.04, x)).join(',')).join(' ');
+      const dots = (v, c) => v.map((x, i) => { const [px, py] = pt(i, Math.max(0.04, x)); return `<circle cx="${px}" cy="${py}" r="3.4" fill="${c}" style="filter:drop-shadow(0 0 4px ${c})"/>`; }).join('');
       const rings = [0.25, 0.5, 0.75, 1].map(r => `<polygon points="${labels.map((_, i) => pt(i, r).join(',')).join(' ')}" class="rring"/>`).join('');
-      const axes = labels.map((l, i) => { const [x, y] = pt(i, 1.18), [ax, ay] = pt(i, 1); return `<line x1="${cx}" y1="${cy}" x2="${ax}" y2="${ay}" class="raxis"/><text x="${x}" y="${y}" class="rlab" text-anchor="middle">${l}</text>`; }).join('');
-      return `<svg viewBox="0 0 240 240" class="radar">${rings}${axes}<polygon points="${poly(bv)}" fill="${cb}" fill-opacity="0.18" stroke="${cb}" stroke-width="2"/><polygon points="${poly(av)}" fill="${ca}" fill-opacity="0.22" stroke="${ca}" stroke-width="2"/></svg>`;
+      const axes = labels.map((l, i) => { const [x, y] = pt(i, 1.2), [ax, ay] = pt(i, 1); return `<line x1="${cx}" y1="${cy}" x2="${ax}" y2="${ay}" class="raxis"/><text x="${x}" y="${y}" class="rlab" text-anchor="middle">${l}</text>`; }).join('');
+      return `<svg viewBox="0 0 260 260" class="radar">${rings}${axes}` +
+        `<polygon points="${poly(bv)}" fill="${cb}" fill-opacity="0.16" stroke="${cb}" stroke-width="2.4" class="rpoly rpoly-b" style="filter:drop-shadow(0 0 5px ${cb})"/>` +
+        `<polygon points="${poly(av)}" fill="${ca}" fill-opacity="0.26" stroke="${ca}" stroke-width="2.4" class="rpoly rpoly-a" style="filter:drop-shadow(0 0 6px ${ca})"/>` +
+        `${dots(bv, cb)}${dots(av, ca)}</svg>`;
     }
     function opts(list, val) { return list.map(x => `<option value="${x.id ?? x.code}" ${String(x.id ?? x.code) === String(val) ? 'selected' : ''}>${x.name}${x.team ? ' (' + x.team + ')' : ''}</option>`).join(''); }
     function draw() {
@@ -49,12 +53,12 @@ const playerMetrics = DB.players.map(p => ({ id: p.player_id, name: p.player_nam
         const A = TM.find(x => x.code === a), B = TM.find(x => x.code === b);
         const M = [['Attack', 'att'], ['Midfield', 'mid'], ['Defence', 'def'], ['Experience', 'exp'], ['Goal threat', 'goal'], ['Youth', 'youth']];
         const av = M.map(([, k]) => A[k]), bv = M.map(([, k]) => B[k]), mx = M.map((_, i) => Math.max(av[i], bv[i]) || 1);
-        out.innerHTML = `<div class="cmpwrap"><div>${radar(M.map(m => m[0]), av.map((v, i) => v / mx[i]), bv.map((v, i) => v / mx[i]), A.color, B.color)}</div><div><div class="cmpleg"><span style="color:${A.color}">● ${A.name}</span><span style="color:${B.color}">● ${B.name}</span></div>${M.map(([l, k]) => `<div class="taperow"><span class="mono">${Math.round(A[k])}</span><span class="tl">${l}</span><span class="mono">${Math.round(B[k])}</span></div>`).join('')}<div class="taperow"><span class="mono">${A.avg}</span><span class="tl">Avg age</span><span class="mono">${B.avg}</span></div></div></div>`;
+        out.innerHTML = `<div class="cmpwrap"><div>${radar(M.map(m => m[0]), av.map((v, i) => v / mx[i]), bv.map((v, i) => v / mx[i]), A.color, B.color)}</div><div><div class="cmpleg"><span style="color:${A.color}">● ${A.name}</span><span style="color:${B.color}">● ${B.name}</span></div>${M.map(([l, k]) => { const va = A[k], vb = B[k]; return `<div class="taperow"><span class="mono ${va > vb ? 'win' : ''}">${Math.round(va)}</span><span class="tl">${l}</span><span class="mono ${vb > va ? 'win' : ''}">${Math.round(vb)}</span></div>`; }).join('')}<div class="taperow"><span class="mono">${A.avg}</span><span class="tl">Avg age</span><span class="mono">${B.avg}</span></div></div></div>`;
       } else {
         const A = PM.find(x => x.id == a), B = PM.find(x => x.id == b);
         const M = [['Caps', 'caps'], ['Intl goals', 'goals'], ['Club apps', 'apps'], ['Club goals', 'cg'], ['Club assists', 'ca'], ['Minutes', 'min']];
         const av = M.map(([, k]) => A[k]), bv = M.map(([, k]) => B[k]), mx = M.map((_, i) => Math.max(av[i], bv[i]) || 1);
-        out.innerHTML = `<div class="cmpwrap"><div>${radar(M.map(m => m[0]), av.map((v, i) => v / mx[i]), bv.map((v, i) => v / mx[i]), A.color, B.color)}</div><div><div class="cmpleg"><span style="color:${A.color}">● ${A.name} (${A.team})</span><span style="color:${B.color}">● ${B.name} (${B.team})</span></div>${M.map(([l, k]) => `<div class="taperow"><span class="mono">${A[k].toLocaleString()}</span><span class="tl">${l}</span><span class="mono">${B[k].toLocaleString()}</span></div>`).join('')}</div></div>`;
+        out.innerHTML = `<div class="cmpwrap"><div>${radar(M.map(m => m[0]), av.map((v, i) => v / mx[i]), bv.map((v, i) => v / mx[i]), A.color, B.color)}</div><div><div class="cmpleg"><span style="color:${A.color}">● ${A.name} (${A.team})</span><span style="color:${B.color}">● ${B.name} (${B.team})</span></div>${M.map(([l, k]) => { const va = A[k], vb = B[k]; return `<div class="taperow"><span class="mono ${va > vb ? 'win' : ''}">${va.toLocaleString()}</span><span class="tl">${l}</span><span class="mono ${vb > va ? 'win' : ''}">${vb.toLocaleString()}</span></div>`; }).join('')}</div></div>`;
       }
     }
     function build() {
