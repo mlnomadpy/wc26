@@ -76,8 +76,15 @@
 .spl-ovr{ flex:none; font-size:18px; min-width:26px; text-align:right; }
 .spl.hide{ display:none; }
 .tv2-kv{ grid-template-columns:150px 1fr; }
-@media(max-width:860px){ .tv2-main{ grid-template-columns:1fr; overflow:auto; } .tv2-stats{ display:none; }
-  .tv2-pitch .pitch{ flex:none; height:62vh; min-height:380px; } .rpane{ overflow:visible; } }
+/* player dashboard — FUT card left (always), tabbed stats/profile/story right */
+.pv-main{ display:grid; grid-template-columns:clamp(230px,25%,300px) 1fr; gap:14px; padding-top:12px; min-height:0; }
+.pv-card{ position:relative; display:flex; flex-direction:column; align-items:center; gap:14px; min-height:0; padding:18px 16px; overflow:hidden; }
+.pv-card .fut.big{ position:relative; z-index:1; width:100%; max-width:244px; }
+.pv-card .funbar{ position:relative; z-index:1; justify-content:center; margin:0; }
+.pv-card .phero-bg{ opacity:.08; }
+@media(max-width:860px){ .tv2-main,.pv-main{ grid-template-columns:1fr; overflow:auto; } .tv2-stats{ display:none; }
+  .tv2-pitch .pitch{ flex:none; height:62vh; min-height:380px; } .rpane{ overflow:visible; }
+  .pv-card{ overflow:visible; } }
 
 .phero{ display:grid; grid-template-columns:auto 1fr; gap:28px; align-items:center; padding:22px 28px; }
 .phero-bg{ width:340px; height:230px; opacity:.12; }
