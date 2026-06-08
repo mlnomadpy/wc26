@@ -1,6 +1,6 @@
 import DB from '../../../../public/data.json';
-import { CONF } from '../../../lib/wc.js';
-import { og } from '../../../og/render.js';
+import { CONF } from '@shared/lib/wc.js';
+import { og } from '@shared/lib/og/render.js';
 
 export function getStaticPaths() {
   return DB.teams.map((t: any) => ({ params: { code: t.fifa_code.toLowerCase() }, props: { t } }));

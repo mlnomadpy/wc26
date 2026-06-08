@@ -1,9 +1,9 @@
 ---
-import Base from '../../components/Base.astro';
-import Flag from '../../components/Flag.astro';
-import FutCard from '../../components/FutCard.astro';
+import Base from '@app/layouts/Base.astro';
+import Flag from '@shared/ui/Flag.astro';
+import FutCard from '@entities/player/ui/FutCard.astro';
 import DB from '../../../public/data.json';
-import { indexes, autoForm, pickXI, strength, FORMATIONS, FORMNAMES, POSC, POSNAME, CONF, surname, num, money, avgAge, flagImg } from '../../lib/wc.js';
+import { indexes, autoForm, pickXI, strength, FORMATIONS, FORMNAMES, POSC, POSNAME, CONF, surname, num, money, avgAge, flagImg } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const IDX = indexes(DB);
 export function getStaticPaths() {
@@ -123,7 +123,7 @@ const jsonld = {
 
   <script type="application/json" id="squad" set:html={JSON.stringify(sq)}></script>
   <script>
-    import { FORMATIONS, pickXI, POSC, surname } from '../../lib/wc.js';
+    import { FORMATIONS, pickXI, POSC, surname } from '@shared/lib/wc.js';
     const root = document.getElementById('teamroot');
     const el = document.getElementById('squad');
     if (root && el) {

@@ -1,7 +1,7 @@
 ---
-import Base from '../components/Base.astro';
+import Base from '@app/layouts/Base.astro';
 import DB from '../../public/data.json';
-import { POSC, CONF, flag, money } from '../lib/wc.js';
+import { POSC, CONF, flag, money } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const buckets = {}; DB.players.forEach(p => { if (Number.isFinite(p.age)) { const b = Math.floor(p.age / 2) * 2; buckets[b] = (buckets[b] || 0) + 1; } });
 const ages = Object.keys(buckets).map(Number).sort((a, b) => b - a);

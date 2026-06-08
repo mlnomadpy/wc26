@@ -1,5 +1,5 @@
 ---
-import '../styles/global.css';
+import '../styles/app.css';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/'; // "/wc26/"
 const SITE = 'https://www.tahabouhsine.com';
 const KICKOFF = '2026-06-11T15:00:00-06:00'; // opening match
@@ -43,7 +43,7 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
   <link rel="sitemap" href={B + 'sitemap-index.xml'} />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Saira+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;1,800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Chakra+Petch:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Saira+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,700;1,800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   {jsonld && <script type="application/ld+json" set:html={JSON.stringify(jsonld)} />}
 </head>
 <body>
@@ -85,6 +85,32 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
       tr.tabIndex = 0; tr.setAttribute('role', 'link');
       tr.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); tr.click(); } });
     });
+    // innovative cards: pointer-driven 3D tilt + holographic foil + glare
+    if (window.matchMedia('(hover:hover) and (pointer:fine)').matches &&
+        !window.matchMedia('(prefers-reduced-motion:reduce)').matches) {
+      const MAX = 12;                       // max tilt degrees
+      document.querySelectorAll('.fut[data-tilt]').forEach(card => {
+        let raf = 0;
+        card.addEventListener('pointermove', e => {
+          const r = card.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+          if (raf) cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(() => {
+            card.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
+            card.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+            card.style.setProperty('--ry', ((px - 0.5) * 2 * MAX).toFixed(2) + 'deg');
+            card.style.setProperty('--rx', ((0.5 - py) * 2 * MAX).toFixed(2) + 'deg');
+            card.classList.add('tilting');
+          });
+        });
+        card.addEventListener('pointerleave', () => {
+          if (raf) cancelAnimationFrame(raf);
+          card.classList.remove('tilting');
+          card.style.setProperty('--rx', '0deg'); card.style.setProperty('--ry', '0deg');
+          card.style.setProperty('--mx', '50%'); card.style.setProperty('--my', '50%');
+        });
+      });
+    }
     // navbar live countdown chip
     (function () {
       const el = document.getElementById('navcd-t'); if (!el) return;

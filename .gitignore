@@ -229,3 +229,6 @@ skills-lock.json
 
 # raw reference photos (inputs for scripts/process_faces.py)
 refs/
+
+# macOS
+.DS_Store

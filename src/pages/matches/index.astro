@@ -1,6 +1,6 @@
 ---
-import Base from '../../components/Base.astro';
-import Flag from '../../components/Flag.astro';
+import Base from '@app/layouts/Base.astro';
+import Flag from '@shared/ui/Flag.astro';
 import DB from '../../../public/data.json';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const matches = [...DB.matches].sort((a, b) => (a.kickoff_at || '').localeCompare(b.kickoff_at || ''));

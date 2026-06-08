@@ -1,7 +1,7 @@
 ---
-import Base from '../../components/Base.astro';
+import Base from '@app/layouts/Base.astro';
 import DB from '../../../public/data.json';
-import { slugify } from '../../lib/wc.js';
+import { slugify } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const m = {}; DB.players.forEach(p => { if (p.club) (m[p.club] = m[p.club] || []).push(p); });
 const rows = Object.entries(m).map(([c, ps]) => ({ c, n: ps.length, country: ps[0].club_country, league: ps[0].club_league })).sort((a, b) => b.n - a.n);

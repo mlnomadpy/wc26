@@ -1,7 +1,7 @@
 ---
-import Base from '../components/Base.astro';
+import Base from '@app/layouts/Base.astro';
 import DB from '../../public/data.json';
-import { indexes, flag, flagImg, money, num } from '../lib/wc.js';
+import { indexes, flag, flagImg, money, num } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const IDX = indexes(DB);
 const t = DB.totals, P = DB.players;
@@ -62,96 +62,99 @@ const jsonld = [
 ];
 ---
 <Base title="WC26 Matchday — FIFA World Cup 2026 Squads, Lineups & Bracket" description="Explore every 2026 FIFA World Cup squad, projected lineup, club and match — 1,247 players across 48 teams and 104 matches, with a live countdown, interactive bracket and comparisons." jsonld={jsonld}>
-  <div class="app-page">
-  <section class="lhero3 reveal">
-    <div class="lh3-bg" aria-hidden="true" style={`background-image:url(${B}hero/stadium.jpg)`}></div>
-    <div class="lh3-art" aria-hidden="true">
-      <div class="lh3-ball">
-        <div class="ball-rays"></div>
-        <div class="ball-rays r2"></div>
-        <div class="ball-glow"></div>
-        <svg class="ball-svg" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="46" fill="#eef5ff" />
-          <g fill="#091226">
-            <polygon points="50,33 61,41 57,54 43,54 39,41" />
-            <polygon points="50,4 57,11 50,18 43,11" />
-            <polygon points="88,30 92,40 84,46 77,38 81,28" />
-            <polygon points="12,30 19,28 23,38 16,46 8,40" />
-            <polygon points="70,78 79,72 86,79 82,89 72,88" />
-            <polygon points="30,78 28,88 18,89 14,79 21,72" />
-          </g>
-          <circle cx="50" cy="50" r="46" fill="none" stroke="#2b8cff" stroke-width="2" />
-        </svg>
-      </div>
-      <img class="lh3-player" src={`${B}hero/player.png`} alt="" />
-    </div>
-    <div class="lh3-grid">
-      <div class="lh3-left">
+  <div class="home">
+  <!-- ============ HERO ============ -->
+  <section class="home-hero bl-hero reveal">
+    <div class="hh-bg" aria-hidden="true" style={`background-image:url(${B}hero/bg.jpg)`}></div>
+    <div class="hh-grad" aria-hidden="true"></div>
+
+    <div class="hh-inner">
+      <div class="hh-copy">
         <div class="lh-eye"><span class="lh-dot"></span> Jun 11 – Jul 19, 2026 · USA · Canada · Mexico</div>
         <h1>The first <span class="accent">48-team</span> World Cup.</h1>
-        <p class="lh-lede">More nations. More rivalries. One dream.</p>
-        <div class="lbtns">
+        <p class="hh-lede">More nations. More rivalries. One dream.</p>
+        <div class="hh-cta">
           <a class="btn primary" href={B + 'teams/'}>Explore teams</a>
           <a class="btn" href={B + 'bracket/'}>View bracket</a>
         </div>
+        <a class="lh-cd hh-cd" href={B + 'matches/1/'} id="cd" data-target={target}>
+          <i class="cardbeam" aria-hidden="true"></i>
+          <div class="cd-lab">Kickoff in</div>
+          <div class="cd-clock">
+            <span><b id="cd-d">–</b><i>days</i></span>
+            <span><b id="cd-h">–</b><i>hrs</i></span>
+            <span><b id="cd-m">–</b><i>min</i></span>
+            <span><b id="cd-s">–</b><i>sec</i></span>
+          </div>
+          <div class="cd-match">
+            <img class="flagi" src={flagImg(ht.fifa_code)} alt="" /><span>{ht.team_name}</span>
+            <em>vs</em>
+            <span>{at.team_name}</span><img class="flagi" src={flagImg(at.fifa_code)} alt="" />
+          </div>
+          <div class="cd-meta">{c1 ? c1.city_name + ' · ' : ''}Opening match</div>
+        </a>
       </div>
 
-      <div class="lh3-spacer" aria-hidden="true"></div>
-
-      <a class="duel-big" href={B + 'compare/'}>
-        <div class="db-tag">The last dance</div>
-        <div class="db-body">
-          <div class="db-p">
-            <span class="db-face"><img src={face(messi?.player_id)} alt="Messi" onerror={onFace('Lionel Messi')} /></span>
-            <b>Messi</b>
-            <span class="db-club"><img class="flagi" src={flagImg('ARG')} alt="" /> Argentina</span>
-            <div class="db-st">
+      <a class="bl-faceoff" href={B + 'compare/'} aria-label="The Last Dance — compare Messi and Ronaldo">
+        <i class="cardbeam" aria-hidden="true"></i>
+        <div class="bl-fo-head"><span class="bl-spark"></span> The Last Dance <span class="bl-spark"></span></div>
+        <div class="bl-duel">
+          <div class="bl-player left">
+            <img class="bl-flag" src={flagImg('ARG')} alt="" />
+            <b class="bl-name">Messi</b>
+            <span class="bl-club">Argentina</span>
+            <div class="bl-st">
               <span>{messi?.international_goals ?? 116}<i>goals</i></span>
               <span>{messi?.caps ?? 198}<i>caps</i></span>
               <span>{messi?.age ?? 38}<i>age</i></span>
             </div>
           </div>
-          <div class="db-vs">VS</div>
-          <div class="db-p">
-            <span class="db-face"><img src={face(ronaldo?.player_id)} alt="Ronaldo" onerror={onFace('Cristiano Ronaldo')} /></span>
-            <b>Ronaldo</b>
-            <span class="db-club"><img class="flagi" src={flagImg('POR')} alt="" /> Portugal</span>
-            <div class="db-st">
+          <div class="bl-vs" aria-hidden="true">
+            <svg class="bl-vs-svg" viewBox="0 0 180 112" role="img">
+              <defs>
+                <linearGradient id="vsFill" x1="24" y1="8" x2="152" y2="102" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#6effbb" />
+                  <stop offset=".52" stop-color="#22e68c" />
+                  <stop offset="1" stop-color="#08a95d" />
+                </linearGradient>
+                <filter id="vsGlow" x="-25%" y="-35%" width="150%" height="170%">
+                  <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#26e98e" flood-opacity=".62" />
+                  <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#02101e" flood-opacity=".72" />
+                </filter>
+              </defs>
+              <path class="vs-shadow" d="M20 15c7-4 19-4 26 0l25 64 41-66c7-5 20-5 27 0l-56 89c-8 8-27 9-34-1L20 15Z" />
+              <path class="vs-shadow" d="M163 19c-18-9-42-8-52 5-9 12 1 22 21 26 23 5 34 17 24 34-12 20-45 23-70 9l12-23c17 8 35 8 41 1 4-5-1-9-15-13-23-6-35-17-27-33 10-20 43-26 77-13l-11 7Z" />
+              <path class="vs-mark" d="M16 9c8-5 21-5 29 0l25 65 42-68c8-4 22-4 30 1l-57 91c-9 9-29 10-37-1L16 9Z" />
+              <path class="vs-mark" d="M159 13c-19-9-43-8-54 6-9 12 1 22 22 27 24 5 35 18 24 35-12 20-46 23-72 9l13-23c17 8 36 8 42 1 4-5-1-9-15-13-24-6-36-18-28-34 11-21 45-27 79-14l-11 6Z" />
+              <path class="vs-cut" d="M35 23 49 62M104 84c15 5 31 4 40-3M117 27c13-5 28-5 42 0M71 75 114 9" />
+            </svg>
+          </div>
+          <div class="bl-player right">
+            <img class="bl-flag" src={flagImg('POR')} alt="" />
+            <b class="bl-name">Ronaldo</b>
+            <span class="bl-club">Portugal</span>
+            <div class="bl-st">
               <span>{ronaldo?.international_goals ?? 143}<i>goals</i></span>
               <span>{ronaldo?.caps ?? 227}<i>caps</i></span>
               <span>{ronaldo?.age ?? 41}<i>age</i></span>
             </div>
           </div>
         </div>
-        <div class="db-foot">Likely their final World Cup — compare them head-to-head →</div>
+        <div class="bl-fo-foot">Likely their final World Cup — compare head-to-head →</div>
       </a>
     </div>
 
-    <div class="lh3-foot">
-      <a class="lh-cd" href={B + 'matches/1/'} id="cd" data-target={target}>
-        <div class="cd-lab">Kickoff in</div>
-        <div class="cd-clock">
-          <span><b id="cd-d">–</b><i>days</i></span>
-          <span><b id="cd-h">–</b><i>hrs</i></span>
-          <span><b id="cd-m">–</b><i>min</i></span>
-          <span><b id="cd-s">–</b><i>sec</i></span>
-        </div>
-        <div class="cd-match">
-          <img class="flagi" src={flagImg(ht.fifa_code)} alt="" /><span>{ht.team_name}</span>
-          <em>vs</em>
-          <span>{at.team_name}</span><img class="flagi" src={flagImg(at.fifa_code)} alt="" />
-        </div>
-        <div class="cd-meta">{c1 ? c1.city_name + ' · ' : ''}Opening match</div>
-      </a>
-      <div class="lh-stats">
-        <a href={B + 'teams/'}><b>{DB.teams.length}</b><span>Teams</span></a>
-        <a href={B + 'players/'}><b>{num(P.length)}</b><span>Players</span></a>
-        <a href={B + 'matches/'}><b>{DB.matches.length}</b><span>Matches</span></a>
-        <a href={B + 'map/'}><b>{(DB.cities && DB.cities.length) || 16}</b><span>Host cities</span></a>
-      </div>
+    <div class="hero-dashboard reveal d1">
+      <section class="home-stats" aria-label="Tournament totals">
+        <a href={B + 'teams/'}><span class="stat-ico" set:html={ICON.teams}></span><b>{DB.teams.length}</b><span>Teams</span></a>
+        <a href={B + 'players/'}><span class="stat-ico" set:html={ICON.players}></span><b>{num(P.length)}</b><span>Players</span></a>
+        <a href={B + 'matches/'}><span class="stat-ico" set:html={ICON.matches}></span><b>{DB.matches.length}</b><span>Matches</span></a>
+        <a href={B + 'map/'}><span class="stat-ico" set:html={ICON.map}></span><b>{(DB.cities && DB.cities.length) || 16}</b><span>Host cities</span></a>
+      </section>
     </div>
   </section>
 
+  <!-- ============ FLAG MARQUEE ============ -->
   <div class="marquee reveal d1" aria-hidden="true">
     <div class="mtrack">
       {[...marquee, ...marquee].map(tm => (
@@ -162,38 +165,61 @@ const jsonld = [
     </div>
   </div>
 
-  <div class="app-grow homescroll">
-  <h2 class="sec">Storylines</h2>
-  <div class="bento reveal d2">
-    <a class="feature" href={B + 'compare/'}>
-      <div>
-        <div class="vsflags"><img src={flagImg('ARG', 80)} alt="Argentina" width="56" height="38" /><span class="vsx">vs</span><img src={flagImg('POR', 80)} alt="Portugal" width="56" height="38" /></div>
-        <div class="ft">The last dance</div>
-      </div>
-      <div class="faint">Messi (Argentina) &amp; Ronaldo (Portugal) — likely their final World Cup. Compare the two icons head-to-head.</div>
-    </a>
-    {tiles.map(s => (
-      <a class={`tile${s.pid ? ' tile-face' : ''}`} href={s.href}>
-        {s.pid && <span class="tile-pf"><img src={face(s.pid)} alt="" loading="lazy" onerror={onFace(s.name)} /></span>}
-        <div class="tile-tx">
-          <div class="big">{s.img && <img src={s.img} alt="" width="26" height="18" loading="lazy" />}{s.big}</div>
-          <div class="lab">{s.lab}</div>
-          <div class="sub faint">{s.sub}</div>
+  <!-- ============ STORYLINES ============ -->
+  <section class="home-sec reveal d2">
+    <div class="sec-head"><h2 class="sec">Storylines</h2></div>
+    <div class="story-feature">
+      <a class="story-opener" href={B + 'matches/1/'}>
+        <div class="story-flags">
+          <img src={flagImg(ht.fifa_code)} alt="" loading="lazy" />
+          <span>vs</span>
+          <img src={flagImg(at.fifa_code)} alt="" loading="lazy" />
         </div>
+        <div>
+          <span class="tag">Opening match</span>
+          <h3>{ht.team_name} vs {at.team_name}</h3>
+          <p>{c1 ? c1.city_name : 'Mexico City'} starts the expanded 48-team tournament.</p>
+        </div>
+        <span class="story-btn">Preview match →</span>
       </a>
-    ))}
-  </div>
+    </div>
+    <div class="bento">
+      {tiles.map(s => (
+        <a class={`tile${s.pid ? ' tile-face' : ''}`} href={s.href}>
+          {s.pid && <span class="tile-pf"><img src={face(s.pid)} alt="" loading="lazy" onerror={onFace(s.name)} /></span>}
+          <div class="tile-tx">
+            <div class="big">{s.img && <img src={s.img} alt="" width="26" height="18" loading="lazy" />}{s.big}</div>
+            <div class="lab">{s.lab}</div>
+            <div class="sub faint">{s.sub}</div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
 
-  <h2 class="sec">Explore</h2>
-  <div class="xstrip reveal d3">
-    {explore.map(([icon, u, h, s]) => (
-      <a class="xrow" href={B + u}>
-        <span class="xi" set:html={icon}></span>
-        <span><span class="xh">{h}</span><br /><span class="xs">{s}</span></span>
-      </a>
-    ))}
-  </div>
-  </div>
+  <!-- ============ EXPLORE ============ -->
+  <section class="home-sec reveal d3">
+    <div class="sec-head"><h2 class="sec">Explore the data</h2></div>
+    <div class="xstrip">
+      {explore.map(([icon, u, h, s]) => (
+        <a class="xrow" href={B + u}>
+          <span class="xi" set:html={icon}></span>
+          <span class="xrow-tx"><span class="xh">{h}</span><span class="xs">{s}</span></span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- ============ CLOSING CTA ============ -->
+  <section class="home-cta reveal d3">
+    <div class="hc-glow" aria-hidden="true"></div>
+    <h2>Your tournament, one tap away.</h2>
+    <p>Squads, projected lineups, the bracket and head-to-heads for all 48 teams.</p>
+    <div class="hh-cta">
+      <a class="btn primary" href={B + 'teams/'}>Explore teams</a>
+      <a class="btn" href={B + 'players/'}>Browse players</a>
+    </div>
+  </section>
   </div>
 
   <script>
@@ -213,8 +239,33 @@ const jsonld = [
         u.h.textContent = String(Math.floor(diff / 36e5) % 24).padStart(2, '0');
         u.m.textContent = String(Math.floor(diff / 6e4) % 60).padStart(2, '0');
         u.s.textContent = String(Math.floor(diff / 1e3) % 60).padStart(2, '0');
+        u.s.classList.remove('tick'); void u.s.offsetWidth; u.s.classList.add('tick');
       }
       tick(); iv = setInterval(tick, 1000);
+    }
+
+    const RM = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+    // scroll-triggered reveals: sections fade up as they enter the viewport
+    const reveals = document.querySelectorAll('.reveal');
+    if (RM || !('IntersectionObserver' in window)) {
+      reveals.forEach(r => r.classList.add('in'));
+    } else {
+      const io = new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); } });
+      }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
+      reveals.forEach(r => io.observe(r));
+    }
+
+    // interactive cursor spotlight on stat / bento / explore cards
+    if (!RM && window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
+      document.querySelectorAll('.home-stats a, .tile, .xrow').forEach(card => {
+        card.addEventListener('pointermove', e => {
+          const r = card.getBoundingClientRect();
+          card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+          card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+        });
+      });
     }
   </script>
 </Base>

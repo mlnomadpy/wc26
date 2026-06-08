@@ -1,9 +1,9 @@
 ---
-import Base from '../../components/Base.astro';
-import Flag from '../../components/Flag.astro';
-import FutCard from '../../components/FutCard.astro';
+import Base from '@app/layouts/Base.astro';
+import Flag from '@shared/ui/Flag.astro';
+import FutCard from '@entities/player/ui/FutCard.astro';
 import DB from '../../../public/data.json';
-import { indexes, slugify, POSC, num, money, flagImg } from '../../lib/wc.js';
+import { indexes, slugify, POSC, num, money, flagImg } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const IDX = indexes(DB);
 export function getStaticPaths() {

@@ -1,8 +1,8 @@
 ---
-import Base from '../../components/Base.astro';
-import Flag from '../../components/Flag.astro';
+import Base from '@app/layouts/Base.astro';
+import Flag from '@shared/ui/Flag.astro';
 import DB from '../../../public/data.json';
-import { indexes, autoForm, pickXI, FORMATIONS, surname, num, money, avgAge } from '../../lib/wc.js';
+import { indexes, autoForm, pickXI, FORMATIONS, surname, num, money, avgAge } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const HOME = '#e9bb4c', AWAY = '#5b9cff';
 const IDX = indexes(DB);

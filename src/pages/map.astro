@@ -1,7 +1,7 @@
 ---
-import Base from '../components/Base.astro';
+import Base from '@app/layouts/Base.astro';
 import DB from '../../public/data.json';
-import { CITY_GEO } from '../lib/wc.js';
+import { CITY_GEO } from '@shared/lib/wc.js';
 const lats = Object.values(CITY_GEO).map(g => g[0]), lons = Object.values(CITY_GEO).map(g => g[1]);
 const minLa = Math.min(...lats) - 2, maxLa = Math.max(...lats) + 2, minLo = Math.min(...lons) - 3, maxLo = Math.max(...lons) + 3;
 const X = lo => (lo - minLo) / (maxLo - minLo) * 100, Yc = la => (1 - (la - minLa) / (maxLa - minLa)) * 100;

@@ -1,6 +1,6 @@
 import DB from '../../../../public/data.json';
-import { indexes } from '../../../lib/wc.js';
-import { og } from '../../../og/render.js';
+import { indexes } from '@shared/lib/wc.js';
+import { og } from '@shared/lib/og/render.js';
 
 const IDX = indexes(DB);
 

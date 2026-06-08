@@ -1,6 +1,6 @@
 ---
-import Base from '../../components/Base.astro';
-import Flag from '../../components/Flag.astro';
+import Base from '@app/layouts/Base.astro';
+import Flag from '@shared/ui/Flag.astro';
 import DB from '../../../public/data.json';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const byG = {}; DB.teams.forEach(t => { (byG[t.group_letter] = byG[t.group_letter] || []).push(t); });

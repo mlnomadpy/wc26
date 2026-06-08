@@ -1,7 +1,7 @@
 ---
-import Base from '../components/Base.astro';
+import Base from '@app/layouts/Base.astro';
 import DB from '../../public/data.json';
-import { indexes, CONF, POSC, avgAge } from '../lib/wc.js';
+import { indexes, CONF, POSC, avgAge } from '@shared/lib/wc.js';
 const IDX = indexes(DB);
 const teamMetrics = DB.teams.map(t => {
   const sq = IDX.playersByTeam[t.fifa_code] || [], a = avgAge(sq) || 27;
