@@ -1,0 +1,32 @@
+---
+import Flag from './Flag.astro';
+import { rating, tier, monogram } from '../lib/wc.js';
+const { p, big = false } = Astro.props;
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const r = rating(p);
+const tr = tier(r);
+const stats = [
+  ['GLS', p.international_goals], ['DRI', p.club_assists_2025_26],
+  ['CAP', p.caps], ['APP', p.club_apps_2025_26],
+  ['G26', p.club_goals_2025_26], ['AGE', p.age],
+];
+---
+<a class={`fut ${tr}${big ? ' big' : ''}`} href={`${B}players/${p.player_id}/`} title={p.player_name}>
+  <div class="fut-sheen"></div>
+  <div class="fut-top">
+    <div class="fut-ovr"><b>{r}</b><span>{p.position}</span></div>
+    <div class="fut-id">
+      <Flag code={p.fifa_code} />
+      <span class="fut-num">#{p.shirt_number ?? '–'}</span>
+      {p.is_captain && <span class="fut-cap">C</span>}
+    </div>
+  </div>
+  <div class="fut-face">
+    <span class="fut-mono">{monogram(p.player_name)}</span>
+    <img src={`${B}faces/${p.player_id}.png`} alt="" loading="lazy" onerror="this.remove()" />
+  </div>
+  <div class="fut-name">{p.player_name}</div>
+  <div class="fut-stats">
+    {stats.map(([k, v]) => <span><b>{v ?? '–'}</b>{k}</span>)}
+  </div>
+</a>

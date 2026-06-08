@@ -688,3 +688,41 @@ body{background:
 .token:hover .sh{box-shadow:0 8px 22px rgba(0,0,0,.6),0 0 0 3px var(--accent)}
 /* pills brighter */
 .pill.FW{background:#3a0f24;color:#ff8fb0}
+
+/* ============================================================================
+   v9 — FUT / Panini collectible player cards (rating-tiered, foil)
+   ============================================================================ */
+.futgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:14px}
+.fut{position:relative;display:flex;flex-direction:column;align-items:center;aspect-ratio:5/7;border-radius:16px;
+  padding:13px 12px 11px;overflow:hidden;text-decoration:none;isolation:isolate;
+  background:linear-gradient(160deg,var(--c1),var(--c2));color:var(--ct);box-shadow:var(--sh);
+  transition:transform .18s cubic-bezier(.22,.61,.36,1),box-shadow .18s}
+.fut:hover{transform:translateY(-7px) rotate(-1.2deg);box-shadow:0 22px 44px -14px var(--c1)}
+.fut-sheen{position:absolute;inset:0;z-index:3;pointer-events:none;background-size:250% 250%;background-position:130% 0;
+  transition:background-position .6s ease;background-image:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.3) 48%,transparent 58%)}
+.fut:hover .fut-sheen{background-position:-30% 0}
+.fut-top{display:flex;justify-content:space-between;align-items:flex-start;width:100%;z-index:2}
+.fut-ovr{display:flex;flex-direction:column;align-items:center;line-height:.88}
+.fut-ovr b{font-family:var(--fdisp2);font-size:30px}
+.fut-ovr span{font-weight:800;font-size:11.5px;letter-spacing:.04em}
+.fut-id{display:flex;flex-direction:column;align-items:center;gap:3px}
+.fut-id .flagi{width:28px;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+.fut-num{font-family:var(--fmono);font-size:10px;font-weight:700;opacity:.85}
+.fut-cap{font-size:9px;font-weight:800;background:rgba(0,0,0,.28);border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center}
+.fut-face{flex:1;display:flex;align-items:center;justify-content:center;position:relative;width:100%;z-index:1;min-height:0}
+.fut-mono{font-family:var(--fdisp2);font-size:46px;opacity:.42}
+.fut-face img{position:absolute;bottom:0;height:120%;max-width:104%;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+.fut-name{font-family:var(--fdisp);font-weight:800;text-transform:uppercase;font-size:13px;width:100%;text-align:center;
+  padding-top:6px;border-top:1px solid color-mix(in srgb,var(--ct) 28%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:2}
+.fut-stats{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;width:100%;margin-top:5px;z-index:2;font-size:10.5px;font-weight:700}
+.fut-stats span{display:flex;gap:5px}.fut-stats b{font-variant-numeric:tabular-nums;min-width:18px}
+.fut.bronze{--c1:#d08a4e;--c2:#794825;--ct:#2b1a0c}
+.fut.silver{--c1:#e2e8ef;--c2:#97a4b3;--ct:#1f2c3a}
+.fut.gold{--c1:#f6d877;--c2:#bb8e2e;--ct:#3a2a06}
+.fut.icon{--ct:#3a2a06;background:linear-gradient(160deg,#fff3cf,#dab44d 52%,#997820);box-shadow:0 0 0 1px rgba(255,222,128,.55),var(--sh)}
+.fut.icon .fut-sheen{background-image:linear-gradient(115deg,transparent 34%,rgba(255,255,255,.55) 48%,transparent 60%)}
+.fut.big{width:262px;max-width:100%;padding:18px 17px 16px}
+.fut.big .fut-ovr b{font-size:42px}.fut.big .fut-mono{font-size:66px}.fut.big .fut-name{font-size:17px}.fut.big .fut-stats{font-size:12px}
+/* player page layout with the big card */
+.pgrid{display:grid;grid-template-columns:262px 1fr 1fr;gap:15px;align-items:start}
+@media(max-width:920px){.pgrid{grid-template-columns:1fr}.fut.big{margin:0 auto}}

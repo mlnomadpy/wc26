@@ -1,6 +1,7 @@
 ---
 import Base from '../../components/Base.astro';
 import Flag from '../../components/Flag.astro';
+import FutCard from '../../components/FutCard.astro';
 import DB from '../../../public/data.json';
 import { indexes, autoForm, pickXI, strength, FORMATIONS, FORMNAMES, POSC, POSNAME, CONF, surname, num, money, avgAge, flagImg } from '../../lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
@@ -94,17 +95,8 @@ const jsonld = {
   {['GK', 'DF', 'MF', 'FW'].map(pos => (
     <section style={`--pc:${POSC[pos]}`}>
       <div class="poshead"><span class="pdot"></span><h3>{POSNAME[pos]}</h3><span class="pn">{byPos[pos].length} players</span></div>
-      <div class="squadgrid">
-        {byPos[pos].sort((a, b) => (a.shirt_number || 99) - (b.shirt_number || 99)).map(p => (
-          <a class="scard" href={`${B}players/${p.player_id}/`}>
-            <div class="jersey">{p.shirt_number ?? '–'}{p.is_captain && <span class="cpt">C</span>}</div>
-            <div style="min-width:0">
-              <div class="sn">{p.player_name}</div>
-              <div class="sc">{p.club}</div>
-              <div class="sx">{p.age ?? '–'}y · {p.club_apps_2025_26 ?? '–'} apps · {p.club_goals_2025_26 ?? '–'}g · {p.caps ?? '–'}c</div>
-            </div>
-          </a>
-        ))}
+      <div class="futgrid">
+        {byPos[pos].sort((a, b) => (a.shirt_number || 99) - (b.shirt_number || 99)).map(p => <FutCard p={p} />)}
       </div>
     </section>
   ))}

@@ -77,3 +77,17 @@ export function indexes(DB){
   return {teamByCode,teamById,playersByTeam,playersByClub,playerById,cityById};
 }
 export const avgAge = ps => {const a=ps.map(p=>p.age).filter(Number.isFinite);return a.length?(a.reduce((x,y)=>x+y,0)/a.length):null;};
+
+/* FUT-style overall rating (derived from available data — not official) */
+export function rating(p){
+  const mv = p.market_value_eur || 0;
+  let r = mv
+    ? 74 + Math.log10(mv/1e6 + 1) * 11
+    : 67 + (p.caps||0)*0.05 + (p.international_goals||0)*0.22 + (p.club_goals_2025_26||0)*0.3 + (p.club_apps_2025_26||0)*0.06;
+  r += Math.min(8, (p.international_goals||0)/20);   // legend bump for prolific scorers
+  if (p.is_captain) r += 1.5;
+  return Math.max(58, Math.min(99, Math.round(r)));
+}
+export const tier = r => r>=88?'icon':r>=78?'gold':r>=70?'silver':'bronze';
+export const tierName = t => ({icon:'Legend',gold:'Gold',silver:'Silver',bronze:'Bronze'}[t]||'');
+export function monogram(n){const w=(n||'').trim().split(/\s+/);return ((w[0]?.[0]||'')+(w.length>1?w[w.length-1][0]:'')).toUpperCase();}
