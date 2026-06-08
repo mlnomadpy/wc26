@@ -667,6 +667,12 @@ tbody tr:last-child td{ border-bottom:0; }
 .thstat{ text-align:center; background:color-mix(in srgb,#fff 4%,transparent); border:1px solid var(--line2); border-radius:var(--r-sm); padding:9px 14px; min-width:70px; }
 .thstat b{ font-family:var(--fdisp2); font-size:22px; display:block; color:var(--accent2); line-height:1.05; }
 .thstat span{ font-size:9.5px; text-transform:uppercase; letter-spacing:.09em; color:var(--fg-mute); font-family:var(--fmono); }
+/* team detail upgrades */
+.dh-glink{ color:var(--accent2); } .dh-glink:hover{ color:var(--fg); }
+.thstat-hero{ background:color-mix(in srgb,var(--accent2) 13%,transparent); border-color:color-mix(in srgb,var(--accent2) 46%,var(--line2)); }
+.thstat-hero b{ color:var(--gold); }
+.keystrip{ display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; margin:2px 0 18px; }
+@media(max-width:760px){ .keystrip{ justify-content:center; } }
 
 .phero{ display:grid; grid-template-columns:auto 1fr; gap:28px; align-items:center; padding:22px 28px; }
 .phero-bg{ width:340px; height:230px; opacity:.12; }
