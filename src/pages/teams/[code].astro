@@ -1,9 +1,8 @@
 ---
 import Base from '@app/layouts/Base.astro';
 import Flag from '@shared/ui/Flag.astro';
-import FutCard from '@entities/player/ui/FutCard.astro';
 import DB from '../../../public/data.json';
-import { indexes, autoForm, pickXI, strength, FORMATIONS, FORMNAMES, POSC, POSNAME, CONF, surname, num, money, avgAge, flagImg, teamRating } from '@shared/lib/wc.js';
+import { indexes, autoForm, pickXI, FORMATIONS, FORMNAMES, POSC, CONF, surname, num, money, avgAge, flagImg, teamRating, rating, tier, monogram } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const IDX = indexes(DB);
 export function getStaticPaths() {
@@ -16,126 +15,118 @@ const byId = {}; sq.forEach(p => byId[p.player_id] = p);
 const form = autoForm(sq);
 const xi = pickXI(sq, form);
 const onPitch = new Set(xi.filter(Boolean));
-const bench = sq.filter(p => !onPitch.has(p.player_id)).sort((a, b) => strength(b) - strength(a));
 const av = avgAge(sq);
-const byPos = { GK: [], DF: [], MF: [], FW: [] }; sq.forEach(p => byPos[p.position] && byPos[p.position].push(p));
-const benchSub = p => [p.club_apps_2025_26 != null ? p.club_apps_2025_26 + ' apps' : '', p.club_goals_2025_26 != null ? p.club_goals_2025_26 + 'g' : '', (p.caps || 0) + 'c'].filter(Boolean).join(' · ');
+const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
+const byPosCount = { GK: 0, DF: 0, MF: 0, FW: 0 }; sq.forEach(p => byPosCount[p.position] != null && byPosCount[p.position]++);
+const squadSorted = [...sq].sort((a, b) => (POS_ORDER[a.position] - POS_ORDER[b.position]) || ((a.shirt_number || 99) - (b.shirt_number || 99)));
 const totG = sq.reduce((s, p) => s + (p.international_goals || 0), 0), totC = sq.reduce((s, p) => s + (p.caps || 0), 0);
 const val = sq.reduce((s, p) => s + (p.market_value_eur || 0), 0);
 const abroad = sq.filter(p => p.club_country && p.club_country !== t.team_name).length;
 const topCap = [...sq].sort((a, b) => (b.caps || 0) - (a.caps || 0))[0];
 const topSc = [...sq].sort((a, b) => (b.international_goals || 0) - (a.international_goals || 0))[0];
 const tRating = teamRating(t.fifa_ranking);
-const desc = `${t.team_name} 2026 FIFA World Cup squad (Group ${t.group_letter}): all ${sq.length} players, projected XI, coach ${t.head_coach || ''}. Caps, goals and 2025/26 club stats.`;
+const desc = `${t.team_name} 2026 FIFA World Cup squad (Group ${t.group_letter}): all ${sq.length} players, projected XI, coach ${t.head_coach || ''}.`;
 const jsonld = {
   '@context': 'https://schema.org', '@type': 'SportsTeam', name: t.team_name, sport: 'Association football',
   url: new URL(Astro.url.pathname, 'https://www.tahabouhsine.com').href,
   coach: t.head_coach ? { '@type': 'Person', name: t.head_coach } : undefined,
   athlete: sq.map(p => ({ '@type': 'Person', name: p.player_name })),
 };
+const POSF = [['', 'All', sq.length], ['GK', 'GK', byPosCount.GK], ['DF', 'DF', byPosCount.DF], ['MF', 'MF', byPosCount.MF], ['FW', 'FW', byPosCount.FW]];
+const STATS = [['Rating', tRating ?? '—', true], ['FIFA', t.fifa_ranking ? '#' + t.fifa_ranking : '—'], ['Value', val ? money(val) : '—'], ['Caps', num(totC)], ['Goals', num(totG)], ['Age', av ? av.toFixed(1) : '—']];
+const face = id => `${B}faces/${id}.jpg`;
 ---
 <Base title={`${t.team_name} — 2026 World Cup squad, lineup & stats`} description={desc} jsonld={jsonld} ogImage={B + 'og/team/' + t.fifa_code.toLowerCase() + '.png'}>
-  <div class="app-page">
-  <a class="btn back" href={B + 'teams/'}>← All teams</a>
-  <header class="dhero" style={`--c:${CONF[t.confederation]}`}>
-    <div class="dh-bg" style={`background-image:url(${flagImg(t.fifa_code, 320)})`}></div>
-    <div class="dh-main">
-      <Flag code={t.fifa_code} cls="dh-flag" w={160} />
-      <div>
-        <div class="dh-eye"><a class="dh-glink" href={`${B}groups/${t.group_letter}/`}>Group {t.group_letter} →</a> · {t.confederation} · {t.qualification_method || 'qualified'}</div>
-        <h1>{t.team_name}</h1>
-        <div class="dh-meta">{t.head_coach || '—'} · {sq.length} players</div>
-      </div>
+  <div class="app-page tv2">
+  <header class="tv2-bar" style={`--c:${CONF[t.confederation]}`}>
+    <a class="tv2-back" href={B + 'teams/'} aria-label="All teams">←</a>
+    <Flag code={t.fifa_code} cls="tv2-flag" w={80} />
+    <div class="tv2-id">
+      <h1>{t.team_name}</h1>
+      <span class="tv2-sub">{t.head_coach || '—'} · <a class="dh-glink" href={`${B}groups/${t.group_letter}/`}>Group {t.group_letter}</a> · {t.confederation} · {sq.length} players</span>
     </div>
-    <div class="dh-stats">
-      <div class="thstat thstat-hero"><b>{tRating ?? '—'}</b><span>Rating</span></div>
-      <div class="thstat"><b>{t.fifa_ranking ? '#' + t.fifa_ranking : '—'}</b><span>FIFA rank</span></div>
-      <div class="thstat"><b>{val ? money(val) : '—'}</b><span>Value</span></div>
-      <div class="thstat"><b>{num(totC)}</b><span>Caps</span></div>
-      <div class="thstat"><b>{num(totG)}</b><span>Intl goals</span></div>
-      <div class="thstat"><b>{av ? av.toFixed(1) : '—'}</b><span>Avg age</span></div>
+    <div class="tv2-stats">
+      {STATS.map(([k, v, hero]) => <span class={`tv2-stat ${hero ? 'hero' : ''}`}><b>{v}</b><i>{k}</i></span>)}
     </div>
   </header>
 
-  <div class="subtabs" id="tsubs">
-    <button class="subtab on" data-t="squad">Squad ({sq.length})</button>
-    <button class="subtab" data-t="lineup">Projected XI</button>
-    <button class="subtab" data-t="info">Team info</button>
-  </div>
-
-  <div class="app-grow scroll" id="tbody">
-  <div class="tsec" data-sec="lineup" id="teamroot" data-form={form}>
-    <h2 class="sec" style="margin-top:6px">Projected XI <span class="tag">{form} · auto-picked from squad data, not an official lineup</span></h2>
-    <div class="pitchwrap">
-      <div class="panel">
+  <div class="app-grow tv2-main">
+    <!-- LEFT — lineup, always visible -->
+    <section class="panel tv2-pitch" id="teamroot" data-form={form}>
+      <div class="tv2-h">
+        <h3>Projected XI <span class="tag">auto-picked · {form}</span></h3>
         <div class="formrow">{FORMNAMES.map(f => <span class={`chip ${f === form ? 'on' : ''}`} data-f={f}>{f}</span>)}</div>
-        <div class="pitch" id="pitch">
-          <div class="line ch"></div><div class="line cc"></div><div class="line box top"></div><div class="line box bot"></div><div class="line six top"></div><div class="line six bot"></div>
-          {xi.map((id, i) => { const [cat, x, y] = FORMATIONS[form][i]; const p = id ? byId[id] : null; return (
-            <a class={`token ${p && p.is_captain ? 'cpt' : ''}`} style={`left:${x}%;top:${y}%`} href={id ? `${B}players/${id}/` : '#'} title={p ? p.player_name : ''}>
-              <div class="sh" style={`--tc:${POSC[cat]}`}>{p ? (p.shirt_number ?? '') : ''}{p && p.is_captain && <i class="cap">C</i>}</div>
-              <div class="nm">{p ? surname(p.player_name) : '—'}</div>
-            </a>
-          ); })}
-        </div>
-        <div class="hint faint">Switch formation to re-pick the XI. Tap a player for full stats.</div>
       </div>
-      <div class="panel">
-        <h3>Bench <span class="tag">{bench.length} · ranked by projected role</span></h3>
-        <div class="benchlist" id="bench">
-          {bench.map(p => (
-            <a class="pcard" href={`${B}players/${p.player_id}/`}>
-              <div class="pcrow"><span class={`pill ${p.position}`}>{p.position}</span><span class="faint">#{p.shirt_number ?? '—'}</span></div>
-              <div class="nm">{p.player_name}{p.is_captain ? ' ©' : ''}</div>
-              <div class="meta faint">{p.club}</div><div class="meta faint">{benchSub(p)}</div>
+      <div class="pitch" id="pitch">
+        <div class="line ch"></div><div class="line cc"></div><div class="line box top"></div><div class="line box bot"></div><div class="line six top"></div><div class="line six bot"></div>
+        {xi.map((id, i) => { const [cat, x, y] = FORMATIONS[form][i]; const p = id ? byId[id] : null; return (
+          <a class={`token ${p && p.is_captain ? 'cpt' : ''}`} style={`left:${x}%;top:${y}%`} href={id ? `${B}players/${id}/` : '#'} title={p ? p.player_name : ''}>
+            <div class="sh" style={`--tc:${POSC[cat]}`}>{p ? (p.shirt_number ?? '') : ''}{p && p.is_captain && <i class="cap">C</i>}</div>
+            <div class="nm">{p ? surname(p.player_name) : '—'}</div>
+          </a>
+        ); })}
+      </div>
+    </section>
+
+    <!-- RIGHT — tabbed: Squad / Profile -->
+    <section class="panel tv2-right">
+      <div class="rtabs" id="rtabs">
+        <button class="rtab on" data-r="squad">Squad</button>
+        <button class="rtab" data-r="info">Profile</button>
+      </div>
+
+      <div class="rpane" data-r="squad">
+        <div class="chips posf" id="posf">
+          {POSF.map(([p, label, n]) => <span class={`chip ${p === '' ? 'on' : ''}`} data-p={p}>{label} <i class="posn">{n}</i></span>)}
+        </div>
+        <div class="splgrid" id="squadgrid">
+          {squadSorted.map(p => (
+            <a class={`spl ${onPitch.has(p.player_id) ? 'on' : ''}`} data-pos={p.position} style={`--pc:${POSC[p.position]}`} href={`${B}players/${p.player_id}/`} title={p.player_name}>
+              <span class="spl-face">
+                <span class="spl-mono">{monogram(p.player_name)}</span>
+                <img src={face(p.player_id)} alt="" loading="lazy" onerror="this.remove()" />
+                <span class="spl-no">{p.shirt_number ?? ''}</span>
+              </span>
+              <span class="spl-id">
+                <span class="spl-nm">{surname(p.player_name)}{p.is_captain ? ' (C)' : ''}</span>
+                <span class="spl-meta"><span class={`pill ${p.position}`}>{p.position}</span> {p.club || ''}</span>
+              </span>
+              <span class={`lbovr ${tier(p)} spl-ovr`}>{rating(p)}</span>
             </a>
           ))}
         </div>
       </div>
-    </div>
-  </div>
 
-  <div class="tsec" data-sec="squad">
-  {['GK', 'DF', 'MF', 'FW'].map(pos => (
-    <section style={`--pc:${POSC[pos]}`}>
-      <div class="poshead"><span class="pdot"></span><h3>{POSNAME[pos]}</h3><span class="pn">{byPos[pos].length} players</span></div>
-      <div class="futgrid">
-        {byPos[pos].sort((a, b) => (a.shirt_number || 99) - (b.shirt_number || 99)).map(p => <FutCard p={p} />)}
+      <div class="rpane" data-r="info" hidden>
+        <div class="kv tv2-kv">
+          <span class="k">Head coach</span><span>{t.head_coach || '—'}</span>
+          <span class="k">FIFA ranking</span><span>{t.fifa_ranking ? '#' + t.fifa_ranking : '—'} · rating {tRating ?? '—'}</span>
+          <span class="k">Group</span><span><a class="dh-glink" href={`${B}groups/${t.group_letter}/`}>Group {t.group_letter} →</a></span>
+          <span class="k">Qualified via</span><span>{t.qualification_method || '—'}</span>
+          <span class="k">Average age</span><span class="mono">{av ? av.toFixed(1) : '—'}</span>
+          <span class="k">Total caps</span><span class="mono">{num(totC)}</span>
+          <span class="k">Total intl goals</span><span class="mono">{num(totG)}</span>
+          <span class="k">Squad value</span><span class="mono">{val ? money(val) : '—'}</span>
+          <span class="k">Play abroad</span><span class="mono">{abroad}/{sq.length}</span>
+          <span class="k">Most capped</span><span>{topCap.player_name} <span class="faint">({topCap.caps})</span></span>
+          <span class="k">Top scorer</span><span>{topSc.player_name} <span class="faint">({topSc.international_goals})</span></span>
+        </div>
       </div>
     </section>
-  ))}
-  </div>
-
-  <div class="tsec" data-sec="info">
-  <div class="panel">
-    <div class="kv">
-      <span class="k">Head coach</span><span>{t.head_coach || '—'}</span>
-      <span class="k">FIFA ranking</span><span>{t.fifa_ranking ? '#' + t.fifa_ranking : '—'}</span>
-      <span class="k">Qualified via</span><span>{t.qualification_method || '—'}</span>
-      <span class="k">Average age</span><span>{av ? av.toFixed(1) : '—'}</span>
-      <span class="k">Total caps</span><span class="mono">{num(totC)}</span>
-      <span class="k">Total intl goals</span><span class="mono">{num(totG)}</span>
-      <span class="k">Squad value</span><span class="mono">{val ? money(val) : '—'}</span>
-      <span class="k">Play abroad</span><span class="mono">{abroad}/{sq.length}</span>
-      <span class="k">Most capped</span><span>{topCap.player_name} ({topCap.caps})</span>
-      <span class="k">Top scorer</span><span>{topSc.player_name} ({topSc.international_goals})</span>
-    </div>
-  </div>
-  </div>
   </div>
   </div>
 
   <script type="application/json" id="squad" set:html={JSON.stringify(sq)}></script>
   <script>
     import { FORMATIONS, pickXI, POSC, surname } from '@shared/lib/wc.js';
+    // formation switcher → re-pick the pitch XI + re-flag squad cards
     const root = document.getElementById('teamroot');
     const el = document.getElementById('squad');
     if (root && el) {
       const sq = JSON.parse(el.textContent);
       const byId = {}; sq.forEach(p => byId[p.player_id] = p);
       const B = window.__B__ || '/';
-      const pitch = document.getElementById('pitch'), bench = document.getElementById('bench');
-      const benchSub = p => [p.club_apps_2025_26 != null ? p.club_apps_2025_26 + ' apps' : '', p.club_goals_2025_26 != null ? p.club_goals_2025_26 + 'g' : '', (p.caps || 0) + 'c'].filter(Boolean).join(' · ');
+      const pitch = document.getElementById('pitch');
       function render(form) {
         const xi = pickXI(sq, form);
         pitch.querySelectorAll('.token').forEach(n => n.remove());
@@ -147,25 +138,35 @@ const jsonld = {
           pitch.appendChild(a);
         });
         const on = new Set(xi.filter(Boolean));
-        const bn = sq.filter(p => !on.has(p.player_id)).sort((a, b) => (b.caps || 0) - (a.caps || 0));
-        bench.innerHTML = bn.map(p => `<a class="pcard" href="${B}players/${p.player_id}/"><div class="pcrow"><span class="pill ${p.position}">${p.position}</span><span class="faint">#${p.shirt_number ?? '—'}</span></div><div class="nm">${p.player_name}${p.is_captain ? ' ©' : ''}</div><div class="meta faint">${p.club ?? ''}</div><div class="meta faint">${benchSub(p)}</div></a>`).join('');
+        document.querySelectorAll('#squadgrid .spl').forEach(c => {
+          const id = +(c.getAttribute('href').match(/players\/(\d+)/) || [])[1];
+          c.classList.toggle('on', on.has(id));
+        });
       }
       document.querySelectorAll('.formrow .chip').forEach(c => c.addEventListener('click', () => {
         document.querySelectorAll('.formrow .chip').forEach(x => x.classList.toggle('on', x === c));
         render(c.dataset.f);
       }));
     }
-    // sub-tabs: Lineup / Squad / Info — one screen each, no long scroll
-    const subs = document.getElementById('tsubs');
-    if (subs) {
-      const secs = document.querySelectorAll('.tsec');
-      const show = t => {
-        secs.forEach(s => { s.style.display = s.dataset.sec === t ? '' : 'none'; });
-        subs.querySelectorAll('.subtab').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-        document.getElementById('tbody')?.scrollTo(0, 0);
-      };
-      subs.querySelectorAll('.subtab').forEach(b => b.addEventListener('click', () => show(b.dataset.t)));
-      show('squad');
+    // right-panel tabs
+    const rtabs = document.getElementById('rtabs');
+    if (rtabs) {
+      const panes = document.querySelectorAll('.tv2-right .rpane');
+      rtabs.querySelectorAll('.rtab').forEach(b => b.addEventListener('click', () => {
+        rtabs.querySelectorAll('.rtab').forEach(x => x.classList.toggle('on', x === b));
+        panes.forEach(p => p.hidden = p.dataset.r !== b.dataset.r);
+      }));
+    }
+    // squad position filter
+    const posf = document.getElementById('posf');
+    if (posf) {
+      const items = [...document.querySelectorAll('#squadgrid .spl')];
+      posf.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+        posf.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c));
+        const p = c.dataset.p;
+        items.forEach(it => it.classList.toggle('hide', !!p && it.dataset.pos !== p));
+      }));
     }
   </script>
 </Base>
+</content>
