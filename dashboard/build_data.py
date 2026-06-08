@@ -112,6 +112,67 @@ coverage_fields = ["height_cm","preferred_foot","market_value_eur","club_apps_20
     "club_yellow_2025_26","club_red_2025_26","team_wins_2025_26","career_club_apps","form_note"]
 coverage = {f: filled(f) for f in coverage_fields if f in present_cols}
 
+# ---- data-ranking rating + fun/social stats (computed from the whole population) ----
+import math, statistics, bisect
+def nv(p, k):
+    v = p.get(k)
+    return v if isinstance(v, (int, float)) else 0
+def _score(p):
+    g, c = nv(p, "international_goals"), nv(p, "caps")
+    cg, ca = nv(p, "club_goals_2025_26"), nv(p, "club_assists_2025_26")
+    ap, mn = nv(p, "club_apps_2025_26"), nv(p, "club_minutes_2025_26")
+    mv, cs = nv(p, "market_value_eur"), nv(p, "club_clean_sheets_2025_26")
+    val = math.log10(mv / 1e6 + 1) if mv else 0
+    invol = ap * 0.3 + (mn / 90) * 0.2 + c * 0.15
+    att = cg * 1.0 + ca * 0.6 + g * 0.5
+    pos = p.get("position")
+    if pos == "FW": return att + val * 6 + g * 0.6 + invol * 0.4
+    if pos == "MF": return att * 0.8 + invol * 0.7 + val * 6 + c * 0.2
+    if pos == "DF": return invol + c * 0.3 + val * 6 + (cg + ca) * 0.5
+    return cs * 1.5 + ap * 0.4 + c * 0.3 + val * 6  # GK
+# z-score within position (normalises positions), then global percentile -> rating
+posg = {}
+for p in players: posg.setdefault(p.get("position"), []).append(p)
+zmap = {}
+for grp in posg.values():
+    sc = [_score(p) for p in grp]
+    m = statistics.mean(sc); sd = statistics.pstdev(sc) or 1
+    for p in grp: zmap[p["player_id"]] = (_score(p) - m) / sd
+zs = sorted(zmap.values())
+def _pct(z): return bisect.bisect_left(zs, z) / max(1, len(zs) - 1)
+goals_sorted = sorted(nv(p, "international_goals") for p in players)
+val_sorted = sorted(nv(p, "market_value_eur") for p in players if nv(p, "market_value_eur"))
+def gpct(v): return bisect.bisect_left(goals_sorted, v) / max(1, len(goals_sorted) - 1)
+# per-team superlatives
+tflag = {}
+byteam = {}
+for p in players: byteam.setdefault(p["fifa_code"], []).append(p)
+for grp in byteam.values():
+    tc = max(grp, key=lambda x: nv(x, "caps"))
+    tv = max(grp, key=lambda x: nv(x, "market_value_eur"))
+    ages = [x for x in grp if isinstance(x.get("age"), int)]
+    ty = min(ages, key=lambda x: x["age"]) if ages else None
+    for p in grp: tflag[p["player_id"]] = (p is tc, p is tv, ty is not None and p is ty)
+for p in players:
+    p["data_rating"] = max(58, min(99, round(60 + _pct(zmap[p["player_id"]]) * 39)))
+    fun = []
+    g, c, age = nv(p, "international_goals"), nv(p, "caps"), p.get("age")
+    isCap, isVal, isYng = tflag[p["player_id"]]
+    if c > 0 and g / c >= 0.5: fun.append(f"⚡ {round(g / c, 2)} goals per cap")
+    gp = round(gpct(g) * 100)
+    if g >= 20 and gp >= 85: fun.append(f"\U0001f525 Top {max(1, 100 - gp)}% scorer at the Cup")
+    if isCap and c: fun.append(f"\U0001f396️ Most-capped in the squad ({c})")
+    if isVal and nv(p, "market_value_eur"): fun.append("\U0001f48e Most valuable in the squad")
+    if isYng and isinstance(age, int): fun.append(f"\U0001f423 Youngest in the squad ({age})")
+    if isinstance(age, int) and age <= 20: fun.append("\U0001f31f Wonderkid")
+    elif isinstance(age, int) and age >= 34: fun.append("\U0001f9d3 Veteran presence")
+    if p.get("club_country") and p.get("club_country") != p.get("team_name"): fun.append(f"\U0001f30d Plays abroad · {p['club_country']}")
+    cg = nv(p, "club_goals_2025_26")
+    if cg >= 15: fun.append(f"\U0001f3af {cg} club goals in 2025/26")
+    if nv(p, "club_clean_sheets_2025_26") >= 10: fun.append(f"\U0001f9e4 {nv(p,'club_clean_sheets_2025_26')} clean sheets in 2025/26")
+    if p.get("is_captain"): fun.append("©️ Captain")
+    p["fun"] = fun[:5]
+
 payload = {
     "generated_at": str(date.today()),
     "has_enrichment": has_enrichment,

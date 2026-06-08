@@ -46,6 +46,7 @@ const StatGrid = (items) => items;
       {p.market_value_eur && <div class="thstat"><b>{money(p.market_value_eur)}</b><span>Value</span></div>}
     </div>
   </header>
+  {p.fun && p.fun.length > 0 && <div class="funbar">{p.fun.map((f: string) => <span class="funchip">{f}</span>)}</div>}
   <div class="pgrid">
     <FutCard p={p} big />
     <div class="panel">

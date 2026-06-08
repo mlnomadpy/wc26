@@ -92,6 +92,7 @@ export const OVR = {
   'Rúben Dias':88,'Emiliano Martínez':86,'Lamine Yamal':84,'Endrick':75,'Julián Álvarez':87,
 };
 export function rating(p){
+  if (p.data_rating != null) return p.data_rating;   // population-ranked rating from build_data.py
   if (OVR[p.player_name] != null) return OVR[p.player_name];
   const mv = p.market_value_eur || 0;
   let r = mv
@@ -104,9 +105,9 @@ export function rating(p){
 export function tier(p){
   const r = rating(p), age = p.age || 99;
   if (LEGENDS.has(p.player_name)) return 'legend';
-  if (age <= 19 || (age <= 21 && r >= 76)) return 'rising';
-  if (r >= 88) return 'special';
-  return r >= 79 ? 'gold' : r >= 70 ? 'silver' : 'bronze';
+  if (age <= 19 || (age <= 21 && r >= 80)) return 'rising';
+  if (r >= 91) return 'special';
+  return r >= 81 ? 'gold' : r >= 71 ? 'silver' : 'bronze';
 }
 export const tierName = t => ({legend:'Legend',special:'Star',rising:'Rising ★',gold:'Gold',silver:'Silver',bronze:'Bronze'}[t]||'');
 export function monogram(n){const w=(n||'').trim().split(/\s+/);return ((w[0]?.[0]||'')+(w.length>1?w[w.length-1][0]:'')).toUpperCase();}

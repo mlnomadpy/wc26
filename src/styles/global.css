@@ -741,3 +741,11 @@ body{background:
 .fut.legend .fut-badge{background:#3a2a06;color:#ffe49a}
 .fut.special .fut-badge{background:var(--accent);color:var(--on-accent)}
 .fut.rising .fut-badge{background:#062420;color:#86f7c8}
+
+/* fun / social stat chips (player page) */
+.funbar{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.funchip{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;font-size:12.5px;font-weight:600;
+  background:linear-gradient(180deg,var(--bg2),var(--bg1));border:1px solid var(--line2);color:var(--fg);box-shadow:var(--sh)}
+.funchip:nth-child(3n+1){border-color:color-mix(in srgb,var(--accent) 45%,var(--line2))}
+.funchip:nth-child(3n+2){border-color:color-mix(in srgb,var(--accent2) 45%,var(--line2))}
+.funchip:nth-child(3n){border-color:color-mix(in srgb,var(--magenta) 45%,var(--line2))}
