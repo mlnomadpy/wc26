@@ -15,6 +15,12 @@ const byId = {}; sq.forEach(p => byId[p.player_id] = p);
 const form = autoForm(sq);
 const xi = pickXI(sq, form);
 const onPitch = new Set(xi.filter(Boolean));
+const lineAvg = (ids) => {
+  const ps = ids.filter(Boolean).map(id => byId[id]).filter(Boolean);
+  const a = arr => arr.length ? Math.round(arr.reduce((s, p) => s + rating(p), 0) / arr.length) : '–';
+  return { ovr: a(ps), att: a(ps.filter(p => p.position === 'FW')), mid: a(ps.filter(p => p.position === 'MF')), def: a(ps.filter(p => p.position === 'DF')) };
+};
+const xiStat = lineAvg(xi);
 const av = avgAge(sq);
 const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
 const byPosCount = { GK: 0, DF: 0, MF: 0, FW: 0 }; sq.forEach(p => byPosCount[p.position] != null && byPosCount[p.position]++);
@@ -62,9 +68,16 @@ const face = id => `${B}faces/${id}.jpg`;
         {xi.map((id, i) => { const [cat, x, y] = FORMATIONS[form][i]; const p = id ? byId[id] : null; return (
           <a class={`token ${p && p.is_captain ? 'cpt' : ''}`} style={`left:${x}%;top:${y}%`} href={id ? `${B}players/${id}/` : '#'} title={p ? p.player_name : ''}>
             <div class="sh" style={`--tc:${POSC[cat]}`}>{p ? (p.shirt_number ?? '') : ''}{p && p.is_captain && <i class="cap">C</i>}</div>
+            {p && <span class="tov" style={`--tc:${POSC[cat]}`}>{rating(p)}</span>}
             <div class="nm">{p ? surname(p.player_name) : '—'}</div>
           </a>
         ); })}
+      </div>
+      <div class="xistat" id="xistat">
+        <span class="xis-ov"><b id="xs-ov">{xiStat.ovr}</b><i>XI Rating</i></span>
+        <span><b id="xs-att">{xiStat.att}</b><i>Attack</i></span>
+        <span><b id="xs-mid">{xiStat.mid}</b><i>Midfield</i></span>
+        <span><b id="xs-def">{xiStat.def}</b><i>Defence</i></span>
       </div>
     </section>
 
@@ -118,7 +131,7 @@ const face = id => `${B}faces/${id}.jpg`;
 
   <script type="application/json" id="squad" set:html={JSON.stringify(sq)}></script>
   <script>
-    import { FORMATIONS, pickXI, POSC, surname } from '@shared/lib/wc.js';
+    import { FORMATIONS, pickXI, POSC, surname, rating } from '@shared/lib/wc.js';
     // formation switcher → re-pick the pitch XI + re-flag squad cards
     const root = document.getElementById('teamroot');
     const el = document.getElementById('squad');
@@ -134,7 +147,7 @@ const face = id => `${B}faces/${id}.jpg`;
           const [cat, x, y] = s, id = xi[i], p = id ? byId[id] : null;
           const a = document.createElement('a'); a.className = 'token' + (p && p.is_captain ? ' cpt' : ''); a.style.left = x + '%'; a.style.top = y + '%';
           a.href = id ? B + 'players/' + id + '/' : '#';
-          a.innerHTML = `<div class="sh" style="--tc:${POSC[cat]}">${p ? (p.shirt_number ?? '') : ''}${p && p.is_captain ? '<i class="cap">C</i>' : ''}</div><div class="nm">${p ? surname(p.player_name) : '—'}</div>`;
+          a.innerHTML = `<div class="sh" style="--tc:${POSC[cat]}">${p ? (p.shirt_number ?? '') : ''}${p && p.is_captain ? '<i class="cap">C</i>' : ''}</div>${p ? `<span class="tov" style="--tc:${POSC[cat]}">${rating(p)}</span>` : ''}<div class="nm">${p ? surname(p.player_name) : '—'}</div>`;
           pitch.appendChild(a);
         });
         const on = new Set(xi.filter(Boolean));
@@ -142,6 +155,12 @@ const face = id => `${B}faces/${id}.jpg`;
           const id = +(c.getAttribute('href').match(/players\/(\d+)/) || [])[1];
           c.classList.toggle('on', on.has(id));
         });
+        // live XI strength readout
+        const xp = xi.filter(Boolean).map(id => byId[id]).filter(Boolean);
+        const avg = arr => arr.length ? Math.round(arr.reduce((s, p) => s + rating(p), 0) / arr.length) : '–';
+        const set = (k, v) => { const e = document.getElementById(k); if (e) e.textContent = v; };
+        set('xs-ov', avg(xp)); set('xs-att', avg(xp.filter(p => p.position === 'FW')));
+        set('xs-mid', avg(xp.filter(p => p.position === 'MF'))); set('xs-def', avg(xp.filter(p => p.position === 'DF')));
       }
       document.querySelectorAll('.formrow .chip').forEach(c => c.addEventListener('click', () => {
         document.querySelectorAll('.formrow .chip').forEach(x => x.classList.toggle('on', x === c));
