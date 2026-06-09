@@ -94,6 +94,39 @@ export const OVR = {
   'Virgil van Dijk':89,'Joško Gvardiol':86,'Achraf Hakimi':85,'Declan Rice':87,'Nico Williams':84,
   'Rúben Dias':88,'Emiliano Martínez':86,'Lamine Yamal':84,'Endrick':75,'Julián Álvarez':87,
 };
+/* Curated detailed role for marquee players (the coarse position field is only
+   GK/DF/MF/FW). Display-only — does not feed the rating engine. Spellings match
+   the dataset. Falls back to the coarse position when a player isn't listed. */
+export const POS_DETAIL = {
+  // Goalkeepers
+  'Alisson':'GK','Thibaut Courtois':'GK','Emiliano Martínez':'GK','Yassine Bounou':'GK','David Raya':'GK',
+  'Jordan Pickford':'GK','Gianluigi Donnarumma':'GK','André Onana':'GK','Manuel Neuer':'GK','Diogo Costa':'GK',
+  // Centre-backs
+  'Virgil van Dijk':'CB','Rúben Dias':'CB','Marquinhos':'CB','William Saliba':'CB','Gabriel Magalhães':'CB',
+  'Alessandro Bastoni':'CB','Antonio Rüdiger':'CB','Josko Gvardiol':'CB','Joško Gvardiol':'CB','Cristian Romero':'CB',
+  // Full-backs / wing-backs
+  'Achraf Hakimi':'RB','Trent Alexander-Arnold':'RB','Jules Koundé':'RB','Denzel Dumfries':'RWB','Dani Carvajal':'RB',
+  'Theo Hernández':'LB','Alphonso Davies':'LB','Álex Grimaldo':'LB','Andrew Robertson':'LB','Nuno Mendes':'LB','Jesús Gallardo':'LB',
+  // Defensive / central midfield
+  'Rodri':'CDM','Declan Rice':'CDM','Aurélien Tchouaméni':'CDM','Casemiro':'CDM','Moisés Caicedo':'CDM','Joshua Kimmich':'CDM',
+  'Federico Valverde':'CM','Pedri':'CM','Frenkie de Jong':'CM','Luka Modrić':'CM','Scott McTominay':'CM','Weston McKennie':'CM',
+  'Franck Kessié':'CM','John McGinn':'CM','Konrad Laimer':'CM',
+  // Attacking midfield
+  'Jude Bellingham':'CAM','Kevin De Bruyne':'CAM','Florian Wirtz':'CAM','Jamal Musiala':'CAM','Bruno Fernandes':'CAM',
+  'Martin Ødegaard':'CAM','Giorgian de Arrascaeta':'CAM','Ismael Saibari':'CAM',
+  // Wingers
+  'Bukayo Saka':'RW','Lamine Yamal':'RW','Bernardo Silva':'RW','Mohamed Salah':'RW','Phil Foden':'RW','Leroy Sané':'RW',
+  'Vinícius Júnior':'LW','Rafael Leão':'LW','Nico Williams':'LW','Heung-min Son':'LW','Son Heung-min':'LW','Neymar':'LW','Jérémy Doku':'LW',
+  // Forwards
+  'Erling Haaland':'ST','Harry Kane':'ST','Lautaro Martínez':'ST','Julián Álvarez':'ST','Victor Osimhen':'ST',
+  'Randal Kolo Muani':'ST','Dušan Vlahović':'ST','Viktor Gyökeres':'ST','Darwin Núñez':'ST','Ivan Toney':'ST',
+  'Endrick':'ST','Mehdi Taremi':'ST','Ayoub El Kaabi':'ST','Dominic Solanke':'ST',
+  // Roaming / second strikers & wide forwards
+  'Kylian Mbappé':'ST','Antoine Griezmann':'SS','Lionel Messi':'RW','Cristiano Ronaldo':'ST','João Félix':'SS',
+};
+export const POSD_NAME = {GK:'Goalkeeper',CB:'Centre-back',RB:'Right-back',LB:'Left-back',RWB:'Right wing-back',LWB:'Left wing-back',CDM:'Defensive mid',CM:'Central mid',CAM:'Attacking mid',RW:'Right wing',LW:'Left wing',ST:'Striker',SS:'Second striker',CF:'Centre-forward'};
+export const posDetail = p => POS_DETAIL[p && p.player_name] || null;
+
 export function rating(p){
   if (p.data_rating != null) return p.data_rating;   // population-ranked rating from build_data.py
   if (OVR[p.player_name] != null) return OVR[p.player_name];

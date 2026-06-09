@@ -483,6 +483,10 @@
 .tv2-tag.muted{ opacity:.66; }
 .tv2-kit{ display:inline-flex; border-radius:4px; overflow:hidden; border:1px solid var(--line2); }
 .tv2-kit i{ width:13px; height:15px; }
+/* detailed-role chip (player detail) */
+.role-tag{ display:inline-block; font:700 9px var(--fmono); letter-spacing:.06em; color:var(--accent2); padding:1px 6px; margin:0 2px 0 1px; border-radius:4px;
+  background:color-mix(in srgb,var(--accent2) 13%,transparent); border:1px solid var(--hud-b); vertical-align:1px; }
+
 /* live standings tag + result score */
 .tag.live{ color:#ff4d5e; border-color:color-mix(in srgb,#ff4d5e 45%,transparent); background:color-mix(in srgb,#ff4d5e 12%,transparent); }
 .tag.live::before{ content:""; display:inline-block; width:6px; height:6px; border-radius:50%; background:#ff4d5e; margin-right:5px; vertical-align:1px; box-shadow:0 0 7px #ff4d5e; animation:livepulse 1.4s ease-in-out infinite; }
