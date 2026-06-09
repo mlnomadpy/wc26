@@ -33,3 +33,4 @@
 @import "./sections/12-match.css"         layer(components);
 @import "./sections/13-map-compare.css"   layer(components);
 @import "./sections/14-palette.css"       layer(components);
+@import "./sections/15-play.css"          layer(components);

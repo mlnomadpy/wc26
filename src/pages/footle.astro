@@ -1,0 +1,190 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../public/data.json';
+import { rating, flagImg } from '@shared/lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+// slim player set for autocomplete + comparison
+const slim = DB.players.map(p => ({
+  id: p.player_id, n: p.player_name, c: p.fifa_code, nat: p.team_name,
+  conf: p.confederation, pos: p.position, age: p.age ?? null, caps: p.caps ?? 0, r: rating(p),
+}));
+// answer pool = recognisable players (so it's guessable)
+const pool = slim.filter(p => p.r >= 77).map(p => p.id);
+const flags = {}; DB.teams.forEach(t => { flags[t.fifa_code] = flagImg(t.fifa_code, 40); });
+const jsonld = { '@context': 'https://schema.org', '@type': 'Game', name: 'Footle', description: 'A daily World Cup 2026 player guessing game.' };
+---
+<Base title="Footle — the daily World Cup 2026 player guess" description="Guess the mystery 2026 World Cup player in six tries. A new player every day — Wordle for football scouts." jsonld={jsonld}>
+  <div class="app-page">
+  <header class="phead">
+    <div>
+      <div class="pe">Daily scouting puzzle</div>
+      <h1>Footle</h1>
+      <p class="psub">Guess the mystery World Cup player in 6 tries — each guess reveals how close you are on nation, position, age, caps and rating.</p>
+    </div>
+    <div class="pstat">
+      <div class="s"><b id="ft-streak">0</b><span>Streak</span></div>
+      <div class="s"><b id="ft-played">0</b><span>Played</span></div>
+      <div class="s"><b id="ft-winp">—</b><span>Win %</span></div>
+    </div>
+  </header>
+
+  <div class="app-grow scroll ftwrap">
+    <div class="ftboard panel">
+      <div class="ftno" id="ftno">Footle</div>
+
+      <div class="ftguess" id="ftguess">
+        <div class="ftcombo">
+          <input id="ftin" placeholder="Type a player's name…" autocomplete="off" aria-label="Guess a player" />
+          <div class="ftac" id="ftac"></div>
+        </div>
+        <div class="ftleft" id="ftleft">6 guesses left</div>
+      </div>
+
+      <div class="fthead">
+        <span>Player</span><span>Nation</span><span>Conf</span><span>Pos</span><span>Age</span><span>Caps</span><span>OVR</span>
+      </div>
+      <div class="ftrows" id="ftrows"></div>
+
+      <div class="ftend" id="ftend" hidden>
+        <div class="ftend-t" id="ftendt"></div>
+        <div class="ftans" id="ftans"></div>
+        <div class="ftend-actions">
+          <button class="btn primary" id="ftshare">Share result</button>
+          <a class="btn" id="ftgoto" href="#">Open player →</a>
+        </div>
+        <div class="ftnext faint">Next Footle in <b id="ftnext">—</b></div>
+      </div>
+
+      <div class="ftlegend faint">
+        <span><i class="ftk hit"></i> exact</span>
+        <span><i class="ftk near"></i> close</span>
+        <span><i class="ftk miss"></i> off</span>
+        <span>▲ answer is higher · ▼ lower</span>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script type="application/json" id="ft-data" set:html={JSON.stringify(slim)}></script>
+  <script type="application/json" id="ft-pool" set:html={JSON.stringify(pool)}></script>
+  <script type="application/json" id="ft-flags" set:html={JSON.stringify(flags)}></script>
+  <script>
+    const B = window.__B__ || '/';
+    const ALL = JSON.parse(document.getElementById('ft-data').textContent);
+    const POOL = JSON.parse(document.getElementById('ft-pool').textContent);
+    const FLAGS = JSON.parse(document.getElementById('ft-flags').textContent);
+    const byId = {}; ALL.forEach(p => byId[p.id] = p);
+    const MAX = 6;
+
+    // deterministic daily puzzle
+    const now = new Date();
+    const dayMs = 864e5, epoch = Date.UTC(2026, 5, 1);
+    const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const num = Math.max(1, Math.floor((todayUTC - epoch) / dayMs) + 1);
+    let h = 0; const ds = todayUTC.toString(); for (let i = 0; i < ds.length; i++) h = (h * 31 + ds.charCodeAt(i)) >>> 0;
+    const answer = byId[POOL[h % POOL.length]];
+
+    const KEY = 'footle-' + todayUTC;
+    let state = JSON.parse(localStorage.getItem(KEY) || 'null') || { guesses: [], done: false, won: false };
+    let stats = JSON.parse(localStorage.getItem('footle-stats') || 'null') || { played: 0, won: 0, streak: 0, best: 0, last: 0 };
+
+    const $ = id => document.getElementById(id);
+    $('ftno').textContent = 'Footle #' + num;
+
+    function band(a, b, near) { const d = a - b; if (d === 0) return ['hit', '']; const dir = d < 0 ? '▲' : '▼'; return [Math.abs(d) <= near ? 'near' : 'miss', dir]; }
+    function compare(g) {
+      const A = answer;
+      const nat = g.nat === A.nat ? ['hit', ''] : (g.conf === A.conf ? ['near', ''] : ['miss', '']);
+      const conf = g.conf === A.conf ? ['hit', ''] : ['miss', ''];
+      const pos = g.pos === A.pos ? ['hit', ''] : ['miss', ''];
+      const age = g.age == null || A.age == null ? ['miss', ''] : band(A.age, g.age, 2);
+      const caps = band(A.caps, g.caps, 15);
+      const ovr = band(A.r, g.r, 3);
+      return { nat, conf, pos, age, caps, ovr };
+    }
+    function cell(val, st, dir) { return `<span class="ftc ${st}">${val}${dir ? ' <em>' + dir + '</em>' : ''}</span>`; }
+    function renderRow(g) {
+      const c = compare(g);
+      const fl = FLAGS[g.c] ? `<img src="${FLAGS[g.c]}" alt="" width="20">` : '';
+      return `<div class="ftrow">
+        <span class="ftname">${fl}<b>${g.n}</b></span>
+        ${cell(g.nat, c.nat[0], '')}${cell(g.conf, c.conf[0], '')}${cell(g.pos, c.pos[0], '')}
+        ${cell(g.age ?? '–', c.age[0], c.age[1])}${cell(g.caps, c.caps[0], c.caps[1])}${cell(g.r, c.ovr[0], c.ovr[1])}
+      </div>`;
+    }
+    function draw() {
+      $('ftrows').innerHTML = state.guesses.map(id => renderRow(byId[id])).join('');
+      $('ftleft').textContent = (MAX - state.guesses.length) + ' guesses left';
+      if (state.done) finish();
+    }
+    function statbar() {
+      $('ft-streak').textContent = stats.streak; $('ft-played').textContent = stats.played;
+      $('ft-winp').textContent = stats.played ? Math.round(stats.won / stats.played * 100) + '%' : '—';
+    }
+    function finish() {
+      $('ftguess').hidden = true; $('ftend').hidden = false;
+      $('ftendt').textContent = state.won ? `Solved in ${state.guesses.length}/6 ⚡` : 'Out of guesses';
+      $('ftans').innerHTML = `${FLAGS[answer.c] ? `<img src="${FLAGS[answer.c]}" width="26">` : ''} <b>${answer.n}</b> · ${answer.nat} · ${answer.pos} · OVR ${answer.r}`;
+      $('ftgoto').href = `${B}players/${answer.id}/`;
+      tickNext();
+    }
+    function tickNext() {
+      const el = $('ftnext'); if (!el) return;
+      function u() { const d = (todayUTC + dayMs) - Date.now(); if (d <= 0) { el.textContent = 'now — refresh'; return; } const hh = Math.floor(d / 36e5), mm = Math.floor(d / 6e4) % 60, ss = Math.floor(d / 1e3) % 60; el.textContent = `${hh}h ${mm}m ${ss}s`; }
+      u(); setInterval(u, 1000);
+    }
+    function guess(p) {
+      if (state.done || state.guesses.includes(p.id)) return;
+      state.guesses.push(p.id);
+      const won = p.id === answer.id;
+      if (won || state.guesses.length >= MAX) {
+        state.done = true; state.won = won;
+        // update lifetime stats once
+        stats.played++; if (won) stats.won++;
+        stats.streak = won ? (stats.last === todayUTC - dayMs || stats.last === 0 ? stats.streak + 1 : 1) : 0;
+        stats.best = Math.max(stats.best, stats.streak); stats.last = todayUTC;
+        localStorage.setItem('footle-stats', JSON.stringify(stats));
+      }
+      localStorage.setItem(KEY, JSON.stringify(state));
+      draw(); statbar();
+    }
+
+    // autocomplete
+    const inp = $('ftin'), ac = $('ftac');
+    let sel = -1, matches = [];
+    function search() {
+      const t = inp.value.toLowerCase().trim();
+      const used = new Set(state.guesses);
+      matches = t.length < 2 ? [] : ALL.filter(p => !used.has(p.id) && p.n.toLowerCase().includes(t)).slice(0, 8);
+      sel = -1;
+      ac.innerHTML = matches.map((p, i) => `<button class="ftopt" data-i="${i}">${FLAGS[p.c] ? `<img src="${FLAGS[p.c]}" width="18">` : ''} <span>${p.n}</span><em>${p.nat} · ${p.pos}</em></button>`).join('');
+      ac.hidden = !matches.length;
+    }
+    function pick(i) { const p = matches[i]; if (!p) return; inp.value = ''; ac.hidden = true; matches = []; guess(p); }
+    inp.addEventListener('input', search);
+    inp.addEventListener('keydown', e => {
+      if (!matches.length) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(sel + 1, matches.length - 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(sel - 1, 0); }
+      else if (e.key === 'Enter') { e.preventDefault(); pick(sel < 0 ? 0 : sel); return; }
+      else return;
+      [...ac.children].forEach((c, i) => c.classList.toggle('on', i === sel));
+    });
+    ac.addEventListener('click', e => { const b = e.target.closest('.ftopt'); if (b) pick(+b.dataset.i); });
+    document.addEventListener('click', e => { if (!e.target.closest('.ftcombo')) ac.hidden = true; });
+
+    // share
+    $('ftshare').addEventListener('click', async () => {
+      const grid = state.guesses.map(id => {
+        const c = compare(byId[id]); const e = s => s === 'hit' ? '🟩' : s === 'near' ? '🟨' : '⬛';
+        return e(c.nat[0]) + e(c.conf[0]) + e(c.pos[0]) + e(c.age[0]) + e(c.caps[0]) + e(c.ovr[0]);
+      }).join('\n');
+      const txt = `Footle #${num} ${state.won ? state.guesses.length : 'X'}/6\n${grid}\n${location.origin}${B}footle/`;
+      try { if (navigator.share) await navigator.share({ text: txt }); else { await navigator.clipboard.writeText(txt); $('ftshare').textContent = 'Copied!'; setTimeout(() => $('ftshare').textContent = 'Share result', 1500); } }
+      catch (e) {}
+    });
+
+    draw(); statbar();
+  </script>
+</Base>
+</content>
