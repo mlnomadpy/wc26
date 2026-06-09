@@ -1,11 +1,21 @@
 ---
 import Base from '@app/layouts/Base.astro';
 import DB from '../../../public/data.json';
-import { slugify } from '@shared/lib/wc.js';
+import { slugify, monogram, rating } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
-const m = {}; DB.players.forEach(p => { if (p.club) (m[p.club] = m[p.club] || []).push(p); });
-const rows = Object.entries(m).map(([c, ps]) => ({ c, n: ps.length, country: ps[0].club_country, league: ps[0].club_league })).sort((a, b) => b.n - a.n);
+const m = {};
+DB.players.forEach(p => { if (p.club) (m[p.club] = m[p.club] || []).push(p); });
+const rows = Object.entries(m).map(([c, ps]) => ({
+  c, slug: slugify(c), n: ps.length, country: ps[0].club_country, league: ps[0].club_league,
+  nations: new Set(ps.map(p => p.fifa_code)).size,
+  top: Math.max(...ps.map(p => rating(p))),
+})).sort((a, b) => b.n - a.n || b.top - a.top);
 const top = rows[0];
+const maxN = top.n;
+// stable colour per league
+const LEAGUE_COL = ['#5aa2ff', '#3ddc97', '#ffb454', '#ff6b9d', '#b48cff', '#5fd6ce', '#ff8f5a', '#8ad0ff'];
+const lc = {}; let li = 0;
+const colOf = lg => (lc[lg] ??= LEAGUE_COL[(li++) % LEAGUE_COL.length]);
 ---
 <Base title="Clubs at the 2026 World Cup — which clubs send the most players" description="All clubs represented at the 2026 FIFA World Cup, ranked by how many players they send. Open a club to see its World Cup players.">
   <div class="app-page">
@@ -13,23 +23,44 @@ const top = rows[0];
     <div>
       <div class="pe">Club watch</div>
       <h1>{rows.length} clubs represented</h1>
-      <p class="psub">Every club sending players to the World Cup, ranked by call-ups. {top.c} leads the way with {top.n}.</p>
+      <p class="psub">Every club sending players to the World Cup, ranked by call-ups. {top.c} leads with {top.n}.</p>
     </div>
     <div class="pstat"><div class="s"><b>{rows.length}</b><span>Clubs</span></div><div class="s"><b>{DB.totals.leagues}</b><span>Leagues</span></div></div>
   </header>
-  <div class="panel app-grow">
-    <div class="tablewrap">
-      <table>
-        <thead><tr><th>Club</th><th>Country</th><th>League</th><th>Players</th></tr></thead>
-        <tbody>
-          {rows.map(r => (
-            <tr onclick={`location.href='${B}clubs/${slugify(r.c)}/'`}>
-              <td>{r.c}</td><td class="faint">{r.country}</td><td class="faint">{r.league}</td><td class="mono"><b>{r.n}</b></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+  <div class="cl-tools">
+    <input type="search" id="clq" class="cl-search" placeholder="Search a club, league or country…" autocomplete="off" />
+    <span class="cl-count" id="clcount">{rows.length} clubs</span>
+  </div>
+  <div class="app-grow scroll">
+    <div class="clgrid" id="clgrid">
+      {rows.map((r, i) => (
+        <a class="clcard" href={`${B}clubs/${r.slug}/`} style={`--lc:${colOf(r.league)}`}
+           data-s={`${r.c} ${r.league} ${r.country}`.toLowerCase()}>
+          <span class="cl-rank">{i + 1}</span>
+          <span class="cl-crest">{monogram(r.c)}</span>
+          <span class="cl-id">
+            <span class="cl-name">{r.c}</span>
+            <span class="cl-sub"><i class="cl-dot"></i>{r.league} · {r.country}</span>
+            <span class="cl-bar"><i style={`width:${Math.round(r.n / maxN * 100)}%`}></i></span>
+          </span>
+          <span class="cl-nums">
+            <b>{r.n}</b><span>player{r.n === 1 ? '' : 's'}</span>
+            <em>{r.nations} nation{r.nations === 1 ? '' : 's'}</em>
+          </span>
+        </a>
+      ))}
+      <div class="cl-empty" id="clempty" hidden>No clubs match.</div>
     </div>
   </div>
   </div>
+  <script>
+    const q = document.getElementById('clq'), grid = document.getElementById('clgrid');
+    const cards = [...grid.querySelectorAll('.clcard')], count = document.getElementById('clcount'), empty = document.getElementById('clempty');
+    q.addEventListener('input', () => {
+      const t = q.value.toLowerCase().trim(); let n = 0;
+      cards.forEach(c => { const on = !t || c.dataset.s.includes(t); c.hidden = !on; if (on) n++; });
+      count.textContent = n + ' club' + (n === 1 ? '' : 's');
+      empty.hidden = n > 0;
+    });
+  </script>
 </Base>

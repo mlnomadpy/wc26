@@ -382,3 +382,39 @@
 .vz-ic{ font-size:22px; }
 .viz-card b{ font-family:var(--fdisp); font-size:15px; }
 .viz-card span{ font-size:11.5px; color:var(--fg-mute); }
+
+/* ===================== CLUBS index ===================== */
+.cl-tools{ display:flex; align-items:center; gap:12px; margin:0 0 12px; }
+.cl-search{ flex:1; max-width:380px; padding:9px 13px; border-radius:10px; background:var(--bg2); border:1px solid var(--hud-b); color:var(--fg); font-size:13px; }
+.cl-search:focus{ outline:none; border-color:var(--accent2); box-shadow:var(--glow); }
+.cl-count{ font:600 10.5px var(--fmono); letter-spacing:.06em; text-transform:uppercase; color:var(--fg-mute); }
+.clgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:9px; align-content:start; }
+.clcard{ position:relative; display:flex; align-items:center; gap:11px; padding:10px 13px 10px 11px; border-radius:11px; text-decoration:none; color:var(--fg);
+  background:var(--bg1); border:1px solid var(--line2); border-left:3px solid var(--lc,var(--accent2)); transition:var(--t); }
+.clcard:hover{ border-color:var(--accent2); transform:translateY(-2px); box-shadow:var(--glow); background:var(--bg2); }
+.cl-rank{ flex:none; width:22px; font:700 12px var(--fmono); color:var(--fg-mute); text-align:right; }
+.cl-crest{ flex:none; width:38px; height:38px; display:flex; align-items:center; justify-content:center; border-radius:50%;
+  font-family:var(--fdisp2); font-weight:800; font-size:14px; color:var(--lc,var(--accent2)); letter-spacing:.02em;
+  background:color-mix(in srgb,var(--lc,var(--accent2)) 16%,var(--bg2)); border:1.5px solid color-mix(in srgb,var(--lc,var(--accent2)) 45%,transparent); }
+.cl-id{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.cl-name{ font-family:var(--fdisp); font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cl-sub{ display:flex; align-items:center; gap:5px; font-size:11px; color:var(--fg-mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cl-dot{ flex:none; width:6px; height:6px; border-radius:50%; background:var(--lc,var(--accent2)); box-shadow:0 0 6px -1px var(--lc,var(--accent2)); }
+.cl-bar{ height:3px; border-radius:2px; background:var(--line2); overflow:hidden; margin-top:1px; }
+.cl-bar i{ display:block; height:100%; background:var(--lc,var(--accent2)); box-shadow:0 0 8px -2px var(--lc,var(--accent2)); }
+.cl-nums{ flex:none; display:flex; flex-direction:column; align-items:flex-end; text-align:right; line-height:1.05; }
+.cl-nums b{ font-family:var(--fdisp2); font-weight:800; font-size:21px; color:var(--fg); }
+.cl-nums span{ font:600 8.5px var(--fmono); letter-spacing:.08em; text-transform:uppercase; color:var(--fg-mute); }
+.cl-nums em{ font-style:normal; font-size:10px; color:var(--accent2); margin-top:2px; }
+.cl-empty{ grid-column:1/-1; padding:40px; text-align:center; color:var(--fg-mute); }
+
+/* ===================== CLUB detail ===================== */
+.club-head{ align-items:center; gap:13px; }
+.club-crest{ flex:none; width:54px; height:54px; display:flex; align-items:center; justify-content:center; border-radius:50%;
+  font-family:var(--fdisp2); font-weight:800; font-size:20px; color:var(--accent2); letter-spacing:.02em;
+  background:color-mix(in srgb,var(--accent2) 15%,var(--bg2)); border:1.5px solid var(--hud-b2); box-shadow:var(--glow); }
+.club-id{ flex:1; min-width:0; }
+.club-flags{ display:flex; gap:4px; flex-wrap:wrap; max-width:170px; align-self:center; }
+.club-flags :global(.sm){ width:20px; }
+.club-squad{ grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); align-content:start; }
+@media(max-width:680px){ .club-flags{ display:none; } }
