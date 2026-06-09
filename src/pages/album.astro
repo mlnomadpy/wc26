@@ -1,0 +1,126 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../public/data.json';
+import { rating, tier, tierName, SPECIAL, surname, monogram, flagImg, POSC } from '@shared/lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const slim = DB.players.map(p => { const r = rating(p), t = tier(p); return { id: p.player_id, s: surname(p.player_name), c: p.fifa_code, pos: p.position, r, t, b: SPECIAL.has(t) ? tierName(t) : '', mo: monogram(p.player_name) }; });
+const order = [...slim].sort((a, b) => b.r - a.r);
+const flags = {}; DB.teams.forEach(t => { flags[t.fifa_code] = flagImg(t.fifa_code, 40); });
+const TIERS = [['', 'All'], ['legend', 'Legend'], ['special', 'Superstar'], ['centurion', 'Centurion'], ['glove', 'Golden Glove'], ['marksman', 'Marksman'], ['maestro', 'Maestro'], ['rising', 'Rising'], ['gold', 'Gold'], ['silver', 'Silver'], ['bronze', 'Bronze']];
+const present = new Set(slim.map(p => p.t));
+const jsonld = { '@context': 'https://schema.org', '@type': 'Game', name: 'Sticker Album', description: 'Collect all 1,247 World Cup 2026 player stickers.' };
+---
+<Base title="Sticker Album — collect all 1,247 World Cup 2026 players" description="Open packs and collect all 1,247 player stickers from the 2026 World Cup. Chase the Legends, complete the album and share your progress." jsonld={jsonld}>
+  <div class="app-page">
+  <header class="phead">
+    <div>
+      <div class="pe">The collection</div>
+      <h1>Sticker Album</h1>
+      <p class="psub">Open packs and collect all 1,247 players — common bronzes to the rarest Legends. Your album saves on this device.</p>
+    </div>
+    <div class="pstat"><div class="s"><b id="al-n">0</b><span>Collected</span></div><div class="s"><b id="al-pc">0%</b><span>Complete</span></div></div>
+  </header>
+
+  <div class="controls">
+    <button class="btn primary" id="al-open">⚡ Open a pack</button>
+    <input id="al-q" placeholder="Search collected…" aria-label="Search" />
+    <select id="al-tier"><option value="">All tiers</option>{TIERS.slice(1).filter(([k]) => present.has(k)).map(([k, l]) => <option value={k}>{l}</option>)}</select>
+    <div class="chips" id="al-own"><button class="chip on" data-o="">All</button><button class="chip" data-o="own">Owned</button><button class="chip" data-o="miss">Missing</button></div>
+    <div class="albar"><span class="albar-fill" id="al-bar"></span></div>
+    <span class="count" id="al-count"></span>
+  </div>
+
+  <div class="app-grow scroll">
+    <div class="album" id="album">
+      {order.map(p => (
+        <button class="sticker locked" data-id={p.id} data-tier={p.t} data-pos={p.pos} data-name={p.s.toLowerCase()} style={`--edge:${POSC[p.pos]}`} aria-label="Locked sticker">
+          <span class="stk-pos">{p.pos}</span><span class="stk-q">?</span>
+        </button>
+      ))}
+    </div>
+  </div>
+  </div>
+
+  <div class="packov" id="packov" hidden>
+    <div class="pack-inner">
+      <div class="pack-head" id="packhead">Your pack</div>
+      <div class="pack-cards" id="packcards"></div>
+      <div class="pack-actions"><button class="btn primary" id="packagain">Open another</button><button class="btn" id="packdone">Back to album</button></div>
+    </div>
+  </div>
+
+  <script type="application/json" id="al-data" set:html={JSON.stringify(slim)}></script>
+  <script type="application/json" id="al-flags" set:html={JSON.stringify(flags)}></script>
+  <script type="application/json" id="al-posc" set:html={JSON.stringify(POSC)}></script>
+  <script define:vars={{ B }}>
+    const ALL = JSON.parse(document.getElementById('al-data').textContent);
+    const FLAGS = JSON.parse(document.getElementById('al-flags').textContent);
+    const POSC = JSON.parse(document.getElementById('al-posc').textContent);
+    const byId = {}; ALL.forEach(p => byId[p.id] = p);
+    const $ = id => document.getElementById(id);
+    const tnames = { legend: 'Legend', special: 'Superstar', centurion: 'Centurion', glove: 'Golden Glove', marksman: 'Marksman', maestro: 'Maestro', rising: 'Rising ★', gold: 'Gold', silver: 'Silver', bronze: 'Bronze', icon: 'Icon' };
+    let owned = new Set(JSON.parse(localStorage.getItem('album') || '[]'));
+
+    function save() { localStorage.setItem('album', JSON.stringify([...owned])); }
+    function fill(el, p) {
+      el.classList.remove('locked'); el.setAttribute('aria-label', p.s);
+      el.innerHTML = `<span class="stk-face"><span class="stk-mo">${p.mo}</span><img src="${B}faces/${p.id}.jpg" alt="" loading="lazy" onerror="this.remove()"></span>` +
+        `<span class="stk-r">${p.r}</span>${p.b ? `<span class="stk-b">${p.b}</span>` : ''}` +
+        `<span class="stk-n">${p.s}</span><img class="stk-fl" src="${FLAGS[p.c] || ''}" alt="">`;
+    }
+    function stats() {
+      $('al-n').textContent = owned.size; const pc = Math.round(owned.size / ALL.length * 1000) / 10;
+      $('al-pc').textContent = pc + '%'; $('al-bar').style.width = (owned.size / ALL.length * 100) + '%';
+    }
+    function syncGrid() {
+      document.querySelectorAll('.sticker').forEach(el => { const id = +el.dataset.id; if (owned.has(id) && el.classList.contains('locked')) fill(el, byId[id]); });
+      stats();
+    }
+    // filters
+    let term = '', ftier = '', own = '';
+    function applyFilters() {
+      let n = 0;
+      document.querySelectorAll('.sticker').forEach(el => {
+        const id = +el.dataset.id, has = owned.has(id);
+        const ok = (!ftier || el.dataset.tier === ftier) &&
+          (own === '' || (own === 'own' ? has : !has)) &&
+          (!term || (has && el.dataset.name.includes(term)));
+        el.style.display = ok ? '' : 'none'; if (ok) n++;
+      });
+      $('al-count').textContent = n.toLocaleString() + ' shown';
+    }
+    $('al-q').addEventListener('input', () => { term = $('al-q').value.toLowerCase().trim(); applyFilters(); });
+    $('al-tier').addEventListener('change', () => { ftier = $('al-tier').value; applyFilters(); });
+    document.querySelectorAll('#al-own .chip').forEach(c => c.addEventListener('click', () => { document.querySelectorAll('#al-own .chip').forEach(x => x.classList.toggle('on', x === c)); own = c.dataset.o; applyFilters(); }));
+
+    // pack opening — weighted toward commons, legends rare
+    const weights = ALL.map(p => Math.max(4, 96 - p.r));
+    const cum = []; let acc = 0; weights.forEach(w => { acc += w; cum.push(acc); }); const total = acc;
+    function pull() { const x = Math.random() * total; let lo = 0, hi = cum.length - 1; while (lo < hi) { const m = (lo + hi) >> 1; if (cum[m] < x) lo = m + 1; else hi = m; } return ALL[lo]; }
+    function packCard(p, isNew) {
+      return `<div class="packcard ${p.t} ${p.b ? 'foil' : ''}" style="--edge:${POSC[p.pos]}">
+        ${isNew ? '<span class="packnew">NEW</span>' : '<span class="packdup">DUPE</span>'}
+        <span class="pc-face"><span class="pc-mo">${p.mo}</span><img src="${B}faces/${p.id}.jpg" alt="" onerror="this.remove()"></span>
+        <span class="pc-r">${p.r}<i>${p.pos}</i></span>${p.b ? `<span class="pc-b">${p.b}</span>` : ''}
+        <span class="pc-n">${p.s}</span><img class="pc-fl" src="${FLAGS[p.c] || ''}" alt="">
+      </div>`;
+    }
+    function openPack() {
+      const picks = []; const seen = new Set();
+      while (picks.length < 5) { const p = pull(); if (!seen.has(p.id) || picks.length > 50) { seen.add(p.id); picks.push(p); } }
+      let newCount = 0;
+      const html = picks.map(p => { const isNew = !owned.has(p.id); if (isNew) { owned.add(p.id); newCount++; } return packCard(p, isNew); }).join('');
+      save(); syncGrid();
+      $('packcards').innerHTML = html;
+      $('packhead').innerHTML = `Your pack · <b>${newCount}</b> new`;
+      $('packov').hidden = false;
+      [...$('packcards').children].forEach((c, i) => { c.style.animationDelay = (i * 0.12) + 's'; });
+    }
+    $('al-open').addEventListener('click', openPack);
+    $('packagain').addEventListener('click', openPack);
+    $('packdone').addEventListener('click', () => { $('packov').hidden = true; });
+    $('packov').addEventListener('click', e => { if (e.target === $('packov')) $('packov').hidden = true; });
+
+    syncGrid(); applyFilters();
+  </script>
+</Base>
