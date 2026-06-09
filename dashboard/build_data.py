@@ -15,7 +15,9 @@ INT_FIELDS = {"shirt_number","age","caps","international_goals","height_cm","mar
     "club_assists_2025_26","club_yellow_2025_26","club_red_2025_26","club_clean_sheets_2025_26",
     "club_goals_conceded_2025_26","team_wins_2025_26","team_draws_2025_26","team_losses_2025_26",
     "career_club_apps","career_club_goals","fifa_ranking","stage_order","match_number",
-    "home_team_id","away_team_id","city_id","stage_id","id","team_id","player_id","squad_size"}
+    "home_team_id","away_team_id","city_id","stage_id","id","team_id","player_id","squad_size",
+    "capacity","altitude_m","opened_year","titles","appearances","home_score","away_score"}
+FLOAT_FIELDS = {"lat","lng","title_odds"}
 
 
 def read_csv(name):
@@ -33,6 +35,11 @@ def coerce(row):
                 out[k] = int(float(v))
             except (ValueError, TypeError):
                 out[k] = v
+        elif k in FLOAT_FIELDS:
+            try:
+                out[k] = float(v)
+            except (ValueError, TypeError):
+                out[k] = v
         elif v in ("True", "False"):
             out[k] = (v == "True")
         else:
@@ -41,6 +48,17 @@ def coerce(row):
 
 
 teams = [coerce(t) for t in read_csv("teams.csv")]
+# optional team metadata (kit colours, World Cup history) merged by fifa_code
+try:
+    team_meta = {m["fifa_code"]: coerce(m) for m in read_csv("team_meta.csv")}
+    for t in teams:
+        meta = team_meta.get(t.get("fifa_code"))
+        if meta:
+            for k, v in meta.items():
+                if k != "fifa_code":
+                    t[k] = v
+except FileNotFoundError:
+    pass
 players = [coerce(p) for p in read_csv("players.csv")]
 for p in players:  # researched facts stored as " ; "-joined string -> array
     p["facts"] = [x for x in (p.get("facts") or "").split(" ; ") if x] if isinstance(p.get("facts"), str) else (p.get("facts") or [])
@@ -64,6 +82,9 @@ for m in matches_raw:
         "away_team": a.get("team_name"), "away_code": a.get("fifa_code"),
         "city": c.get("city_name"), "venue": c.get("venue_name"),
         "country": c.get("country"), "stage": s.get("stage_name"),
+        # results pass-through — null until scores are added to matches.csv
+        "home_score": mm.get("home_score"), "away_score": mm.get("away_score"),
+        "status": mm.get("status") or ("final" if mm.get("home_score") is not None else "scheduled"),
     })
     matches.append(mm)
 

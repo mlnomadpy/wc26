@@ -1,0 +1,49 @@
+fifa_code,color_primary,color_secondary,titles,best_finish,is_debut
+MEX,#006847,#c8102e,0,Quarter-finals,False
+RSA,#007a4d,#f2a900,0,Group stage,False
+KOR,#c8102e,#003478,0,Fourth place,False
+CZE,#d7141a,#11457e,0,,False
+CAN,#d52b1e,#ffffff,0,Group stage,False
+BIH,#1c3f94,#ffd700,0,Group stage,False
+QAT,#8a1538,#ffffff,0,Group stage,False
+SUI,#d52b1e,#ffffff,0,Quarter-finals,False
+BRA,#ffdf00,#009c3b,5,Winners,False
+MAR,#c1272d,#006233,0,Fourth place,False
+HAI,#00209f,#d21034,0,Group stage,False
+SCO,#0a2d6b,#ffffff,0,Group stage,False
+USA,#0a3161,#b31942,0,Third place,False
+PAR,#d52b1e,#0038a8,0,Quarter-finals,False
+AUS,#ffcd00,#00843d,0,Round of 16,False
+TUR,#e30a17,#ffffff,0,Third place,False
+GER,#ffffff,#1a1a1a,4,Winners,False
+CUR,#002b7f,#ffffff,0,Debut,True
+CIV,#f77f00,#009e60,0,Group stage,False
+ECU,#ffd100,#0072ce,0,Round of 16,False
+NED,#f36c21,#ffffff,0,Runners-up,False
+JPN,#0033a0,#ffffff,0,Round of 16,False
+SWE,#006aa7,#fecc00,0,Runners-up,False
+TUN,#e70013,#ffffff,0,Group stage,False
+BEL,#e30613,#ffd700,0,Third place,False
+EGY,#ce1126,#ffffff,0,Group stage,False
+IRN,#ffffff,#239f40,0,Group stage,False
+NZL,#ffffff,#000000,0,Group stage,False
+ESP,#c60b1e,#ffc400,1,Winners,False
+CPV,#003893,#cf2027,0,Debut,True
+KSA,#006c35,#ffffff,0,Round of 16,False
+URU,#5cbfeb,#ffffff,2,Winners,False
+FRA,#002395,#ffffff,2,Winners,False
+SEN,#00853f,#fdef42,0,Quarter-finals,False
+IRQ,#ffffff,#007a3d,0,Group stage,False
+NOR,#ba0c2f,#00205b,0,Round of 16,False
+ARG,#6cace4,#ffffff,3,Winners,False
+ALG,#006233,#d21034,0,Round of 16,False
+AUT,#ed2939,#ffffff,0,Third place,False
+JOR,#007a3d,#ce1126,0,Debut,True
+POR,#da291c,#006600,0,Third place,False
+COD,#0085ca,#f7d618,0,Group stage,False
+UZB,#0099b5,#ffffff,0,Debut,True
+COL,#fcd116,#003893,0,Quarter-finals,False
+ENG,#ffffff,#cf081f,1,Winners,False
+CRO,#ff0000,#ffffff,0,Runners-up,False
+GHA,#006b3f,#fcd116,0,Quarter-finals,False
+PAN,#d21034,#005293,0,Group stage,False

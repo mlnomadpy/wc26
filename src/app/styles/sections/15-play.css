@@ -455,12 +455,14 @@
 .map-tip span{ display:block; font-size:10.5px; color:var(--fg-mute); }
 .map-tip em{ font-style:normal; font-family:var(--fmono); font-size:9.5px; color:var(--accent2); }
 .map-list{ padding:6px; }
-.mli{ display:grid; grid-template-columns:1fr 1.1fr 28px; gap:8px; align-items:center; padding:8px 10px; border-radius:8px; border-bottom:1px solid var(--line); transition:var(--t); }
+.mli{ display:grid; grid-template-columns:1fr 42px 26px; gap:8px; align-items:center; padding:8px 10px; border-radius:8px; border-bottom:1px solid var(--line); transition:var(--t); }
 .mli:last-child{ border-bottom:0; }
 .mli-head{ font:600 9px var(--fmono); letter-spacing:.1em; text-transform:uppercase; color:var(--fg-mute); border-bottom:1px solid var(--line2); }
-.mli-c{ font-weight:600; font-size:12.5px; display:flex; flex-direction:column; }
-.mli-c i{ font-style:normal; font-size:9.5px; color:var(--fg-mute); font-family:var(--fmono); letter-spacing:.04em; }
-.mli-v{ font-size:11px; color:var(--fg-mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mli-c{ min-width:0; display:flex; flex-direction:column; gap:1px; }
+.mli-nm{ display:flex; align-items:center; gap:6px; font-weight:600; font-size:12.5px; }
+.mli-c i{ font-style:normal; font-size:10px; color:var(--fg-mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mli-alt{ flex:none; font:700 8px var(--fmono); letter-spacing:.03em; color:#ffb454; padding:1px 5px; border-radius:4px; background:color-mix(in srgb,#ffb454 16%,transparent); }
+.mli-cap{ text-align:right; font-family:var(--fmono); font-size:11px; color:var(--fg-dim); }
 .mli-m{ text-align:right; } .mli-m b{ font-family:var(--fdisp2); font-weight:800; font-size:15px; color:var(--accent2); }
 .mli.on{ background:color-mix(in srgb,var(--accent2) 12%,transparent); }
 
@@ -472,3 +474,18 @@
 .ins-xlinks a:hover{ border-color:var(--accent2); color:var(--accent2); box-shadow:var(--glow); transform:translateY(-1px); }
 .ins-go{ float:right; font-family:var(--fmono); font-size:10px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--accent2); text-decoration:none; }
 .ins-go:hover{ text-decoration:underline; }
+
+/* ===================== TEAM history badges + kit ===================== */
+.tv2-hist{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:5px; }
+.tv2-tag{ font:700 9.5px var(--fmono); letter-spacing:.04em; text-transform:uppercase; padding:3px 8px; border-radius:5px; color:var(--fg-mute); background:var(--bg2); border:1px solid var(--line2); }
+.tv2-tag.champ{ color:#ffd23f; background:color-mix(in srgb,#ffd23f 14%,transparent); border-color:color-mix(in srgb,#ffd23f 42%,transparent); box-shadow:0 0 12px -4px #ffd23f; }
+.tv2-tag.debut{ color:var(--accent2); background:color-mix(in srgb,var(--accent2) 14%,transparent); border-color:var(--hud-b2); }
+.tv2-tag.muted{ opacity:.66; }
+.tv2-kit{ display:inline-flex; border-radius:4px; overflow:hidden; border:1px solid var(--line2); }
+.tv2-kit i{ width:13px; height:15px; }
+/* teams directory — champions / debut badge (top-right of card) */
+.teamcard{ position:relative; }
+.tc-trophy{ position:absolute; top:9px; left:10px; z-index:2; font:800 10px var(--fdisp2); color:#ffd23f; letter-spacing:.02em;
+  filter:drop-shadow(0 0 6px color-mix(in srgb,#ffd23f 60%,transparent)); }
+.tc-debut{ position:absolute; top:9px; left:10px; z-index:2; font:700 7.5px var(--fmono); letter-spacing:.1em; color:var(--accent2);
+  padding:2px 5px; border-radius:4px; background:color-mix(in srgb,var(--accent2) 14%,transparent); border:1px solid var(--hud-b); }

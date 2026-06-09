@@ -50,6 +50,15 @@ const face = id => `${B}faces/${id}.jpg`;
     <div class="tv2-id">
       <h1>{t.team_name}</h1>
       <span class="tv2-sub">{t.head_coach || '—'} · <a class="dh-glink" href={`${B}groups/${t.group_letter}/`}>Group {t.group_letter}</a> · {t.confederation} · {sq.length} players</span>
+      <span class="tv2-hist">
+        {t.is_debut
+          ? <span class="tv2-tag debut">★ World Cup debut</span>
+          : t.titles > 0
+            ? <span class="tv2-tag champ">★ {t.titles}× World Champion{t.titles > 1 ? 's' : ''}</span>
+            : t.best_finish && <span class="tv2-tag">Best finish · {t.best_finish}</span>}
+        {!t.is_debut && t.titles > 0 && t.best_finish && <span class="tv2-tag muted">Best · {t.best_finish}</span>}
+        {t.color_primary && <span class="tv2-kit" title="Kit colours"><i style={`background:${t.color_primary}`}></i><i style={`background:${t.color_secondary}`}></i></span>}
+      </span>
     </div>
     <div class="tv2-stats">
       {STATS.map(([k, v, hero]) => <span class={`tv2-stat ${hero ? 'hero' : ''}`}><b>{v}</b><i>{k}</i></span>)}

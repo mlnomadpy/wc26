@@ -6,7 +6,10 @@ const mcount = {}; DB.matches.forEach(m => { if (m.city_id) mcount[m.city_id] = 
 const CITIES = DB.cities.filter(c => CITY_GEO[c.id]).map(c => ({
   id: c.id, name: c.city_name, venue: c.venue_name, country: c.country,
   lat: CITY_GEO[c.id][0], lng: CITY_GEO[c.id][1], m: mcount[c.id] || 0,
+  cap: c.capacity || null, alt: c.altitude_m ?? null, roof: c.roof || null,
 }));
+const totalSeats = CITIES.reduce((s, c) => s + (c.cap || 0), 0);
+const highest = [...CITIES].sort((a, b) => (b.alt || 0) - (a.alt || 0))[0];
 ---
 <Base title="Host cities — 2026 FIFA World Cup venues map" description="The 16 host cities and stadiums of the 2026 FIFA World Cup across the USA, Canada and Mexico, with matches hosted per venue.">
   <div class="app-page">
@@ -16,20 +19,27 @@ const CITIES = DB.cities.filter(c => CITY_GEO[c.id]).map(c => ({
       <h1>16 host cities</h1>
       <p class="psub">From Vancouver to Mexico City — the venues hosting the first 48-team World Cup, spread across the USA, Canada and Mexico.</p>
     </div>
-    <div class="pstat"><div class="s"><b>16</b><span>Venues</span></div><div class="s"><b>3</b><span>Nations</span></div></div>
+    <div class="pstat">
+      <div class="s"><b>16</b><span>Venues</span></div>
+      <div class="s"><b>{(totalSeats / 1e6).toFixed(2)}M</b><span>Seats</span></div>
+      <div class="s"><b>{(highest.alt / 1000).toFixed(1)}km</b><span>{highest.name} alt.</span></div>
+    </div>
   </header>
   <div class="app-grow map-main">
     <div class="panel map-panel">
       <canvas id="mapcv" class="map-cv"></canvas>
       <div class="map-tip" id="maptip" hidden></div>
-      <div class="map-cap">Node size = matches hosted</div>
+      <div class="map-cap">Node size = capacity · ◆ high altitude</div>
     </div>
     <div class="panel map-list scroll">
-      <div class="mli mli-head"><span>City</span><span>Venue</span><span class="mli-m">M</span></div>
-      {CITIES.slice().sort((a, b) => b.m - a.m).map(c => (
+      <div class="mli mli-head"><span>City</span><span class="mli-cap">Seats</span><span class="mli-m">M</span></div>
+      {CITIES.slice().sort((a, b) => b.m - a.m || (b.cap || 0) - (a.cap || 0)).map(c => (
         <div class="mli" data-id={c.id}>
-          <span class="mli-c">{c.name}<i>{c.country}</i></span>
-          <span class="mli-v">{c.venue}</span>
+          <span class="mli-c">
+            <span class="mli-nm">{c.name}{c.alt >= 1000 && <span class="mli-alt" title={`${c.alt} m altitude`}>◆ {(c.alt / 1000).toFixed(1)}km</span>}</span>
+            <i>{c.venue}</i>
+          </span>
+          <span class="mli-cap">{c.cap ? (c.cap / 1000).toFixed(0) + 'k' : '—'}</span>
           <span class="mli-m"><b>{c.m}</b></span>
         </div>
       ))}
@@ -49,7 +59,8 @@ const CITIES = DB.cities.filter(c => CITY_GEO[c.id]).map(c => ({
     let W = 0, H = 0, hover = null, t = 0;
     const px = lng => M.l + (lng - LNG[0]) / (LNG[1] - LNG[0]) * (W - M.l - M.r);
     const py = lat => M.t + (LAT[0] - lat) / (LAT[0] - LAT[1]) * (H - M.t - M.b);
-    const maxM = Math.max(...CITIES.map(c => c.m));
+    const maxCap = Math.max(...CITIES.map(c => c.cap || 0)) || 1;
+    const minCap = Math.min(...CITIES.map(c => c.cap || maxCap));
 
     function resize() { const s = cv.parentElement; W = s.clientWidth; H = s.clientHeight; cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px'; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
 
@@ -65,16 +76,20 @@ const CITIES = DB.cities.filter(c => CITY_GEO[c.id]).map(c => ({
       landPath();
       ctx.fillStyle = 'rgba(30,72,128,.16)'; ctx.fill();
       ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(88,221,255,.4)'; ctx.shadowColor = '#58ddff'; ctx.shadowBlur = 10; ctx.stroke(); ctx.shadowBlur = 0;
-      // city nodes
+      // city nodes — radius by capacity, high-altitude venues marked amber
       for (const c of CITIES) {
-        const x = px(c.lng), y = py(c.lat), r = 3.5 + c.m / maxM * 7;
-        const on = hover === c;
+        const x = px(c.lng), y = py(c.lat), r = 4 + ((c.cap || minCap) - minCap) / (maxCap - minCap || 1) * 7;
+        const on = hover === c, hi = c.alt >= 1000;
+        const col = hi ? '#ffb454' : '#7fd4ff', glow = hi ? '#ffb454' : '#58ddff';
         const pulse = on ? 0 : (Math.sin(t * 2 + c.id) * 0.5 + 0.5) * 3;
-        ctx.globalAlpha = .25; ctx.fillStyle = '#58ddff';
+        ctx.globalAlpha = .22; ctx.fillStyle = glow;
         ctx.beginPath(); ctx.arc(x, y, r + pulse + 2, 0, 7); ctx.fill();
-        ctx.globalAlpha = 1; ctx.fillStyle = on ? '#fff' : '#7fd4ff';
-        ctx.shadowColor = '#58ddff'; ctx.shadowBlur = on ? 16 : 8;
-        ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1; ctx.fillStyle = on ? '#fff' : col;
+        ctx.shadowColor = glow; ctx.shadowBlur = on ? 16 : 8;
+        if (hi) { // diamond for altitude venues
+          ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y); ctx.closePath(); ctx.fill();
+        } else { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); }
+        ctx.shadowBlur = 0;
         c._x = x; c._y = y; c._r = r;
         // label
         ctx.fillStyle = on ? '#eaf4ff' : 'rgba(200,222,255,.62)';
@@ -91,7 +106,7 @@ const CITIES = DB.cities.filter(c => CITY_GEO[c.id]).map(c => ({
       let best = null, bd = 200;
       for (const c of CITIES) { const dx = c._x - mx, dy = c._y - my, d = dx * dx + dy * dy; if (d < Math.max(bd, (c._r + 6) ** 2) && d < bd) { bd = d; best = c; } }
       hover = best; cv.style.cursor = best ? 'pointer' : 'default';
-      if (best) { tip.hidden = false; tip.innerHTML = `<b>${best.name}</b><span>${best.venue}</span><em>${best.m} match${best.m === 1 ? '' : 'es'} · ${best.country}</em>`; tip.style.left = mx + 'px'; tip.style.top = my + 'px'; }
+      if (best) { tip.hidden = false; const cap = best.cap ? (best.cap / 1000).toFixed(1) + 'k seats' : ''; const alt = best.alt >= 1000 ? ` · ◆ ${best.alt}m` : ''; tip.innerHTML = `<b>${best.name}</b><span>${best.venue}${best.roof === 'retractable' ? ' · retractable' : ''}</span><em>${best.m} match${best.m === 1 ? '' : 'es'} · ${cap}${alt}</em>`; tip.style.left = mx + 'px'; tip.style.top = my + 'px'; }
       else tip.hidden = true;
       document.querySelectorAll('.mli').forEach(el => el.classList.toggle('on', best && +el.dataset.id === best.id));
     });

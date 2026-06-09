@@ -60,6 +60,9 @@ const SORTS = [['rank', 'Rank'], ['rating', 'Rating'], ['value', 'Value'], ['az'
            data-search={`${t.team_name} ${t.confederation} group ${t.group_letter} ${t.head_coach || ''} ${t.star ? t.star.name : ''}`.toLowerCase()}
            style={`--cc:${CONF[t.confederation] || '#6b7a90'}`}>
           <span class="tc-rank">{t.fifa_ranking ? '#' + t.fifa_ranking : '—'}</span>
+          {t.titles > 0
+            ? <span class="tc-trophy" title={`${t.titles}× World Champion`}>🏆{t.titles > 1 ? ' ' + t.titles : ''}</span>
+            : t.is_debut && <span class="tc-debut" title="World Cup debut">DEBUT</span>}
           <span class="tc-sel" aria-hidden="true"></span>
           <span class="tc-flag"><Flag code={t.fifa_code} w={80} /></span>
           <span class="tc-name">{t.team_name}</span>
