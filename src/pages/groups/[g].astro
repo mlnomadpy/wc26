@@ -38,6 +38,10 @@ const fixtures = DB.matches
 const fmtDay = (s) => { const d = new Date((s || '').replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00')); return isNaN(d) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
 const fav = table[0];
 const gs = [...new Set(DB.teams.map(t => t.group_letter))].sort();
+// LIVE standings once results exist (build_data.py computes from match scores)
+const liveRows = (DB.standings && DB.standings[g] && DB.standings[g].length) ? DB.standings[g] : null;
+const byCode = {}; teams.forEach(t => (byCode[t.fifa_code] = t));
+const hasScore = (m) => m.home_score != null && m.away_score != null;
 ---
 <Base title={`Group ${g} — projected standings · FIFA World Cup 2026`} description={`Group ${g} at the 2026 FIFA World Cup: the four teams, their projected finishing order and qualification outlook, plus all six group fixtures.`}>
   <div class="app-page">
@@ -47,7 +51,7 @@ const gs = [...new Set(DB.teams.map(t => t.group_letter))].sort();
       <div class="dh-main">
         <div class="dh-num">{g}</div>
         <div>
-          <div class="dh-eye">Group stage · projected</div>
+          <div class="dh-eye">{liveRows ? 'Group stage · live' : 'Group stage · projected'}</div>
           <h1>Group {g}</h1>
           <div class="dh-meta">{table.length} teams · {fixtures.length} fixtures · {fav.team_name} favoured to top</div>
         </div>
@@ -64,33 +68,60 @@ const gs = [...new Set(DB.teams.map(t => t.group_letter))].sort();
     <div class="app-grow scroll">
     <div class="grid2 grp-grid">
       <section class="panel">
-        <h3><span class="tag">Projected table</span></h3>
-        <table class="grp-table">
-          <thead><tr><th>#</th><th>Team</th><th>FIFA</th><th>Rating</th><th>xPts</th><th>Outlook</th></tr></thead>
-          <tbody>
-            {table.map((t, i) => {
-              const o = outlook(i);
-              return (
-                <tr class={`grp-row ${o.c}`} onclick={`location.href='${B}teams/${t.fifa_code.toLowerCase()}/'`} style={`--cc:${CONF[t.confederation] || '#6b7a90'}`}>
-                  <td class="grp-pos">{i + 1}</td>
-                  <td>
-                    <span class="nat"><Flag code={t.fifa_code} cls="sm" /> <b>{t.team_name}</b></span>
-                    {t.star && <div class="grp-star">★ {t.star.player_name}</div>}
-                  </td>
-                  <td class="mono faint">{t.fifa_ranking ? '#' + t.fifa_ranking : '—'}</td>
-                  <td>
-                    <div class="grp-rate"><span class="grp-rnum">{t.rating}</span>
-                      <span class="bartrack grp-bar"><span class="bar" style={`width:${barPct(t.rating)}%`}></span></span>
-                    </div>
-                  </td>
-                  <td class="mono"><b>{t.xpts.toFixed(1)}</b></td>
-                  <td><span class={`qual ${o.c}`}>{o.t}</span></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <p class="grp-note faint">Projected from squad strength (FIFA world ranking). Top two advance to the Round of 32; the eight best third-placed teams also qualify.</p>
+        {liveRows ? (
+          <>
+            <h3><span class="tag live">Standings · live</span></h3>
+            <table class="grp-table">
+              <thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th><th>Outlook</th></tr></thead>
+              <tbody>
+                {liveRows.map((r, i) => {
+                  const o = outlook(i), t = byCode[r.code] || {};
+                  return (
+                    <tr class={`grp-row ${o.c}`} onclick={`location.href='${B}teams/${r.code.toLowerCase()}/'`} style={`--cc:${CONF[t.confederation] || '#6b7a90'}`}>
+                      <td class="grp-pos">{i + 1}</td>
+                      <td><span class="nat"><Flag code={r.code} cls="sm" /> <b>{r.team}</b></span></td>
+                      <td class="mono faint">{r.P}</td><td class="mono">{r.W}</td><td class="mono">{r.D}</td><td class="mono">{r.L}</td>
+                      <td class="mono">{r.GD > 0 ? '+' + r.GD : r.GD}</td>
+                      <td class="mono"><b>{r.Pts}</b></td>
+                      <td><span class={`qual ${o.c}`}>{o.t}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <p class="grp-note faint">Live from results · tiebreak by points, goal difference, goals for. Top two advance to the Round of 32; the eight best third-placed teams also qualify.</p>
+          </>
+        ) : (
+          <>
+            <h3><span class="tag">Projected table</span></h3>
+            <table class="grp-table">
+              <thead><tr><th>#</th><th>Team</th><th>FIFA</th><th>Rating</th><th>xPts</th><th>Outlook</th></tr></thead>
+              <tbody>
+                {table.map((t, i) => {
+                  const o = outlook(i);
+                  return (
+                    <tr class={`grp-row ${o.c}`} onclick={`location.href='${B}teams/${t.fifa_code.toLowerCase()}/'`} style={`--cc:${CONF[t.confederation] || '#6b7a90'}`}>
+                      <td class="grp-pos">{i + 1}</td>
+                      <td>
+                        <span class="nat"><Flag code={t.fifa_code} cls="sm" /> <b>{t.team_name}</b></span>
+                        {t.star && <div class="grp-star">★ {t.star.player_name}</div>}
+                      </td>
+                      <td class="mono faint">{t.fifa_ranking ? '#' + t.fifa_ranking : '—'}</td>
+                      <td>
+                        <div class="grp-rate"><span class="grp-rnum">{t.rating}</span>
+                          <span class="bartrack grp-bar"><span class="bar" style={`width:${barPct(t.rating)}%`}></span></span>
+                        </div>
+                      </td>
+                      <td class="mono"><b>{t.xpts.toFixed(1)}</b></td>
+                      <td><span class={`qual ${o.c}`}>{o.t}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <p class="grp-note faint">Projected from squad strength (FIFA world ranking). Top two advance to the Round of 32; the eight best third-placed teams also qualify.</p>
+          </>
+        )}
       </section>
 
       <section class="panel">
@@ -101,7 +132,7 @@ const gs = [...new Set(DB.teams.map(t => t.group_letter))].sort();
               <span class="fx-day mono">{fmtDay(m.kickoff_at)}</span>
               <span class="fx-match">
                 <span class="fx-side fx-home"><b>{m.home_team}</b> <Flag code={m.home_code} cls="sm" /></span>
-                <span class="fx-vs mono">vs</span>
+                <span class={`fx-vs mono ${hasScore(m) ? 'fx-score' : ''}`}>{hasScore(m) ? `${m.home_score}–${m.away_score}` : 'vs'}</span>
                 <span class="fx-side fx-away"><Flag code={m.away_code} cls="sm" /> <b>{m.away_team}</b></span>
               </span>
               <span class="fx-city faint">{m.city}</span>

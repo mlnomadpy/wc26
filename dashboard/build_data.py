@@ -235,6 +235,37 @@ for p in players:
     if p.get("is_captain"): fun.append("©️ Captain")
     p["fun"] = fun[:5]
 
+# ---- live group standings (computed from match results once scores exist) ----
+# Dormant until home_score/away_score appear on group-stage rows in matches.csv;
+# tiebreak by points -> goal difference -> goals for (head-to-head not yet applied).
+group_of = {t["fifa_code"]: t.get("group_letter") for t in teams}
+rec = {t["fifa_code"]: {"code": t["fifa_code"], "team": t["team_name"], "group": t.get("group_letter"),
+       "P": 0, "W": 0, "D": 0, "L": 0, "GF": 0, "GA": 0, "GD": 0, "Pts": 0} for t in teams}
+played = 0
+for m in matches:
+    hs, as_ = m.get("home_score"), m.get("away_score")
+    if hs is None or as_ is None:
+        continue
+    hc, ac = m.get("home_code"), m.get("away_code")
+    if hc not in rec or ac not in rec:
+        continue
+    if rec[hc]["group"] is None or rec[hc]["group"] != rec[ac]["group"]:
+        continue  # group tables only count group-stage meetings
+    played += 1
+    for c, gf, ga in ((hc, hs, as_), (ac, as_, hs)):
+        r = rec[c]; r["P"] += 1; r["GF"] += gf; r["GA"] += ga; r["GD"] = r["GF"] - r["GA"]
+        if gf > ga: r["W"] += 1; r["Pts"] += 3
+        elif gf == ga: r["D"] += 1; r["Pts"] += 1
+        else: r["L"] += 1
+standings = {}
+if played:
+    for g in sorted({v for v in group_of.values() if v}):
+        rows = sorted((r for r in rec.values() if r["group"] == g),
+                      key=lambda r: (-r["Pts"], -r["GD"], -r["GF"], r["team"]))
+        for i, r in enumerate(rows):
+            r["rank"] = i + 1
+        standings[g] = rows
+
 payload = {
     "generated_at": str(date.today()),
     "has_enrichment": has_enrichment,
@@ -244,6 +275,7 @@ payload = {
         "squads_loaded": sum(1 for t in teams if t.get("squad_size")),
         "players": len(players),
         "matches": len(matches),
+        "matches_played": played,
         "host_cities": len(cities),
         "clubs": len(set(p.get("club") for p in players if p.get("club"))),
         "leagues": len(set(p.get("club_league") for p in players if p.get("club_league"))),
@@ -252,6 +284,7 @@ payload = {
     "matches": matches,
     "cities": cities,
     "stages": stages,
+    "standings": standings,
     "players": players,
     "agg": {
         "positions": count_by(players, "position"),

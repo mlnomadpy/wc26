@@ -93,6 +93,19 @@ then `build_dataset.py` → `build_data.py`. Validate coverage delta after each.
 - Add a small results-update path (edit matches.csv → rebuild; the daily cron
   already rebuilds).
 
+### Results-update path (live now — engine shipped)
+`build_data.py` computes `payload["standings"]` (per group: P/W/D/L/GF/GA/GD/Pts,
+ranked by points → GD → GF) from any group-stage rows in `matches.csv` that carry
+`home_score`/`away_score`. It is **dormant** until scores exist (`matches_played`
+= 0 → `standings` = {}). To go live during the tournament:
+1. Add `home_score,away_score,status` columns to `matches.csv` (or fill them).
+2. Enter final scores on played rows (`status` = `final`).
+3. `python3 dashboard/build_data.py && npm run build` (the daily cron does this).
+The groups page auto-switches projected → **live** table + shows real scorelines.
+Verified end-to-end with a synthetic full Group A. Still TODO: head-to-head
+tiebreakers, best-third-place ranking, and knockout real-resolution (the bracket
+still projects via teamRating).
+
 ---
 
 ## Sequencing
