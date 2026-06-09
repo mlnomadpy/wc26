@@ -1,0 +1,194 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../public/data.json';
+import { CONF } from '@shared/lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+
+// club-country -> confederation (region where the player plays club football)
+const C2C = {
+  England:'UEFA',Germany:'UEFA',Spain:'UEFA',France:'UEFA',Italy:'UEFA',Netherlands:'UEFA',Portugal:'UEFA',Turkey:'UEFA','Türkiye':'UEFA',Belgium:'UEFA','Czech Republic':'UEFA',Scotland:'UEFA',Denmark:'UEFA',Greece:'UEFA',Russia:'UEFA',Switzerland:'UEFA',Cyprus:'UEFA',Norway:'UEFA',Austria:'UEFA',Croatia:'UEFA',Wales:'UEFA',Poland:'UEFA',Israel:'UEFA',Sweden:'UEFA',Hungary:'UEFA',Serbia:'UEFA',Romania:'UEFA',Slovakia:'UEFA',Slovenia:'UEFA',Bulgaria:'UEFA','Bosnia and Herzegovina':'UEFA',Kazakhstan:'UEFA','Republic of Ireland':'UEFA',Ireland:'UEFA',Finland:'UEFA',Armenia:'UEFA',Azerbaijan:'UEFA',
+  'Saudi Arabia':'AFC',Qatar:'AFC',Iran:'AFC',Uzbekistan:'AFC','United Arab Emirates':'AFC',Iraq:'AFC',Jordan:'AFC','South Korea':'AFC',Japan:'AFC',Australia:'AFC',Malaysia:'AFC',China:'AFC',Thailand:'AFC',Indonesia:'AFC',
+  'United States':'CONCACAF',USA:'CONCACAF',Mexico:'CONCACAF',Canada:'CONCACAF','Costa Rica':'CONCACAF',Panama:'CONCACAF',Haiti:'CONCACAF',Honduras:'CONCACAF',
+  Brazil:'CONMEBOL',Argentina:'CONMEBOL',Ecuador:'CONMEBOL',Paraguay:'CONMEBOL',Venezuela:'CONMEBOL',Chile:'CONMEBOL',Colombia:'CONMEBOL',Uruguay:'CONMEBOL',
+  Egypt:'CAF','South Africa':'CAF',Tunisia:'CAF',Morocco:'CAF',Algeria:'CAF',Ghana:'CAF',
+  'New Zealand':'OFC',
+};
+const CONF_FULL = { UEFA:'Europe', CONMEBOL:'South America', CONCACAF:'N. & C. America', CAF:'Africa', AFC:'Asia & Australia', OFC:'Oceania' };
+const ps = DB.players;
+const N = ps.length;
+
+// top leagues for the by-league view
+const lcount = {}; ps.forEach(p => { if (p.club_league) lcount[p.club_league] = (lcount[p.club_league] || 0) + 1; });
+const TOPL = Object.entries(lcount).sort((a, b) => b[1] - a[1]).slice(0, 12).map(e => e[0]);
+const TOPLSET = new Set(TOPL);
+const leagueKey = p => (p.club_league && TOPLSET.has(p.club_league)) ? p.club_league : 'Other leagues';
+
+// build matrices
+function build(targetOf) {
+  const m = {}, srcT = {}, tgtT = {};
+  ps.forEach(p => {
+    const s = p.confederation, t = targetOf(p);
+    m[s] = m[s] || {}; m[s][t] = (m[s][t] || 0) + 1;
+    srcT[s] = (srcT[s] || 0) + 1; tgtT[t] = (tgtT[t] || 0) + 1;
+  });
+  const srcOrder = Object.keys(srcT).sort((a, b) => srcT[b] - srcT[a]);
+  return { m, srcT, tgtT, srcOrder };
+}
+const regionF = build(p => C2C[p.club_country] || 'Other');
+const leagueF = build(leagueKey);
+// region target order by size; league order: keep top-league rank then Other last
+const regionOrder = Object.keys(regionF.tgtT).sort((a, b) => regionF.tgtT[b] - regionF.tgtT[a]);
+const leagueOrder = [...TOPL.filter(l => leagueF.tgtT[l]), ...(leagueF.tgtT['Other leagues'] ? ['Other leagues'] : [])];
+
+const COL = { ...CONF, Other:'#6b7a90' };
+// headline stats
+const europe = regionF.tgtT['UEFA'] || 0;
+const big5 = ps.filter(p => ['Premier League','Bundesliga','La Liga','Ligue 1','Serie A'].includes(p.club_league)).length;
+const home = ps.filter(p => p.club_country === p.team_name || (p.club_country === 'United States' && p.team_name === 'USA')).length;
+const STATS = [
+  [Math.round(europe / N * 100) + '%', 'play club football in Europe', europe + ' of ' + N],
+  [big5, 'play in the Big Five leagues', Math.round(big5 / N * 100) + '% of the field'],
+  [home, 'play in their home country', Math.round(home / N * 100) + '%'],
+];
+
+const PAYLOAD = {
+  region: { ...regionF, tgtOrder: regionOrder, tgtLabel: { ...CONF_FULL, Other:'Other / domestic' } },
+  league: { ...leagueF, tgtOrder: leagueOrder, tgtLabel: {} },
+  col: COL, confFull: CONF_FULL,
+};
+---
+<Base title="Talent Flow — where the World Cup plays its club football" description="A flow map of all 1,247 World Cup players from their national confederation to the club leagues they play in. 66% of the field plays in Europe.">
+  <div class="app-page flow-page">
+    <header class="phead flow-head">
+      <div>
+        <div class="pe">The flow</div>
+        <h1>Talent Flow</h1>
+        <p class="psub">Every player, from the nation they represent to the club football they actually play. Two-thirds of the World Cup is played in Europe.</p>
+      </div>
+      <div class="gx-ctrls">
+        <div class="gx-seg" id="flMode" role="tablist">
+          <button class="on" data-mode="region">By region</button>
+          <button data-mode="league">By league</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="flow-stats">
+      {STATS.map(([b, l, s]) => <div class="flstat"><b>{b}</b><span>{l}</span><i>{s}</i></div>)}
+    </div>
+
+    <div class="app-grow flow-stage">
+      <div class="fl-cols"><span>Nation</span><span>Club</span></div>
+      <svg id="flsvg" class="fl-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet" aria-label="Talent flow diagram"></svg>
+      <div class="fl-tip" id="flTip" hidden></div>
+    </div>
+  </div>
+
+  <script type="application/json" id="flData" set:html={JSON.stringify(PAYLOAD)}></script>
+  <script>
+    const D = JSON.parse(document.getElementById('flData').textContent);
+    const svg = document.getElementById('flsvg'), tip = document.getElementById('flTip');
+    const NS = 'http://www.w3.org/2000/svg';
+    let mode = 'region', lock = null;
+    const VW = 1000, VH = 600, NODEW = 12, LX = 246, RX = 742, padT = 16, padB = 18, gap = 10;
+    const total = Object.values(D.region.srcT).reduce((a, b) => a + b, 0);
+
+    function layout() {
+      const F = D[mode];
+      const src = F.srcOrder, tgt = F.tgtOrder;
+      const usable = VH - padT - padB;
+      const maxGaps = Math.max(src.length - 1, tgt.length - 1) * gap;
+      const scale = (usable - maxGaps) / total;
+      const colH = (arr, tot) => arr.reduce((s, k) => s + tot[k] * scale, 0) + (arr.length - 1) * gap;
+      const lH = colH(src, F.srcT), rH = colH(tgt, F.tgtT);
+      const L = {}, R = {}, ribL = {}, ribR = {};
+      let ly = padT + (usable - lH) / 2;
+      src.forEach(s => { const h = F.srcT[s] * scale; L[s] = { y0: ly, y1: ly + h }; ly += h + gap; });
+      let ry = padT + (usable - rH) / 2;
+      tgt.forEach(t => { const h = F.tgtT[t] * scale; R[t] = { y0: ry, y1: ry + h }; ry += h + gap; });
+      src.forEach(s => { let off = L[s].y0; tgt.forEach(t => { const v = (F.m[s] || {})[t]; if (!v) return; ribL[s + '>' + t] = [off, off + v * scale]; off += v * scale; }); });
+      tgt.forEach(t => { let off = R[t].y0; src.forEach(s => { const v = (F.m[s] || {})[t]; if (!v) return; ribR[s + '>' + t] = [off, off + v * scale]; off += v * scale; }); });
+      return { F, src, tgt, L, R, ribL, ribR, scale };
+    }
+
+    function colorOf(k) { return D.col[k] || '#6b7a90'; }
+    function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+    function render() {
+      svg.innerHTML = '';
+      const G = layout(), F = G.F;
+      const mx = (LX + NODEW + RX) / 2;
+      // ribbons
+      const rg = el('g', { class: 'fl-ribbons' }, svg);
+      G.src.forEach(s => G.tgt.forEach(t => {
+        const key = s + '>' + t, v = (F.m[s] || {})[t]; if (!v) return;
+        const [l0, l1] = G.ribL[key], [r0, r1] = G.ribR[key], x0 = LX + NODEW, x1 = RX;
+        const d = `M${x0},${l0} C${mx},${l0} ${mx},${r0} ${x1},${r0} L${x1},${r1} C${mx},${r1} ${mx},${l1} ${x0},${l1} Z`;
+        const p = el('path', { d, fill: colorOf(s), style: 'color:' + colorOf(s), 'fill-opacity': .26, class: 'fl-rib', 'data-s': s, 'data-t': t, 'data-v': v }, rg);
+        p.addEventListener('mousemove', e => showTip(e, `${D.confFull[s] || s} → ${F.tgtLabel[t] || t}`, v));
+        p.addEventListener('mouseenter', () => hi(s, t));
+        p.addEventListener('mouseleave', () => { hideTip(); if (!lock) clearHi(); });
+      }));
+      // nodes + labels
+      const ng = el('g', { class: 'fl-nodes' }, svg);
+      G.src.forEach(s => {
+        const n = G.L[s], h = n.y1 - n.y0;
+        el('rect', { x: LX, y: n.y0, width: NODEW, height: Math.max(1, h), rx: 2, fill: colorOf(s), style: 'color:' + colorOf(s), class: 'fl-node fl-src', 'data-s': s }, ng);
+        const tx = el('text', { x: LX - 10, y: (n.y0 + n.y1) / 2, 'text-anchor': 'end', class: 'fl-lab' }, ng);
+        tx.textContent = (D.confFull[s] || s);
+        const tn = el('text', { x: LX - 10, y: (n.y0 + n.y1) / 2 + 13, 'text-anchor': 'end', class: 'fl-num' }, ng);
+        tn.textContent = F.srcT[s];
+      });
+      G.tgt.forEach(t => {
+        const n = G.R[t], h = n.y1 - n.y0;
+        el('rect', { x: RX, y: n.y0, width: NODEW, height: Math.max(1, h), rx: 2, fill: mode === 'region' ? colorOf(t) : '#8aa0c0', class: 'fl-node fl-tgt', 'data-t': t }, ng);
+        const cy = (n.y0 + n.y1) / 2, big = h > 18;
+        const tx = el('text', { x: RX + NODEW + 10, y: big ? cy - 1 : cy + 4, 'text-anchor': 'start', class: 'fl-lab' }, ng);
+        tx.textContent = (F.tgtLabel[t] || t);
+        if (big) { const tn = el('text', { x: RX + NODEW + 10, y: cy + 13, 'text-anchor': 'start', class: 'fl-num' }, ng); tn.textContent = F.tgtT[t]; }
+      });
+      // node hover/lock
+      svg.querySelectorAll('.fl-src').forEach(r => {
+        r.addEventListener('mouseenter', () => { if (!lock) hi(r.dataset.s, null); });
+        r.addEventListener('mouseleave', () => { if (!lock) clearHi(); });
+        r.addEventListener('click', () => { lock = (lock === r.dataset.s) ? null : r.dataset.s; lock ? hi(lock, null) : clearHi(); });
+      });
+      svg.querySelectorAll('.fl-tgt').forEach(r => {
+        r.addEventListener('mouseenter', () => { if (!lock) hi(null, r.dataset.t); });
+        r.addEventListener('mouseleave', () => { if (!lock) clearHi(); });
+      });
+      if (lock) hi(lock, null);
+    }
+
+    function hi(s, t) {
+      svg.classList.add('fl-dim');
+      svg.querySelectorAll('.fl-rib').forEach(p => {
+        const on = (s && p.dataset.s === s) || (t && p.dataset.t === t);
+        p.classList.toggle('on', on);
+      });
+    }
+    function clearHi() { svg.classList.remove('fl-dim'); svg.querySelectorAll('.fl-rib.on').forEach(p => p.classList.remove('on')); }
+
+    function showTip(e, label, v) {
+      tip.hidden = false;
+      tip.innerHTML = `<b>${label}</b><span>${v} players · ${Math.round(v / total * 100)}%</span>`;
+      const r = svg.getBoundingClientRect();
+      tip.style.left = (e.clientX - r.left) + 'px';
+      tip.style.top = (e.clientY - r.top) + 'px';
+    }
+    function hideTip() { tip.hidden = true; }
+
+    function setMode(m) {
+      mode = m; lock = null;
+      [...document.getElementById('flMode').children].forEach(x => x.classList.toggle('on', x.dataset.mode === m));
+      render();
+    }
+    document.getElementById('flMode').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      location.hash = b.dataset.mode === 'league' ? 'league' : '';
+      setMode(b.dataset.mode);
+    });
+    setMode(location.hash === '#league' ? 'league' : 'region');
+    window.addEventListener('resize', () => { /* svg is viewBox-scaled, no relayout needed */ });
+  </script>
+</Base>
