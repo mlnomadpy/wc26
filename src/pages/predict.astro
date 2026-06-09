@@ -1,0 +1,114 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../public/data.json';
+import { BTREE, STAGE_R, teamRating, CONF, flagImg } from '@shared/lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const byNum = {}; DB.matches.forEach(m => byNum[m.match_number] = m);
+const roundOf = n => { const m = byNum[n]; return m ? (STAGE_R[m.stage] || 0) : 0; };
+const leaves = []; (function dfs(n) { const ch = BTREE[n]; if (!ch) { leaves.push(n); return; } ch.forEach(dfs); })(104);
+
+// project group standings by squad strength (teamRating from FIFA rank)
+const teamByCode = {}; DB.teams.forEach(t => teamByCode[t.fifa_code] = t);
+const tr = c => teamRating(teamByCode[c]?.fifa_ranking) || 60;
+const byGroup = {}; DB.teams.forEach(t => (byGroup[t.group_letter] = byGroup[t.group_letter] || []).push(t.fifa_code));
+const rank = {}; Object.entries(byGroup).forEach(([g, cs]) => rank[g] = [...cs].sort((a, b) => tr(b) - tr(a)));
+function resolveSlot(s) {
+  let m;
+  if (m = s.match(/^([12])([A-L])$/)) return rank[m[2]] ? rank[m[2]][+m[1] - 1] : null;
+  if (m = s.match(/^3([A-L]+)$/)) { const c = m[1].split('').map(g => rank[g] && rank[g][2]).filter(Boolean).sort((a, b) => tr(b) - tr(a)); return c[0] || null; }
+  return null;
+}
+// feeders: leaf matches get two resolved team codes; inner matches get their child match numbers
+const feed = {};
+leaves.forEach(n => { const [a, b] = (byNum[n].match_label || '').split(/\s+vs\s+/); feed[n] = { t: 'teams', a: resolveSlot(a), b: resolveSlot(b) }; });
+Object.keys(BTREE).map(Number).forEach(n => { feed[n] = { t: 'matches', a: BTREE[n][0], b: BTREE[n][1] }; });
+// vertical order per round
+const Y = {}; leaves.forEach((n, i) => Y[n] = i);
+Object.keys(BTREE).map(Number).sort((a, b) => roundOf(a) - roundOf(b)).forEach(n => { const ch = BTREE[n]; Y[n] = ch.reduce((s, c) => s + Y[c], 0) / ch.length; });
+const rounds = [[], [], [], [], []];
+[...leaves, ...Object.keys(BTREE).map(Number)].forEach(n => rounds[roundOf(n)].push(n));
+rounds.forEach(col => col.sort((a, b) => Y[a] - Y[b]));
+const meta = {}; DB.teams.forEach(t => meta[t.fifa_code] = { n: t.team_name, f: flagImg(t.fifa_code, 40), col: CONF[t.confederation] || '#5aa2ff', r: tr(t.fifa_code) });
+const headers = ['Round of 32', 'Round of 16', 'Quarters', 'Semis', 'Final'];
+const jsonld = { '@context': 'https://schema.org', '@type': 'Game', name: 'Bracket Predictor', description: 'Predict the 2026 World Cup knockout bracket.' };
+---
+<Base title="Bracket Predictor — call the 2026 World Cup knockouts" description="Fill in your own 2026 World Cup knockout bracket — pick every winner from the Round of 32 to the final, then share your champion." jsonld={jsonld}>
+  <div class="app-page">
+  <header class="phead">
+    <div>
+      <div class="pe">Your call</div>
+      <h1>Predict the bracket</h1>
+      <p class="psub">Pick a winner in every tie from the Round of 32 to the final — the Round of 32 is seeded by our model. Crown your champion and share it.</p>
+    </div>
+    <div class="pstat"><div class="s"><b id="pr-done">0</b><span>Picked</span></div><div class="s"><b id="pr-champ">—</b><span>Champion</span></div></div>
+  </header>
+
+  <div class="controls">
+    <button class="btn ghost" id="pr-reset">Reset</button>
+    <button class="btn ghost" id="pr-auto">Use the model's picks</button>
+    <button class="btn primary" id="pr-share">Share bracket</button>
+    <span class="count" id="pr-count"></span>
+  </div>
+
+  <div class="app-grow scroll">
+    <div class="pbracket" id="pbracket">
+      {rounds.map((col, r) => (
+        <div class="pcol" data-r={r}>
+          <div class="pcolh">{headers[r]}</div>
+          {col.map(n => <div class="pmatch" data-n={n}></div>)}
+        </div>
+      ))}
+      <div class="pcol pchampcol">
+        <div class="pcolh">Champion</div>
+        <div class="pchamp" id="pchamp"><div class="trophy">🏆</div><div class="pchamp-t" id="pchampt">Crown a winner</div></div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script type="application/json" id="pr-feed" set:html={JSON.stringify(feed)}></script>
+  <script type="application/json" id="pr-meta" set:html={JSON.stringify(meta)}></script>
+  <script define:vars={{ B }}>
+    const FEED = JSON.parse(document.getElementById('pr-feed').textContent);
+    const META = JSON.parse(document.getElementById('pr-meta').textContent);
+    const $ = id => document.getElementById(id);
+    const FINAL = 104, all = Object.keys(FEED).map(Number);
+    let WIN = {};
+
+    const u = new URLSearchParams(location.search).get('p');
+    if (u) u.split(',').forEach(pair => { const [n, c] = pair.split('-'); if (n && c) WIN[+n] = c; });
+
+    function teamsOf(n) { const f = FEED[n]; return f.t === 'teams' ? [f.a, f.b] : [WIN[f.a] || null, WIN[f.b] || null]; }
+    function clean() { for (let pass = 0; pass < 4; pass++) all.forEach(n => { if (WIN[n] && !teamsOf(n).includes(WIN[n])) delete WIN[n]; }); }
+    function teamRow(n, code) {
+      if (!code) return `<div class="pteam tbd">TBD</div>`;
+      const m = META[code], w = WIN[n] === code, dim = WIN[n] && !w;
+      return `<button class="pteam ${w ? 'win' : ''} ${dim ? 'dim' : ''}" data-n="${n}" data-c="${code}" style="--cc:${m.col}"><img src="${m.f}" alt=""><span>${m.n}</span></button>`;
+    }
+    function render() {
+      clean();
+      all.forEach(n => { const [a, b] = teamsOf(n); const el = document.querySelector(`.pmatch[data-n="${n}"]`); if (el) el.innerHTML = teamRow(n, a) + `<span class="pvs">vs</span>` + teamRow(n, b); });
+      const champ = WIN[FINAL];
+      $('pchampt').innerHTML = champ ? `<img src="${META[champ].f}" alt=""> <b>${META[champ].n}</b>` : 'Crown a winner';
+      $('pchamp').classList.toggle('on', !!champ);
+      const done = all.filter(n => WIN[n]).length;
+      $('pr-done').textContent = done; $('pr-count').textContent = done + ' / ' + all.length + ' ties picked';
+      $('pr-champ').textContent = champ || '—';
+      history.replaceState(null, '', '?p=' + all.filter(n => WIN[n]).map(n => n + '-' + WIN[n]).join(','));
+    }
+    document.getElementById('pbracket').addEventListener('click', e => {
+      const b = e.target.closest('.pteam'); if (!b || b.classList.contains('tbd')) return;
+      const n = +b.dataset.n, c = b.dataset.c;
+      WIN[n] = (WIN[n] === c) ? undefined : c; if (WIN[n] === undefined) delete WIN[n];
+      render();
+    });
+    $('pr-reset').addEventListener('click', () => { WIN = {}; render(); });
+    $('pr-auto').addEventListener('click', () => { WIN = {}; for (let pass = 0; pass < 6; pass++) for (const n of all) { const [a, b] = teamsOf(n); if (a && b) WIN[n] = (META[a].r >= META[b].r ? a : b); } render(); });
+    $('pr-share').addEventListener('click', async () => {
+      const champ = WIN[FINAL];
+      const txt = `My WC26 bracket${champ ? ` — ${META[champ].n} lift the trophy 🏆` : ''}\n${location.href}`;
+      try { if (navigator.share) await navigator.share({ text: txt }); else { await navigator.clipboard.writeText(txt); $('pr-share').textContent = 'Copied!'; setTimeout(() => $('pr-share').textContent = 'Share bracket', 1500); } } catch (e) {}
+    });
+    render();
+  </script>
+</Base>
