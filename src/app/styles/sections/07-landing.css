@@ -208,8 +208,10 @@
 .tile-pf img{ width:100%; height:100%; object-fit:cover; object-position:50% 16%; filter:saturate(1.2) contrast(1.05); }
 .tile-tx{ position:relative; z-index:1; min-width:0; align-self:flex-end; width:62%; } .tile-face .big{ font-size:clamp(36px,3.5vw,54px); }
 .xstrip{ display:grid; grid-template-columns:repeat(auto-fill,minmax(228px,1fr)); gap:12px; }
-.xrow{ position:relative; display:flex; align-items:center; gap:12px; padding:15px 16px; border:1px solid var(--line2); border-radius:var(--r); background:var(--bg1); color:var(--fg); transition:var(--t); }
-.xrow .xi{ display:flex; align-items:center; justify-content:center; width:26px; flex:none; color:var(--accent2); }
+.xrow{ position:relative; display:flex; align-items:center; gap:13px; padding:13px 15px; border:1px solid var(--line2); border-radius:var(--r); background:var(--bg1); color:var(--fg); transition:var(--t); clip-path:var(--cut-edge); }
+.xrow .xi{ display:flex; align-items:center; justify-content:center; width:38px; height:38px; flex:none; border-radius:9px; color:var(--accent2);
+  background:color-mix(in srgb,var(--accent2) 12%,var(--bg2)); border:1px solid var(--hud-b); transition:var(--t); }
+.xrow:hover .xi{ background:color-mix(in srgb,var(--accent2) 22%,var(--bg2)); box-shadow:0 0 14px -4px var(--accent2); }
 .xrow-tx{ display:flex; flex-direction:column; gap:2px; min-width:0; }
 .xrow .xh{ font-weight:600; font-size:13.5px; } .xrow .xs{ font-size:11px; color:var(--fg-mute); }
 .home-cta{ position:relative; overflow:hidden; text-align:center; margin:0 clamp(40px,5.3vw,86px); padding:clamp(36px,5vw,60px) 24px; border-radius:var(--r);
