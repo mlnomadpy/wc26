@@ -34,6 +34,24 @@
 .iconbtn{ display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:999px; cursor:pointer;
   border:1px solid color-mix(in srgb,var(--accent) 52%,var(--line2)); background:color-mix(in srgb,var(--bg2) 74%,transparent); color:var(--fg); font-size:15px; transition:var(--t); }
 .iconbtn:hover{ border-color:var(--accent2); background:var(--bg3); }
+/* follow-your-nation control + picker */
+.favbtn.on{ padding:0; overflow:hidden; border-color:color-mix(in srgb,var(--fav,var(--accent2)) 65%,var(--line2)); box-shadow:0 0 14px -4px var(--fav,var(--accent2)); }
+.favbtn.on img{ width:100%; height:100%; object-fit:cover; }
+.navpick{ position:fixed; inset:0; z-index:120; display:none; align-items:flex-start; justify-content:center; background:rgba(4,7,11,.6); backdrop-filter:blur(4px); padding-top:10vh; }
+.navpick.show{ display:flex; }
+.npbox{ width:min(640px,92vw); background:var(--bg1); border:1px solid var(--accent2); border-radius:var(--r); box-shadow:0 30px 80px -30px #000,var(--glow); overflow:hidden; }
+.nphead{ display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); font-family:var(--fdisp); font-weight:700; }
+.npx{ background:none; border:0; color:var(--fg-mute); font-size:16px; cursor:pointer; }
+.npx:hover{ color:var(--fg); }
+.npgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(62px,1fr)); gap:8px; padding:16px 18px; max-height:54vh; overflow:auto; }
+.npflag{ display:flex; flex-direction:column; align-items:center; gap:5px; padding:9px 6px; border-radius:9px; background:var(--bg2); border:1px solid var(--line2); cursor:pointer; transition:var(--t); }
+.npflag img{ width:34px; border-radius:4px; }
+.npflag span{ font-family:var(--fmono); font-size:9px; color:var(--fg-mute); }
+.npflag:hover{ border-color:var(--accent2); transform:translateY(-2px); }
+.npflag.on{ border-color:var(--accent2); background:color-mix(in srgb,var(--accent2) 16%,var(--bg2)); box-shadow:var(--glow); }
+.npfoot{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:13px 18px; border-top:1px solid var(--line); }
+.npcur{ display:inline-flex; align-items:center; gap:8px; font-size:13px; } .npcur img{ width:22px; border-radius:3px; }
+.npfoot .btn{ padding:7px 13px; }
 main{ position:relative; z-index:1; flex:1; min-height:0; min-width:0; max-width:100%;
   overflow-y:auto; overflow-x:clip; padding:24px 34px 30px; scrollbar-width:thin; scrollbar-color:var(--line2) transparent; }
 main::-webkit-scrollbar{ width:10px; }

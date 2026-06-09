@@ -1,5 +1,9 @@
 ---
 import '../styles/app.css';
+import DB from '../../../public/data.json';
+import { flagImg, CONF } from '@shared/lib/wc.js';
+const NATIONS = DB.teams.map(t => ({ c: t.fifa_code, n: t.team_name, g: t.group_letter, f: flagImg(t.fifa_code, 40), col: CONF[t.confederation] || '#5aa2ff' }))
+  .sort((a, b) => a.n.localeCompare(b.n));
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/'; // "/wc26/"
 const SITE = 'https://www.tahabouhsine.com';
 const KICKOFF = '2026-06-11T15:00:00-06:00'; // opening match
@@ -64,6 +68,7 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <span class="sp-t">Search</span><kbd>⌘K</kbd>
       </button>
+      <button class="iconbtn favbtn" id="favBtn" aria-label="Follow your nation" title="Follow your nation">☆</button>
       <button class="iconbtn" id="themeb" aria-label="Toggle theme">☀️</button>
     </div>
   </header>
@@ -78,7 +83,15 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
     </div>
   </div>
 
-  <script define:vars={{ B, KICKOFF }}>
+  <div class="navpick" id="navpick" role="dialog" aria-modal="true" aria-label="Follow a nation">
+    <div class="npbox">
+      <div class="nphead"><b>Follow your nation</b><button class="npx" id="npclose" aria-label="Close">✕</button></div>
+      <div class="npgrid" id="npgrid"></div>
+      <div class="npfoot" id="npfoot"></div>
+    </div>
+  </div>
+
+  <script define:vars={{ B, KICKOFF, NATIONS }}>
     window.__B__ = B;
     // a11y: make clickable table rows keyboard-operable
     document.querySelectorAll('tr[onclick]').forEach(tr => {
@@ -153,8 +166,35 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
     document.addEventListener('keydown', e => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); open(); }
       else if (e.key === '/' && !/input|select|textarea/i.test(document.activeElement.tagName)) { e.preventDefault(); open(); }
-      else if (e.key === 'Escape') close();
+      else if (e.key === 'Escape') { close(); npClose(); }
     });
+
+    // follow your nation
+    const favBtn = document.getElementById('favBtn'), navpick = document.getElementById('navpick');
+    const npgrid = document.getElementById('npgrid'), npfoot = document.getElementById('npfoot');
+    const natOf = c => NATIONS.find(x => x.c === c);
+    function getFav() { return localStorage.getItem('wc-fav') || ''; }
+    function renderFav() {
+      const n = natOf(getFav());
+      if (n) { favBtn.innerHTML = `<img src="${n.f}" alt="${n.c}">`; favBtn.classList.add('on'); favBtn.style.setProperty('--fav', n.col); favBtn.title = 'Following ' + n.n; document.documentElement.dataset.fav = n.c; }
+      else { favBtn.textContent = '☆'; favBtn.classList.remove('on'); favBtn.title = 'Follow your nation'; delete document.documentElement.dataset.fav; }
+    }
+    function drawPick() {
+      const f = getFav();
+      npgrid.innerHTML = NATIONS.map(n => `<button class="npflag ${f === n.c ? 'on' : ''}" data-c="${n.c}" title="${n.n}"><img src="${n.f}" alt=""><span>${n.c}</span></button>`).join('');
+      const n = natOf(f);
+      npfoot.innerHTML = n
+        ? `<span class="npcur"><img src="${n.f}" alt=""> Following <b>${n.n}</b></span><span style="flex:1"></span><a class="btn" href="${B}teams/${f.toLowerCase()}/">View squad →</a><button class="btn ghost" id="npclear">Unfollow</button>`
+        : `<span class="faint">Pick a nation to follow it across the app.</span>`;
+    }
+    function npOpen() { drawPick(); navpick.classList.add('show'); }
+    function npClose() { navpick.classList.remove('show'); }
+    favBtn.addEventListener('click', npOpen);
+    document.getElementById('npclose').addEventListener('click', npClose);
+    navpick.addEventListener('click', e => { if (e.target === navpick) npClose(); });
+    npgrid.addEventListener('click', e => { const b = e.target.closest('.npflag'); if (!b) return; localStorage.setItem('wc-fav', b.dataset.c); renderFav(); drawPick(); });
+    npfoot.addEventListener('click', e => { if (e.target.id === 'npclear') { localStorage.removeItem('wc-fav'); renderFav(); drawPick(); } });
+    renderFav();
   </script>
 </body>
 </html>

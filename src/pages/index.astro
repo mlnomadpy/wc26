@@ -35,6 +35,14 @@ const tiles = [
 ].filter(Boolean);
 
 const marquee = [...DB.teams].sort((a, b) => a.group_letter.localeCompare(b.group_letter));
+// per-team next fixture, for the "following" personalised band
+const teamNext = {};
+[...DB.matches].sort((a, b) => a.match_number - b.match_number).forEach(m => {
+  [[m.home_code, m.away_team], [m.away_code, m.home_team]].forEach(([c, opp]) => {
+    if (c && !teamNext[c]) teamNext[c] = { opp, n: m.match_number, when: (m.kickoff_at || '').slice(0, 10) };
+  });
+});
+const MYTEAMS = DB.teams.reduce((o, t) => { o[t.fifa_code] = { n: t.team_name, g: t.group_letter, f: flagImg(t.fifa_code, 40), next: teamNext[t.fifa_code] || null }; return o; }, {});
 const svg = (p) => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
 const ICON = {
   teams: svg('<path d="M12 3 4 6v6c0 5 3.5 7.5 8 9 4.5-1.5 8-4 8-9V6l-8-3z"/>'),
@@ -165,6 +173,9 @@ const jsonld = [
     </div>
   </div>
 
+  <!-- ============ FOLLOWING (personalised) ============ -->
+  <a class="myband" id="myband" hidden></a>
+
   <!-- ============ PLAY ============ -->
   <section class="home-sec reveal d2">
     <div class="sec-head"><h2 class="sec">Play</h2><a class="sec-link" href={B + 'footle/'}>Footle →</a></div>
@@ -246,6 +257,22 @@ const jsonld = [
   </section>
   </div>
 
+  <script type="application/json" id="myteams" set:html={JSON.stringify(MYTEAMS)}></script>
+  <script>
+    // personalised "following" band
+    (function () {
+      const MY = JSON.parse(document.getElementById('myteams').textContent);
+      const B = window.__B__ || '/';
+      const fav = localStorage.getItem('wc-fav'), band = document.getElementById('myband');
+      if (fav && MY[fav] && band) {
+        const t = MY[fav];
+        band.hidden = false; band.href = `${B}teams/${fav.toLowerCase()}/`;
+        band.innerHTML = `<img src="${t.f}" alt=""><b>Following ${t.n}</b><span>Group ${t.g}</span>` +
+          (t.next ? `<span>Next · vs ${t.next.opp} · ${t.next.when}</span>` : '') +
+          `<em>Open squad →</em>`;
+      }
+    })();
+  </script>
   <script>
     const root = document.getElementById('cd');
     if (root) {

@@ -51,6 +51,15 @@
   .ftc{ min-height:38px; font-size:11px; padding:2px; } .ftname{ font-size:11.5px; }
 }
 
+/* personalised "following" band */
+.myband{ display:flex; align-items:center; gap:11px; flex-wrap:wrap; margin:0 clamp(40px,5.3vw,86px); padding:10px 16px; border-radius:999px; text-decoration:none; color:var(--fg);
+  background:color-mix(in srgb,var(--fav,var(--accent2)) 11%,var(--bg1)); border:1px solid color-mix(in srgb,var(--fav,var(--accent2)) 42%,var(--line2)); transition:var(--t); }
+.myband:hover{ border-color:var(--accent2); box-shadow:var(--glow); }
+.myband img{ width:24px; border-radius:3px; flex:none; } .myband b{ font-weight:700; font-size:13.5px; }
+.myband span{ color:var(--fg-mute); font-size:10.5px; font-family:var(--fmono); text-transform:uppercase; letter-spacing:.06em; }
+.myband em{ margin-left:auto; font-style:normal; color:var(--accent2); font-weight:600; font-size:12.5px; }
+@media(max-width:560px){ .myband{ margin:0 18px; } .myband em{ margin-left:0; } }
+
 /* landing "Play" section */
 .home-play{ display:grid; grid-template-columns:1.25fr 1fr; gap:16px; }
 @media(max-width:880px){ .home-play{ grid-template-columns:1fr; } }
