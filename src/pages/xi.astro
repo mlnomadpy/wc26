@@ -1,0 +1,141 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../public/data.json';
+import { rating, FORMATIONS, FORMNAMES, POSC, surname, flagImg } from '@shared/lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const price = (r) => Math.min(220, Math.round(2 * Math.pow(1.16, r - 60)));
+const slim = DB.players.map(p => ({ id: p.player_id, n: p.player_name, s: surname(p.player_name), c: p.fifa_code, nat: p.team_name, club: p.club || '—', pos: p.position, r: rating(p), pr: price(rating(p)) }));
+const flags = {}; DB.teams.forEach(t => { flags[t.fifa_code] = flagImg(t.fifa_code, 40); });
+const BUDGET = 700;
+const jsonld = { '@context': 'https://schema.org', '@type': 'Game', name: 'Build your XI', description: 'Build your dream World Cup 2026 XI on a budget.' };
+---
+<Base title="Build your XI — dream World Cup 2026 team on a budget" description="Pick your dream 2026 World Cup XI on a €700m budget. Rate your team, chase chemistry and share it." jsonld={jsonld}>
+  <div class="app-page tv2">
+  <header class="phead">
+    <div>
+      <div class="pe">Squad builder</div>
+      <h1>Build your XI</h1>
+      <p class="psub">Pick eleven players on a €{BUDGET}m budget — chase the highest rating and the best chemistry, then share your side.</p>
+    </div>
+    <div class="pstat">
+      <div class="s"><b id="xi-rate">–</b><span>Rating</span></div>
+      <div class="s"><b id="xi-chem">0</b><span>Chem</span></div>
+      <div class="s"><b id="xi-bud">€{BUDGET}m</b><span>Left</span></div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="chips formrow" id="xiform">{FORMNAMES.map((f, i) => <button class={`chip ${i === 1 ? 'on' : ''}`} data-f={f}>{f}</button>)}</div>
+    <button class="btn ghost" id="xireset">Reset</button>
+    <button class="btn primary" id="xishare">Share XI</button>
+    <span class="count" id="xifill">0 / 11 picked</span>
+  </div>
+
+  <div class="app-grow tv2-main xi-main">
+    <section class="panel tv2-pitch">
+      <div class="pitch" id="xipitch"></div>
+    </section>
+    <section class="panel tv2-right">
+      <div class="xi-pickhead" id="xiph">Tap a position on the pitch to fill it</div>
+      <input id="xiq" placeholder="Search players…" aria-label="Search players" hidden />
+      <div class="rpane xi-list" id="xilist"></div>
+    </section>
+  </div>
+  </div>
+
+  <script type="application/json" id="xi-data" set:html={JSON.stringify(slim)}></script>
+  <script type="application/json" id="xi-flags" set:html={JSON.stringify(flags)}></script>
+  <script type="application/json" id="xi-forms" set:html={JSON.stringify(FORMATIONS)}></script>
+  <script type="application/json" id="xi-posc" set:html={JSON.stringify(POSC)}></script>
+  <script define:vars={{ BUDGET, B }}>
+    const ALL = JSON.parse(document.getElementById('xi-data').textContent);
+    const FLAGS = JSON.parse(document.getElementById('xi-flags').textContent);
+    const FORMS = JSON.parse(document.getElementById('xi-forms').textContent);
+    const POSC = JSON.parse(document.getElementById('xi-posc').textContent);
+    const byId = {}; ALL.forEach(p => byId[p.id] = p);
+    const $ = id => document.getElementById(id);
+    let form = '4-3-3', picks = [], active = -1, term = '';
+
+    // restore from URL ?xi=id,id...
+    const u = new URLSearchParams(location.search);
+    if (u.get('f') && FORMS[u.get('f')]) form = u.get('f');
+    if (u.get('xi')) { const ids = u.get('xi').split(',').map(Number); picks = ids.map(i => i || null); }
+
+    function spent() { return picks.reduce((s, id) => s + (id ? byId[id].pr : 0), 0); }
+    function filled() { return picks.filter(Boolean); }
+    function chem() {
+      const ps = filled().map(id => byId[id]); let c = 0;
+      for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) {
+        if (ps[i].club === ps[j].club && ps[i].club !== '—') c += 6;
+        if (ps[i].nat === ps[j].nat) c += 3;
+      }
+      return Math.min(100, c);
+    }
+    function drawPitch() {
+      const slots = FORMS[form];
+      if (picks.length !== slots.length) picks = slots.map((_, i) => picks[i] ?? null);
+      $('xipitch').innerHTML =
+        `<div class="line ch"></div><div class="line cc"></div><div class="line box top"></div><div class="line box bot"></div><div class="line six top"></div><div class="line six bot"></div>` +
+        slots.map((s, i) => {
+          const [cat, x, y] = s, id = picks[i], p = id ? byId[id] : null;
+          return `<button class="xislot token ${active === i ? 'sel' : ''} ${p ? '' : 'empty'}" data-i="${i}" style="left:${x}%;top:${y}%">
+            <div class="sh" style="--tc:${POSC[cat]}">${p ? `<img src="${FLAGS[p.c] || ''}" alt="">` : '+'}</div>
+            <div class="nm">${p ? p.s + ' · ' + p.r : cat}</div></button>`;
+        }).join('');
+    }
+    function drawStats() {
+      const ps = filled(); const avg = ps.length ? Math.round(ps.reduce((s, id) => s + byId[id].r, 0) / ps.length) : '–';
+      $('xi-rate').textContent = avg; $('xi-chem').textContent = chem();
+      $('xi-bud').textContent = '€' + (BUDGET - spent()) + 'm';
+      $('xi-bud').style.color = spent() > BUDGET ? 'var(--magenta)' : '';
+      $('xifill').textContent = ps.length + ' / 11 picked' + (spent() > BUDGET ? ' · over budget!' : '');
+      const enc = picks.map(id => id || 0).join(',');
+      history.replaceState(null, '', `?f=${form}&xi=${enc}`);
+    }
+    function draw() { drawPitch(); drawStats(); }
+    function pickList() {
+      if (active < 0) { $('xiph').textContent = 'Tap a position on the pitch to fill it'; $('xiq').hidden = true; $('xilist').innerHTML = ''; return; }
+      const cat = FORMS[form][active][0]; $('xiq').hidden = false;
+      $('xiph').innerHTML = `Fill <b>${cat}</b> · budget left €${BUDGET - spent()}m`;
+      const left = BUDGET - spent() + (picks[active] ? byId[picks[active]].pr : 0);
+      const chosen = new Set(filled());
+      let arr = ALL.filter(p => p.pos === cat && (!term || p.n.toLowerCase().includes(term))).sort((a, b) => b.r - a.r);
+      $('xilist').innerHTML = arr.slice(0, 80).map(p => {
+        const own = picks[active] === p.id, used = chosen.has(p.id) && !own, afford = p.pr <= left;
+        return `<button class="xiopt ${own ? 'own' : ''} ${(!afford || used) ? 'off' : ''}" data-id="${p.id}" ${used ? 'disabled' : ''}>
+          <img src="${FLAGS[p.c] || ''}" alt="" width="20">
+          <span class="xio-id"><b>${p.n}</b><em>${p.nat} · ${p.club}</em></span>
+          <span class="xio-r">${p.r}</span><span class="xio-pr">€${p.pr}m</span></button>`;
+      }).join('') || '<div class="empty">No players.</div>';
+    }
+    function selectSlot(i) { active = i; draw(); pickList(); $('xiq').focus(); }
+    function setPlayer(id) {
+      if (active < 0) return; const p = byId[id]; if (!p) return;
+      const left = BUDGET - spent() + (picks[active] ? byId[picks[active]].pr : 0);
+      if (picks[active] === id) { picks[active] = null; } // tap again to clear
+      else if (p.pr <= left && !filled().includes(id)) { picks[active] = id; }
+      else return;
+      term = ''; $('xiq').value = '';
+      // auto-advance to next empty slot
+      draw(); const next = picks.findIndex(x => !x); active = picks[active] ? (next >= 0 ? next : -1) : active; draw(); pickList();
+    }
+
+    $('xipitch').addEventListener('click', e => { const b = e.target.closest('.xislot'); if (b) selectSlot(+b.dataset.i); });
+    $('xilist').addEventListener('click', e => { const b = e.target.closest('.xiopt'); if (b && !b.disabled) setPlayer(+b.dataset.id); });
+    $('xiq').addEventListener('input', () => { term = $('xiq').value.toLowerCase().trim(); pickList(); });
+    document.querySelectorAll('#xiform .chip').forEach(c => c.addEventListener('click', () => {
+      document.querySelectorAll('#xiform .chip').forEach(x => x.classList.toggle('on', x === c));
+      form = c.dataset.f; picks = FORMS[form].map((_, i) => picks[i] ?? null); active = -1; draw(); pickList();
+    }));
+    $('xireset').addEventListener('click', () => { picks = FORMS[form].map(() => null); active = -1; draw(); pickList(); });
+    $('xishare').addEventListener('click', async () => {
+      const ps = filled(); const avg = ps.length ? Math.round(ps.reduce((s, id) => s + byId[id].r, 0) / ps.length) : 0;
+      const txt = `My WC26 Dream XI (${form}) — rating ${avg}, chem ${chem()}, €${spent()}m\n${ps.map(id => byId[id].s).join(', ')}\n${location.href}`;
+      try { if (navigator.share) await navigator.share({ text: txt }); else { await navigator.clipboard.writeText(txt); $('xishare').textContent = 'Copied!'; setTimeout(() => $('xishare').textContent = 'Share XI', 1500); } } catch (e) {}
+    });
+
+    // sync form chip to restored form
+    document.querySelectorAll('#xiform .chip').forEach(c => c.classList.toggle('on', c.dataset.f === form));
+    draw(); pickList();
+  </script>
+</Base>

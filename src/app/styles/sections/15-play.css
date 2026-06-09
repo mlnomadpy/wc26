@@ -78,3 +78,27 @@
 .play-card .ph{ font-weight:700; font-size:13.5px; } .play-card .ps{ font-size:11px; color:var(--fg-mute); }
 .play-card.soon{ opacity:.62; } .play-card.soon .badge{ margin-left:auto; font-family:var(--fmono); font-size:8.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-mute); border:1px solid var(--line2); border-radius:5px; padding:2px 6px; }
 .play-card:not(.soon):hover{ border-color:var(--accent2); transform:translateY(-2px); box-shadow:var(--glow); }
+
+/* Build-your-XI builder */
+.xislot{ position:absolute; transform:translate(-50%,-50%); width:62px; text-align:center; cursor:pointer; z-index:3; background:none; border:0; padding:0; color:var(--fg); }
+.xislot .sh{ position:relative; width:42px; height:42px; margin:0 auto; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center;
+  font-family:var(--fdisp2); font-weight:800; font-size:20px; color:#fff;
+  background:radial-gradient(circle at 38% 28%,rgba(255,255,255,.4),transparent 45%),var(--tc,var(--accent2));
+  border:2px solid rgba(255,255,255,.85); box-shadow:0 4px 12px rgba(0,0,0,.5),0 0 14px -3px var(--tc,var(--accent2)); transition:.14s var(--ease); }
+.xislot.empty .sh{ background:color-mix(in srgb,var(--tc,var(--accent2)) 13%,var(--bg2)); border:2px dashed color-mix(in srgb,var(--tc,var(--accent2)) 60%,var(--line2)); color:color-mix(in srgb,var(--tc,var(--accent2)) 80%,#fff); box-shadow:none; }
+.xislot .sh img{ width:100%; height:100%; object-fit:cover; }
+.xislot:hover .sh{ transform:scale(1.12); }
+.xislot.sel .sh{ outline:3px solid #fff; outline-offset:2px; }
+.xislot .nm{ font-size:10px; margin-top:4px; color:#fff; white-space:nowrap; font-weight:600; background:rgba(0,0,0,.45); padding:1px 6px; border-radius:5px; backdrop-filter:blur(2px); }
+.xi-pickhead{ flex:none; font-size:13px; margin-bottom:10px; color:var(--fg-dim); } .xi-pickhead b{ color:var(--accent2); }
+.xi-main .tv2-right>input{ flex:none; width:100%; margin-bottom:10px; }
+.xi-list{ display:flex; flex-direction:column; gap:6px; }
+.xiopt{ display:flex; align-items:center; gap:9px; width:100%; padding:8px 11px; border-radius:8px; background:var(--bg2); border:1px solid var(--line2); color:var(--fg); cursor:pointer; text-align:left; transition:var(--t); }
+.xiopt:hover{ border-color:var(--accent2); }
+.xiopt img{ border-radius:3px; flex:none; }
+.xio-id{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.xio-id b{ font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .xio-id em{ font-style:normal; font-size:10.5px; color:var(--fg-mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.xio-r{ font-family:var(--fdisp2); font-weight:800; font-size:16px; color:var(--accent2); flex:none; min-width:24px; text-align:center; }
+.xio-pr{ font-family:var(--fmono); font-size:11.5px; color:var(--gold); flex:none; min-width:48px; text-align:right; }
+.xiopt.own{ border-color:var(--spark); background:color-mix(in srgb,var(--spark) 12%,var(--bg2)); }
+.xiopt.off{ opacity:.42; cursor:not-allowed; } .xiopt.off .xio-pr{ color:var(--magenta); }
