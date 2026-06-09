@@ -2,37 +2,101 @@
 import Base from '@app/layouts/Base.astro';
 import DB from '../../public/data.json';
 import { CITY_GEO } from '@shared/lib/wc.js';
-const lats = Object.values(CITY_GEO).map(g => g[0]), lons = Object.values(CITY_GEO).map(g => g[1]);
-const minLa = Math.min(...lats) - 2, maxLa = Math.max(...lats) + 2, minLo = Math.min(...lons) - 3, maxLo = Math.max(...lons) + 3;
-const X = lo => (lo - minLo) / (maxLo - minLo) * 100, Yc = la => (1 - (la - minLa) / (maxLa - minLa)) * 100;
 const mcount = {}; DB.matches.forEach(m => { if (m.city_id) mcount[m.city_id] = (mcount[m.city_id] || 0) + 1; });
+const CITIES = DB.cities.filter(c => CITY_GEO[c.id]).map(c => ({
+  id: c.id, name: c.city_name, venue: c.venue_name, country: c.country,
+  lat: CITY_GEO[c.id][0], lng: CITY_GEO[c.id][1], m: mcount[c.id] || 0,
+}));
 ---
 <Base title="Host cities — 2026 FIFA World Cup venues map" description="The 16 host cities and stadiums of the 2026 FIFA World Cup across the USA, Canada and Mexico, with matches hosted per venue.">
+  <div class="app-page">
   <header class="phead">
     <div>
       <div class="pe">Across three nations</div>
       <h1>16 host cities</h1>
-      <p class="psub">From Vancouver to Mexico City — the venues hosting the first World Cup spread across the USA, Canada and Mexico.</p>
+      <p class="psub">From Vancouver to Mexico City — the venues hosting the first 48-team World Cup, spread across the USA, Canada and Mexico.</p>
     </div>
     <div class="pstat"><div class="s"><b>16</b><span>Venues</span></div><div class="s"><b>3</b><span>Nations</span></div></div>
   </header>
-  <div class="grid2" style="margin-top:16px">
-    <div class="panel">
-      <h3>Venues across North America</h3>
-      <div class="mapbox">
-        {DB.cities.map(c => { const g = CITY_GEO[c.id]; if (!g) return null; const sz = 8 + (mcount[c.id] || 0) * 0.9; return [
-          <div class="cdot2" style={`left:${X(g[1])}%;top:${Yc(g[0])}%;width:${sz}px;height:${sz}px`} title={`${c.city_name} — ${mcount[c.id]||0} matches`}></div>,
-          <div class="clab" style={`left:${X(g[1])}%;top:${Yc(g[0])}%`}>{c.city_name}</div>
-        ]; })}
-      </div>
-      <div class="faint" style="margin-top:8px">Dot size = matches hosted. Approximate positions (no basemap).</div>
+  <div class="app-grow map-main">
+    <div class="panel map-panel">
+      <canvas id="mapcv" class="map-cv"></canvas>
+      <div class="map-tip" id="maptip" hidden></div>
+      <div class="map-cap">Node size = matches hosted</div>
     </div>
-    <div class="panel">
-      <h3>Cities</h3>
-      <table>
-        <thead><tr><th>City</th><th>Venue</th><th>Country</th><th>Matches</th></tr></thead>
-        <tbody>{DB.cities.map(c => <tr><td>{c.city_name}</td><td class="faint">{c.venue_name}</td><td class="faint">{c.country}</td><td class="mono">{mcount[c.id] || 0}</td></tr>)}</tbody>
-      </table>
+    <div class="panel map-list scroll">
+      <div class="mli mli-head"><span>City</span><span>Venue</span><span class="mli-m">M</span></div>
+      {CITIES.slice().sort((a, b) => b.m - a.m).map(c => (
+        <div class="mli" data-id={c.id}>
+          <span class="mli-c">{c.name}<i>{c.country}</i></span>
+          <span class="mli-v">{c.venue}</span>
+          <span class="mli-m"><b>{c.m}</b></span>
+        </div>
+      ))}
     </div>
   </div>
+  </div>
+
+  <script type="application/json" id="mapdata" set:html={JSON.stringify(CITIES)}></script>
+  <script>
+    const CITIES = JSON.parse(document.getElementById('mapdata').textContent);
+    const cv = document.getElementById('mapcv'), ctx = cv.getContext('2d'), tip = document.getElementById('maptip');
+    const DPR = Math.min(2, window.devicePixelRatio || 1);
+    // simplified North America coastline (lat,lng), clockwise from the NW
+    const NA = [[60,-141],[54,-130],[48.4,-124.7],[40,-124.3],[34,-120.5],[30,-116],[23,-110],[20,-105.5],[16,-96],[15.5,-92.5],[18,-94.5],[21,-97],[26,-97.3],[29.2,-94.8],[30,-89],[29.5,-84],[25,-81],[27,-80],[31,-81.2],[35,-76],[38.9,-74],[41.5,-70],[44.5,-67],[47,-65],[48.5,-64],[52,-55.5],[57,-61],[60,-64],[63,-77.5],[58,-94],[69,-95],[70,-128],[69.5,-141]];
+    const LAT = [71, 13], LNG = [-143, -53];
+    const M = { l: 14, r: 14, t: 12, b: 12 };
+    let W = 0, H = 0, hover = null, t = 0;
+    const px = lng => M.l + (lng - LNG[0]) / (LNG[1] - LNG[0]) * (W - M.l - M.r);
+    const py = lat => M.t + (LAT[0] - lat) / (LAT[0] - LAT[1]) * (H - M.t - M.b);
+    const maxM = Math.max(...CITIES.map(c => c.m));
+
+    function resize() { const s = cv.parentElement; W = s.clientWidth; H = s.clientHeight; cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px'; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
+
+    function landPath() { ctx.beginPath(); NA.forEach((p, i) => { const x = px(p[1]), y = py(p[0]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.closePath(); }
+
+    function frame() {
+      t += 0.016; ctx.clearRect(0, 0, W, H);
+      // graticule
+      ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(90,162,255,.06)';
+      for (let lng = -140; lng <= -60; lng += 20) { ctx.beginPath(); ctx.moveTo(px(lng), py(LAT[0])); ctx.lineTo(px(lng), py(LAT[1])); ctx.stroke(); }
+      for (let lat = 20; lat <= 70; lat += 10) { ctx.beginPath(); ctx.moveTo(px(LNG[0]), py(lat)); ctx.lineTo(px(LNG[1]), py(lat)); ctx.stroke(); }
+      // landmass
+      landPath();
+      ctx.fillStyle = 'rgba(30,72,128,.16)'; ctx.fill();
+      ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(88,221,255,.4)'; ctx.shadowColor = '#58ddff'; ctx.shadowBlur = 10; ctx.stroke(); ctx.shadowBlur = 0;
+      // city nodes
+      for (const c of CITIES) {
+        const x = px(c.lng), y = py(c.lat), r = 3.5 + c.m / maxM * 7;
+        const on = hover === c;
+        const pulse = on ? 0 : (Math.sin(t * 2 + c.id) * 0.5 + 0.5) * 3;
+        ctx.globalAlpha = .25; ctx.fillStyle = '#58ddff';
+        ctx.beginPath(); ctx.arc(x, y, r + pulse + 2, 0, 7); ctx.fill();
+        ctx.globalAlpha = 1; ctx.fillStyle = on ? '#fff' : '#7fd4ff';
+        ctx.shadowColor = '#58ddff'; ctx.shadowBlur = on ? 16 : 8;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+        c._x = x; c._y = y; c._r = r;
+        // label
+        ctx.fillStyle = on ? '#eaf4ff' : 'rgba(200,222,255,.62)';
+        ctx.font = (on ? '700 ' : '600 ') + '10px Inter, system-ui, sans-serif';
+        ctx.textAlign = x > W - 90 ? 'end' : 'start';
+        ctx.fillText(c.name, x + (x > W - 90 ? -(r + 5) : r + 5), y + 3);
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(frame);
+    }
+    const rect = () => cv.getBoundingClientRect();
+    cv.addEventListener('mousemove', e => {
+      const r = rect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+      let best = null, bd = 200;
+      for (const c of CITIES) { const dx = c._x - mx, dy = c._y - my, d = dx * dx + dy * dy; if (d < Math.max(bd, (c._r + 6) ** 2) && d < bd) { bd = d; best = c; } }
+      hover = best; cv.style.cursor = best ? 'pointer' : 'default';
+      if (best) { tip.hidden = false; tip.innerHTML = `<b>${best.name}</b><span>${best.venue}</span><em>${best.m} match${best.m === 1 ? '' : 'es'} · ${best.country}</em>`; tip.style.left = mx + 'px'; tip.style.top = my + 'px'; }
+      else tip.hidden = true;
+      document.querySelectorAll('.mli').forEach(el => el.classList.toggle('on', best && +el.dataset.id === best.id));
+    });
+    cv.addEventListener('mouseleave', () => { hover = null; tip.hidden = true; document.querySelectorAll('.mli.on').forEach(el => el.classList.remove('on')); });
+    window.addEventListener('resize', resize);
+    resize(); frame();
+  </script>
 </Base>

@@ -28,7 +28,8 @@ const jsonld = { '@context': 'https://schema.org', '@type': 'Game', name: 'Footl
     </div>
   </header>
 
-  <div class="app-grow scroll ftwrap">
+  <div class="app-grow scroll">
+   <div class="ftwrap">
     <div class="ftboard panel">
       <div class="ftno" id="ftno">Footle</div>
 
@@ -52,16 +53,25 @@ const jsonld = { '@context': 'https://schema.org', '@type': 'Game', name: 'Footl
           <button class="btn primary" id="ftshare">Share result</button>
           <a class="btn" id="ftgoto" href="#">Open player →</a>
         </div>
-        <div class="ftnext faint">Next Footle in <b id="ftnext">—</b></div>
-      </div>
-
-      <div class="ftlegend faint">
-        <span><i class="ftk hit"></i> exact</span>
-        <span><i class="ftk near"></i> close</span>
-        <span><i class="ftk miss"></i> off</span>
-        <span>▲ answer is higher · ▼ lower</span>
       </div>
     </div>
+
+    <aside class="ftside">
+      <div class="panel ftcard ftcount">
+        <div class="pe">Next scout drops in</div>
+        <div class="ftbig" id="ftnext">—</div>
+      </div>
+      <div class="panel ftcard">
+        <h3>How to play</h3>
+        <ul class="fthow">
+          <li>Guess the mystery World Cup player in <b>six tries</b>.</li>
+          <li>Each column is graded: <i class="ftk hit"></i> exact · <i class="ftk near"></i> close · <i class="ftk miss"></i> off.</li>
+          <li><b>▲ / ▼</b> mean the answer's age, caps or rating is higher / lower.</li>
+          <li>A fresh scout drops every day — keep the streak alive.</li>
+        </ul>
+      </div>
+    </aside>
+   </div>
   </div>
   </div>
 
@@ -112,9 +122,13 @@ const jsonld = { '@context': 'https://schema.org', '@type': 'Game', name: 'Footl
         ${cell(g.age ?? '–', c.age[0], c.age[1])}${cell(g.caps, c.caps[0], c.caps[1])}${cell(g.r, c.ovr[0], c.ovr[1])}
       </div>`;
     }
+    const emptyRow = () => `<div class="ftrow empty"><span class="ftname">—</span>${'<span class="ftc"></span>'.repeat(6)}</div>`;
     function draw() {
-      $('ftrows').innerHTML = state.guesses.map(id => renderRow(byId[id])).join('');
-      $('ftleft').textContent = (MAX - state.guesses.length) + ' guesses left';
+      const rows = state.guesses.map(id => renderRow(byId[id]));
+      while (rows.length < MAX) rows.push(emptyRow());
+      $('ftrows').innerHTML = rows.join('');
+      const left = MAX - state.guesses.length;
+      $('ftleft').textContent = left + ' guess' + (left === 1 ? '' : 'es') + ' left';
       if (state.done) finish();
     }
     function statbar() {
@@ -126,7 +140,6 @@ const jsonld = { '@context': 'https://schema.org', '@type': 'Game', name: 'Footl
       $('ftendt').textContent = state.won ? `Solved in ${state.guesses.length}/6 ⚡` : 'Out of guesses';
       $('ftans').innerHTML = `${FLAGS[answer.c] ? `<img src="${FLAGS[answer.c]}" width="26">` : ''} <b>${answer.n}</b> · ${answer.nat} · ${answer.pos} · OVR ${answer.r}`;
       $('ftgoto').href = `${B}players/${answer.id}/`;
-      tickNext();
     }
     function tickNext() {
       const el = $('ftnext'); if (!el) return;
@@ -184,6 +197,6 @@ const jsonld = { '@context': 'https://schema.org', '@type': 'Game', name: 'Footl
       catch (e) {}
     });
 
-    draw(); statbar();
+    draw(); statbar(); tickNext();
   </script>
 </Base>

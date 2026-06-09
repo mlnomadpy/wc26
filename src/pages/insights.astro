@@ -20,13 +20,21 @@ const chartData = { positions: DB.agg.positions, conf: DB.agg.by_confederation, 
       <p class="psub">Position split, confederation share, an age pyramid, the most valuable players, top leagues and where the world's squads actually play.</p>
     </div>
   </header>
+  <div class="ins-xlinks">
+    <span class="ins-xlab">Go deeper →</span>
+    <a href={B + 'galaxy/'}>🌌 Talent Galaxy</a>
+    <a href={B + 'flow/'}>🌊 Talent Flow</a>
+    <a href={B + 'power/'}>🔷 Talent Cosmos</a>
+    <a href={B + 'spread/'}>📊 The Spread</a>
+    <a href={B + 'diaspora/'}>🗺️ The Diaspora</a>
+  </div>
   <div class="app-grow scroll">
   <div class="grid2">
     <div class="panel"><h3>Players by position</h3><canvas id="c1" height="200"></canvas></div>
     <div class="panel"><h3>Players by confederation</h3><canvas id="c2" height="200"></canvas></div>
   </div>
   <div class="grid2">
-    <div class="panel"><h3>Age pyramid <span class="tag">squad ages</span></h3>
+    <div class="panel"><h3>Age pyramid <a class="ins-go" href={B + 'spread/'}>age × rating →</a></h3>
       {ages.map(k => <div class="barrow"><span class="mono">{k}-{k + 1}</span><div class="bartrack"><div class="bar" style={`width:${buckets[k] / amax * 100}%`}></div></div><span class="faint mono">{buckets[k]}</span></div>)}
     </div>
     <div class="panel"><h3>Most valuable players</h3>
@@ -34,10 +42,10 @@ const chartData = { positions: DB.agg.positions, conf: DB.agg.by_confederation, 
     </div>
   </div>
   <div class="grid2">
-    <div class="panel"><h3>Top leagues by players</h3>
+    <div class="panel"><h3>Top leagues by players <a class="ins-go" href={B + 'flow/'}>full flow →</a></h3>
       {lg.map(([l, n]) => <div class="barrow"><span>{l}</span><div class="bartrack"><div class="bar" style={`width:${n / lmax * 100}%`}></div></div><span class="faint mono">{n}</span></div>)}
     </div>
-    <div class="panel"><h3>Diaspora — where players play <span class="tag">top club countries</span></h3>
+    <div class="panel"><h3>Diaspora — where players play <a class="ins-go" href={B + 'diaspora/'}>world map →</a></h3>
       {cc.map(([c, n]) => <div class="barrow"><span>{c}</span><div class="bartrack"><div class="bar alt" style={`width:${n / cmax * 100}%`}></div></div><span class="faint mono">{n}</span></div>)}
     </div>
   </div>

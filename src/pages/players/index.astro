@@ -2,7 +2,7 @@
 import Base from '@app/layouts/Base.astro';
 import Flag from '@shared/ui/Flag.astro';
 import DB from '../../../public/data.json';
-import { CONF, money, rating, tier, tierName } from '@shared/lib/wc.js';
+import { CONF, rating, tier, tierName } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 // single ranked list — this page IS the player ranking (sorted by our overall rating)
 const ranked = [...DB.players]
@@ -13,7 +13,7 @@ const top = ranked[0];
 const teams = [...new Set(DB.players.map(p => p.team_name))].sort();
 const TIERS = [['legend', 'Legend'], ['special', 'Superstar'], ['centurion', 'Centurion'], ['glove', 'Golden Glove'], ['marksman', 'Marksman'], ['maestro', 'Maestro'], ['rising', 'Rising ★'], ['gold', 'Gold'], ['silver', 'Silver'], ['bronze', 'Bronze']];
 const present = new Set(ranked.map(x => x.t));
-const cols = [['rank', '#'], ['ovr', 'OVR'], ['player_name', 'Player'], ['fifa_code', 'Team'], ['position', 'Pos'], ['tier', 'Tier'], ['age', 'Age'], ['caps', 'Caps'], ['international_goals', 'Goals'], ['club', 'Club'], ['market_value_eur', 'Value']];
+const cols = [['rank', '#'], ['ovr', 'OVR'], ['player_name', 'Player'], ['fifa_code', 'Team'], ['position', 'Pos'], ['tier', 'Tier'], ['age', 'Age'], ['caps', 'Caps'], ['international_goals', 'Goals'], ['club', 'Club'], ['club_apps_2025_26', 'Apps']];
 ---
 <Base title="Players & ranking — all 1,247 at the 2026 FIFA World Cup" description="Every 2026 FIFA World Cup player ranked by a data-driven overall rating. Search by name, club, nation or tier (Legend, Superstar, Centurion…) and filter by position, confederation and team.">
   <div class="app-page">
@@ -42,7 +42,7 @@ const cols = [['rank', '#'], ['ovr', 'OVR'], ['player_name', 'Player'], ['fifa_c
             <tr data-pos={p.position} data-team={p.team_name} data-conf={p.confederation} data-tier={t}
                 data-search={`${p.player_name} ${p.club || ''} ${p.fifa_code} ${p.team_name} ${tierName(t)}${p.is_captain ? ' captain' : ''}`.toLowerCase()}
                 data-rank={rank} data-ovr={r} data-age={p.age ?? ''} data-caps={p.caps ?? ''}
-                data-international_goals={p.international_goals ?? ''} data-market_value_eur={p.market_value_eur ?? ''}
+                data-international_goals={p.international_goals ?? ''} data-club_apps_2025_26={p.club_apps_2025_26 ?? ''}
                 data-player_name={p.player_name} data-club={p.club ?? ''} data-fifa_code={p.fifa_code}
                 onclick={`location.href='${B}players/${p.player_id}/'`}>
               <td class="mono faint">{rank}</td>
@@ -55,7 +55,7 @@ const cols = [['rank', '#'], ['ovr', 'OVR'], ['player_name', 'Player'], ['fifa_c
               <td class="mono">{p.caps ?? ''}</td>
               <td class="mono">{p.international_goals ?? ''}</td>
               <td class="faint">{p.club}</td>
-              <td class="mono">{p.market_value_eur ? money(p.market_value_eur) : '·'}</td>
+              <td class="mono">{p.club_apps_2025_26 ?? '·'}</td>
             </tr>
           ))}
         </tbody>
