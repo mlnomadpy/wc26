@@ -1,0 +1,115 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../public/data.json';
+import { rating, flagImg, surname, monogram } from '@shared/lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const pool = DB.players.filter(p => rating(p) >= 72).map(p => ({
+  id: p.player_id, s: surname(p.player_name), c: p.fifa_code, nat: p.team_name, club: p.club || '—',
+  mo: monogram(p.player_name), g: p.international_goals || 0, caps: p.caps || 0, r: rating(p), age: p.age || 0,
+}));
+const flags = {}; DB.teams.forEach(t => { flags[t.fifa_code] = flagImg(t.fifa_code, 40); });
+const jsonld = { '@context': 'https://schema.org', '@type': 'Game', name: 'Higher or Lower', description: 'Guess which 2026 World Cup player ranks higher.' };
+---
+<Base title="Higher or Lower — the World Cup 2026 stat game" description="Does the next player have more goals, caps or a higher rating? Keep the streak alive in this World Cup 2026 higher-or-lower game." jsonld={jsonld}>
+  <div class="app-page">
+  <header class="phead">
+    <div>
+      <div class="pe">Streak game</div>
+      <h1>Higher or Lower</h1>
+      <p class="psub">Does the mystery player rank higher or lower than the one shown? Keep the run alive — one wrong call ends it.</p>
+    </div>
+    <div class="pstat"><div class="s"><b id="hl-streak">0</b><span>Streak</span></div><div class="s"><b id="hl-best">0</b><span>Best</span></div></div>
+  </header>
+
+  <div class="controls" id="hlmetrics">
+    <span class="faint" style="font-family:var(--fmono);font-size:11px;text-transform:uppercase;letter-spacing:.08em">Metric</span>
+    <div class="chips">
+      <button class="chip on" data-m="g">Intl goals</button>
+      <button class="chip" data-m="caps">Caps</button>
+      <button class="chip" data-m="r">Rating</button>
+      <button class="chip" data-m="age">Age</button>
+    </div>
+  </div>
+
+  <div class="app-grow scroll hlwrap">
+    <div class="hlboard" id="hlboard">
+      <div class="hlcard" id="hlA"></div>
+      <div class="hlmid">
+        <div class="hlq" id="hlq">has</div>
+        <div class="hlbtns" id="hlbtns">
+          <button class="btn hl-hi" data-d="hi">▲ Higher</button>
+          <button class="btn hl-lo" data-d="lo">▼ Lower</button>
+        </div>
+        <div class="hlmetric" id="hlmetric">intl goals</div>
+      </div>
+      <div class="hlcard" id="hlB"></div>
+    </div>
+    <div class="hlover" id="hlover" hidden>
+      <div class="hlover-t" id="hlovert"></div>
+      <button class="btn primary" id="hlagain">Play again</button>
+      <button class="btn" id="hlshare">Share streak</button>
+    </div>
+  </div>
+  </div>
+
+  <script type="application/json" id="hl-pool" set:html={JSON.stringify(pool)}></script>
+  <script type="application/json" id="hl-flags" set:html={JSON.stringify(flags)}></script>
+  <script define:vars={{ B }}>
+    const POOL = JSON.parse(document.getElementById('hl-pool').textContent);
+    const FLAGS = JSON.parse(document.getElementById('hl-flags').textContent);
+    const $ = id => document.getElementById(id);
+    const LABELS = { g: 'intl goals', caps: 'caps', r: 'rating', age: 'age' };
+    let metric = 'g', a = null, b = null, streak = 0, busy = false;
+    let best = +(localStorage.getItem('hilo-best') || 0); $('hl-best').textContent = best;
+
+    function rnd(not) { let p; do { p = POOL[Math.floor(Math.random() * POOL.length)]; } while (not && p.id === not.id); return p; }
+    function face(p) { return `<span class="hlf"><span class="hlmo">${p.mo}</span><img src="${B}faces/${p.id}.jpg" alt="" onerror="this.remove()"></span>`; }
+    function cardHTML(p, reveal) {
+      return `${face(p)}<div class="hlnm">${p.s}</div>
+        <div class="hlmeta"><img src="${FLAGS[p.c] || ''}" width="18"> ${p.nat}</div>
+        <div class="hlsub">${p.club}</div>
+        <div class="hlval ${reveal ? 'show' : ''}">${reveal ? `<b>${p[metric]}</b><i>${LABELS[metric]}</i>` : '<b class="hlhide">?</b>'}</div>`;
+    }
+    function deal(fresh) {
+      if (fresh) { a = rnd(); streak = 0; $('hl-streak').textContent = 0; }
+      b = rnd(a);
+      $('hlA').innerHTML = cardHTML(a, true);
+      $('hlB').innerHTML = cardHTML(b, false);
+      $('hlq').innerHTML = `Does <b>${b.s}</b> have`;
+      $('hlmetric').textContent = LABELS[metric];
+      $('hlbtns').classList.remove('hide'); busy = false;
+    }
+    function guess(d) {
+      if (busy) return; busy = true;
+      $('hlB').innerHTML = cardHTML(b, true);
+      const correct = (d === 'hi') ? (b[metric] >= a[metric]) : (b[metric] <= a[metric]);
+      $('hlB').classList.add(correct ? 'right' : 'wrong');
+      setTimeout(() => {
+        $('hlB').classList.remove('right', 'wrong');
+        if (correct) {
+          streak++; $('hl-streak').textContent = streak;
+          if (streak > best) { best = streak; localStorage.setItem('hilo-best', best); $('hl-best').textContent = best; }
+          a = b; deal(false);
+        } else { gameOver(); }
+      }, 1100);
+    }
+    function gameOver() {
+      $('hlbtns').classList.add('hide');
+      $('hlover').hidden = false;
+      $('hlovert').innerHTML = `Run over — streak <b>${streak}</b>${streak >= best && streak > 0 ? ' · new best!' : ''}`;
+    }
+    function restart() { $('hlover').hidden = true; deal(true); }
+
+    $('hlbtns').addEventListener('click', e => { const b = e.target.closest('[data-d]'); if (b) guess(b.dataset.d); });
+    $('hlagain').addEventListener('click', restart);
+    $('hlshare').addEventListener('click', async () => {
+      const txt = `I hit a streak of ${streak} on WC26 Higher or Lower (${LABELS[metric]}) 🔥\n${location.origin}${B}hilo/`;
+      try { if (navigator.share) await navigator.share({ text: txt }); else { await navigator.clipboard.writeText(txt); $('hlshare').textContent = 'Copied!'; setTimeout(() => $('hlshare').textContent = 'Share streak', 1500); } } catch (e) {}
+    });
+    document.querySelectorAll('#hlmetrics .chip').forEach(c => c.addEventListener('click', () => {
+      document.querySelectorAll('#hlmetrics .chip').forEach(x => x.classList.toggle('on', x === c));
+      metric = c.dataset.m; restart();
+    }));
+    deal(true);
+  </script>
+</Base>
