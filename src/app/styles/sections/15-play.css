@@ -305,3 +305,80 @@
   background:linear-gradient(165deg,#0e2036,#070f1d); border:1px solid var(--hud-b2); box-shadow:0 8px 24px -8px #000, var(--glow); }
 .fl-tip b{ display:block; font-family:var(--fdisp2); font-weight:700; font-size:12.5px; color:#eaf4ff; }
 .fl-tip span{ font-family:var(--fmono); font-size:10.5px; color:var(--accent2); }
+
+/* ===================== TALENT COSMOS (treemap) ===================== */
+.pw-head{ flex-wrap:wrap; gap:12px; }
+.pw-legend{ display:flex; gap:12px; }
+.pw-lg{ display:inline-flex; align-items:center; gap:5px; font:600 10px var(--fmono); letter-spacing:.05em; text-transform:uppercase; color:var(--fg-mute); }
+.pw-lg i{ width:9px; height:9px; border-radius:2px; }
+.pw-stage{ position:relative; border-radius:16px; overflow:hidden; border:1px solid var(--hud-b2); background:#050b16; }
+.pw-team{ position:absolute; border-radius:6px; overflow:hidden; background:color-mix(in srgb,var(--cc) 8%,#070f1d);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cc) 55%,transparent); }
+.pw-thead{ position:absolute; inset:0 0 auto 0; height:20px; z-index:2; display:flex; align-items:center; gap:5px; padding:0 7px; text-decoration:none;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--cc) 32%,#070f1d),color-mix(in srgb,var(--cc) 10%,#070f1d)); }
+.pw-thead img{ width:15px; height:11px; object-fit:cover; border-radius:1px; }
+.pw-thead b{ font-family:var(--fdisp2); font-weight:800; font-size:11px; letter-spacing:.04em; color:#eaf4ff; }
+.pw-thead:hover b{ color:var(--accent2); }
+.pw-body{ position:absolute; inset:0; }
+.pw-pl{ position:absolute; overflow:hidden; text-decoration:none; display:flex; flex-direction:column; justify-content:center; padding:2px 4px;
+  background:color-mix(in srgb,var(--pc) 26%,#0a1424); box-shadow:inset 0 0 0 .6px rgba(5,11,22,.7); transition:.12s; }
+.pw-pl[href]:hover{ background:color-mix(in srgb,var(--pc) 52%,#0a1424); z-index:3; box-shadow:inset 0 0 0 1.5px #fff; }
+.pw-nm{ font-family:var(--fdisp2); font-weight:700; font-size:10px; line-height:1.05; color:#eef5ff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pw-r{ font-family:var(--fmono); font-weight:700; font-size:9px; color:color-mix(in srgb,var(--pc) 70%,#fff); }
+.pw-tip{ position:absolute; z-index:9; transform:translate(-50%,-130%); padding:6px 10px; border-radius:8px; pointer-events:none; white-space:nowrap;
+  background:linear-gradient(165deg,#0e2036,#070f1d); border:1px solid var(--hud-b2); box-shadow:0 8px 24px -8px #000, var(--glow); }
+.pw-tip b{ display:block; font-family:var(--fdisp2); font-weight:700; font-size:12.5px; color:#eaf4ff; }
+.pw-tip span{ font-family:var(--fmono); font-size:10px; color:var(--accent2); }
+
+/* ===================== THE SPREAD (scatter) ===================== */
+.sp-head{ flex-wrap:wrap; gap:12px; }
+.sp-ctrls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.sp-search{ width:190px; padding:8px 12px; border-radius:9px; background:var(--bg2); border:1px solid var(--hud-b); color:var(--fg); font-size:12.5px; }
+.sp-search:focus{ outline:none; border-color:var(--accent2); box-shadow:var(--glow); }
+.sp-seg, .sp-conf{ display:inline-flex; flex-wrap:wrap; gap:4px; }
+.sp-seg{ background:var(--bg2); border:1px solid var(--hud-b); border-radius:9px; padding:3px; }
+.sp-seg button{ font:600 11.5px var(--fdisp2); letter-spacing:.03em; color:var(--fg-mute); background:none; border:0; padding:6px 11px; border-radius:6px; cursor:pointer; transition:var(--t); }
+.sp-seg button.on{ color:#06101f; background:var(--pc,var(--accent2)); }
+.sp-conf{ margin:0 0 12px; gap:6px; }
+.sp-conf button{ font:600 10.5px var(--fmono); letter-spacing:.04em; text-transform:uppercase; color:var(--fg-mute); background:var(--bg2); border:1px solid var(--line2); padding:5px 10px; border-radius:7px; cursor:pointer; transition:var(--t); }
+.sp-conf button:hover{ border-color:var(--cc,var(--accent2)); color:var(--fg); }
+.sp-conf button.on{ color:#06101f; background:var(--cc,var(--accent2)); border-color:transparent; }
+.sp-stage{ position:relative; border-radius:16px; overflow:hidden; border:1px solid var(--hud-b2); background:radial-gradient(120% 90% at 50% 0%, #0a1830, #050b16 70%); }
+.sp-canvas{ display:block; width:100%; height:100%; }
+.sp-tip{ position:absolute; z-index:6; transform:translate(-50%,-128%); padding:6px 10px; border-radius:8px; pointer-events:none; white-space:nowrap;
+  background:linear-gradient(165deg,#0e2036,#070f1d); border:1px solid var(--hud-b2); box-shadow:0 8px 24px -8px #000, var(--glow); }
+.sp-tip b{ display:block; font-family:var(--fdisp2); font-weight:700; font-size:12.5px; color:#eaf4ff; }
+.sp-tip span{ display:block; font-size:11px; color:var(--fg-mute); }
+.sp-tip em{ font-style:normal; font-family:var(--fmono); font-size:10px; color:var(--accent2); }
+
+/* ===================== THE DIASPORA (world map) ===================== */
+.dp-head{ flex-wrap:wrap; gap:12px; }
+.dp-read{ display:flex; align-items:center; gap:11px; min-width:230px; padding:9px 13px; border-radius:11px; background:var(--bg2); border:1px solid var(--hud-b); clip-path:var(--cut); }
+.dp-read img{ width:34px; height:34px; border-radius:50%; object-fit:cover; border:1.5px solid var(--hud-b2); box-shadow:var(--glow); }
+.dp-read b{ display:block; font-family:var(--fdisp); font-size:16px; line-height:1.1; }
+.dp-read span{ display:block; font-size:11.5px; color:var(--accent2); }
+.dp-read em{ font-style:normal; font-family:var(--fmono); font-size:10px; color:var(--fg-mute); }
+.dp-nations{ display:flex; gap:6px; overflow-x:auto; padding:0 0 10px; margin:0 0 4px; scrollbar-width:thin; }
+.dp-nat{ flex:none; display:inline-flex; flex-direction:column; align-items:center; gap:3px; padding:6px 8px; border-radius:9px; cursor:pointer; transition:var(--t);
+  background:var(--bg2); border:1px solid var(--line2); }
+.dp-nat img{ width:26px; height:18px; object-fit:cover; border-radius:2px; }
+.dp-nat span{ font:700 9px var(--fmono); letter-spacing:.04em; color:var(--fg-mute); }
+.dp-nat:hover{ border-color:var(--accent2); }
+.dp-nat.on{ border-color:var(--accent2); background:color-mix(in srgb,var(--accent2) 16%,var(--bg2)); box-shadow:var(--glow); }
+.dp-nat.on span{ color:var(--accent2); }
+.dp-stage{ position:relative; border-radius:16px; overflow:hidden; border:1px solid var(--hud-b2); background:radial-gradient(130% 100% at 50% 30%, #0a1830, #050b16 75%); }
+.dp-canvas{ display:block; width:100%; height:100%; }
+.dp-tip{ position:absolute; z-index:6; transform:translate(-50%,-128%); padding:5px 9px; border-radius:8px; pointer-events:none; white-space:nowrap;
+  background:linear-gradient(165deg,#0e2036,#070f1d); border:1px solid var(--hud-b2); box-shadow:0 8px 24px -8px #000, var(--glow); }
+.dp-tip b{ display:block; font-family:var(--fdisp2); font-weight:700; font-size:12px; color:#eaf4ff; }
+.dp-tip span{ font-family:var(--fmono); font-size:10px; color:var(--accent2); }
+
+/* landing — Visualize grid */
+.viz-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+.viz-card{ position:relative; display:flex; flex-direction:column; gap:4px; padding:16px; border-radius:var(--r); text-decoration:none; color:var(--fg); overflow:hidden;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--vc) 13%,var(--bg1)),var(--bg1) 72%); border:1px solid color-mix(in srgb,var(--vc) 34%,var(--line2)); transition:var(--t); }
+.viz-card::after{ content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(70% 80% at 88% 12%, color-mix(in srgb,var(--vc) 24%,transparent), transparent 60%); }
+.viz-card:hover{ transform:translateY(-3px); border-color:var(--vc); box-shadow:0 14px 36px -16px var(--vc); }
+.vz-ic{ font-size:22px; }
+.viz-card b{ font-family:var(--fdisp); font-size:15px; }
+.viz-card span{ font-size:11.5px; color:var(--fg-mute); }

@@ -1,0 +1,102 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../public/data.json';
+import { rating, CONF, POSC, surname, flagImg } from '@shared/lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+
+// star power emphasises elite players so squads vary meaningfully in area
+const sp = p => Math.pow(Math.max(1, rating(p) - 56), 1.6);
+const byTeam = {};
+DB.players.forEach(p => (byTeam[p.fifa_code] = byTeam[p.fifa_code] || []).push(p));
+const TEAMS = DB.teams.map(t => {
+  const sq = (byTeam[t.fifa_code] || []).map(p => ({ id: p.player_id, n: surname(p.player_name), pos: p.position, r: rating(p), v: sp(p) }))
+    .sort((a, b) => b.v - a.v);
+  return { c: t.fifa_code, name: t.team_name, conf: t.confederation || 'Unknown', flag: flagImg(t.fifa_code, 20), value: sq.reduce((s, p) => s + p.v, 0), players: sq };
+}).sort((a, b) => b.value - a.value);
+const PAYLOAD = { teams: TEAMS, conf: CONF, pos: POSC };
+const strongest = TEAMS[0];
+---
+<Base title="Talent Cosmos — the World Cup sized by squad strength" description="A treemap of all 48 World Cup squads sized by total talent, every player a tile coloured by position. The biggest squads, the deepest benches, at a glance.">
+  <div class="app-page pw-page">
+    <header class="phead pw-head">
+      <div>
+        <div class="pe">The map of strength</div>
+        <h1>Talent Cosmos</h1>
+        <p class="psub">Every nation sized by total squad strength, every player a tile by position. Hover for detail — click to open.</p>
+      </div>
+      <div class="pw-legend">
+        {['GK', 'DF', 'MF', 'FW'].map(p => <span class="pw-lg"><i style={`background:${POSC[p]}`}></i>{p}</span>)}
+      </div>
+    </header>
+    <div class="app-grow pw-stage" id="pwStage">
+      <div class="pw-tip" id="pwTip" hidden></div>
+    </div>
+  </div>
+
+  <script type="application/json" id="pwData" set:html={JSON.stringify(PAYLOAD)}></script>
+  <script define:vars={{ B }}>
+    const D = JSON.parse(document.getElementById('pwData').textContent);
+    const stage = document.getElementById('pwStage'), tip = document.getElementById('pwTip');
+
+    // squarified treemap (Bruls/Huizing/van Wijk)
+    function squarify(items, x, y, w, h) {
+      const out = [];
+      const total = items.reduce((s, i) => s + i.value, 0) || 1;
+      let sc = (w * h) / total;
+      let q = items.map(i => ({ i, a: i.value * sc }));
+      function worst(row, side) {
+        const s = row.reduce((a, r) => a + r.a, 0);
+        const mx = Math.max(...row.map(r => r.a)), mn = Math.min(...row.map(r => r.a));
+        return Math.max((side * side * mx) / (s * s), (s * s) / (side * side * mn));
+      }
+      function place(rect) {
+        let { x, y, w, h } = rect, rest = q;
+        while (rest.length) {
+          const side = Math.min(w, h);
+          let row = [rest[0]], k = 1;
+          while (k < rest.length && worst(row, side) >= worst(row.concat(rest[k]), side)) { row.push(rest[k]); k++; }
+          const s = row.reduce((a, r) => a + r.a, 0);
+          if (w >= h) { const rw = s / h; let yy = y; row.forEach(r => { const ih = r.a / rw; out.push({ it: r.i, x, y: yy, w: rw, h: ih }); yy += ih; }); x += rw; w -= rw; }
+          else { const rh = s / w; let xx = x; row.forEach(r => { const iw = r.a / rh; out.push({ it: r.i, x: xx, y, w: iw, h: rh }); xx += iw; }); y += rh; h -= rh; }
+          rest = rest.slice(row.length);
+        }
+      }
+      place({ x, y, w, h });
+      return out;
+    }
+
+    function render() {
+      stage.querySelectorAll('.pw-team').forEach(n => n.remove());
+      const W = stage.clientWidth, H = stage.clientHeight, PAD = 3;
+      const teamRects = squarify(D.teams.map(t => ({ ...t, value: t.value })), 0, 0, W, H);
+      for (const tr of teamRects) {
+        const t = tr.it;
+        const cell = document.createElement('div'); cell.className = 'pw-team';
+        cell.style.cssText = `left:${tr.x + PAD}px;top:${tr.y + PAD}px;width:${Math.max(0, tr.w - PAD * 2)}px;height:${Math.max(0, tr.h - PAD * 2)}px;--cc:${D.conf[t.conf] || '#6b7a90'}`;
+        const small = tr.w < 76 || tr.h < 58;
+        const headH = small ? 0 : 20;
+        if (!small) cell.innerHTML = `<a class="pw-thead" href="${B}teams/${t.c.toLowerCase()}/">${t.flag ? `<img src="${t.flag}" alt=""/>` : ''}<b>${t.c}</b></a>`;
+        // players inside the body area
+        const bw = tr.w - PAD * 2, bh = tr.h - PAD * 2 - headH;
+        if (bw > 6 && bh > 6) {
+          const pr = squarify(t.players.map(p => ({ ...p, value: p.v })), 0, 0, bw, bh);
+          const body = document.createElement('div'); body.className = 'pw-body'; body.style.cssText = `top:${headH}px`;
+          for (const p of pr) {
+            const pl = p.it, big = p.w > 30 && p.h > 22;
+            const d = document.createElement(pl.id ? 'a' : 'div'); d.className = 'pw-pl';
+            if (pl.id) d.href = `${B}players/${pl.id}/`;
+            d.style.cssText = `left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px;--pc:${D.pos[pl.pos] || '#9fb2cc'}`;
+            d.innerHTML = big ? `<span class="pw-nm">${pl.n}</span><span class="pw-r">${pl.r}</span>` : '';
+            d.addEventListener('mousemove', e => { tip.hidden = false; tip.innerHTML = `<b>${pl.n}</b><span>${t.name} · ${pl.pos} · ${pl.r}</span>`; const r = stage.getBoundingClientRect(); tip.style.left = (e.clientX - r.left) + 'px'; tip.style.top = (e.clientY - r.top) + 'px'; });
+            d.addEventListener('mouseleave', () => tip.hidden = true);
+            body.appendChild(d);
+          }
+          cell.appendChild(body);
+        }
+        stage.appendChild(cell);
+      }
+    }
+    render();
+    let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+  </script>
+</Base>

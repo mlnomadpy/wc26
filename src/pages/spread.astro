@@ -1,0 +1,121 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../public/data.json';
+import { rating, CONF, POSC, surname } from '@shared/lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const CONF_FULL = { UEFA: 'Europe', CONMEBOL: 'S. America', CONCACAF: 'N. America', CAF: 'Africa', AFC: 'Asia', OFC: 'Oceania' };
+const PLAYERS = DB.players.filter(p => p.age).map(p => ({
+  id: p.player_id, n: surname(p.player_name), pos: p.position, age: p.age, r: rating(p),
+  conf: p.confederation, tn: p.team_name, club: p.club || '—',
+}));
+const CONFS = [...new Set(PLAYERS.map(p => p.conf))].sort((a, b) => (CONF_FULL[a] ? -1 : 1));
+const PAYLOAD = { players: PLAYERS, pos: POSC, conf: CONF, confFull: CONF_FULL };
+---
+<Base title="The Spread — every World Cup player by age and rating" description="A scatter of all 1,247 World Cup players plotted by age and strength, coloured by position — find the wonderkids, the veterans and the peak-years core.">
+  <div class="app-page sp-page">
+    <header class="phead sp-head">
+      <div>
+        <div class="pe">Age × strength</div>
+        <h1>The Spread</h1>
+        <p class="psub">1,247 players by age and rating. Top-left is the wonderkid corner; the veterans hold the top-right.</p>
+      </div>
+      <div class="sp-ctrls">
+        <input type="search" id="spSearch" class="sp-search" placeholder="Highlight a player…" autocomplete="off" />
+        <div class="sp-seg" id="spPos">
+          <button class="on" data-p="">All</button>
+          {['GK', 'DF', 'MF', 'FW'].map(p => <button data-p={p} style={`--pc:${POSC[p]}`}>{p}</button>)}
+        </div>
+      </div>
+    </header>
+    <div class="sp-conf" id="spConf">
+      <button class="on" data-c="">All confederations</button>
+      {CONFS.map(c => <button data-c={c} style={`--cc:${CONF[c]}`}>{CONF_FULL[c] || c}</button>)}
+    </div>
+    <div class="app-grow sp-stage">
+      <canvas id="spCanvas" class="sp-canvas"></canvas>
+      <div class="sp-tip" id="spTip" hidden></div>
+    </div>
+  </div>
+
+  <script type="application/json" id="spData" set:html={JSON.stringify(PAYLOAD)}></script>
+  <script define:vars={{ B }}>
+    const D = JSON.parse(document.getElementById('spData').textContent);
+    const cv = document.getElementById('spCanvas'), ctx = cv.getContext('2d'), tip = document.getElementById('spTip');
+    const DPR = Math.min(2, window.devicePixelRatio || 1);
+    let W = 0, H = 0, posF = '', confF = '', term = '', hover = null;
+    const M = { l: 46, r: 16, t: 16, b: 34 };
+    const AGE = [15, 44], RAT = [48, 94];
+    // stable jitter per player so dots don't dance on redraw
+    const pts = D.players.map((p, i) => ({ ...p, jx: ((i * 9301 + 49297) % 233280) / 233280 - 0.5 }));
+
+    const sx = a => M.l + (a - AGE[0]) / (AGE[1] - AGE[0]) * (W - M.l - M.r);
+    const sy = r => H - M.b - (r - RAT[0]) / (RAT[1] - RAT[0]) * (H - M.t - M.b);
+
+    function resize() {
+      const s = cv.parentElement; W = s.clientWidth; H = s.clientHeight;
+      cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0); draw();
+    }
+    const shown = p => (!posF || p.pos === posF) && (!confF || p.conf === confF);
+    const matches = p => term && (p.n.toLowerCase().includes(term) || p.tn.toLowerCase().includes(term));
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      // grid + axes
+      ctx.font = '10px IBM Plex Mono, monospace'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.strokeStyle = 'rgba(120,150,190,.10)'; ctx.fillStyle = 'rgba(150,170,200,.55)'; ctx.lineWidth = 1;
+      for (let r = 50; r <= 90; r += 10) { const y = sy(r); ctx.beginPath(); ctx.moveTo(M.l, y); ctx.lineTo(W - M.r, y); ctx.stroke(); ctx.fillText(r, M.l - 8, y); }
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      for (let a = 18; a <= 42; a += 4) { const x = sx(a); ctx.beginPath(); ctx.moveTo(x, M.t); ctx.lineTo(x, H - M.b); ctx.strokeStyle = 'rgba(120,150,190,.07)'; ctx.stroke(); ctx.fillText(a, x, H - M.b + 7); }
+      // axis titles
+      ctx.fillStyle = 'rgba(150,170,200,.4)'; ctx.font = '600 9px IBM Plex Mono, monospace';
+      ctx.fillText('AGE →', W - M.r - 22, H - M.b + 19);
+      ctx.save(); ctx.translate(13, M.t + 30); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'left'; ctx.fillText('RATING →', 0, 0); ctx.restore();
+      // corner hints
+      ctx.fillStyle = 'rgba(120,224,168,.28)'; ctx.font = '700 11px Saira Condensed, sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText('WONDERKIDS', M.l + 8, M.t + 12);
+      ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(255,143,176,.28)';
+      ctx.fillText('VETERANS', W - M.r - 8, M.t + 12);
+      // dots
+      const any = !!term;
+      for (const p of pts) {
+        const vis = shown(p); const hit = matches(p);
+        const x = sx(p.age) + p.jx * 7, y = sy(p.r);
+        let a = vis ? 0.82 : 0.05;
+        if (any) a = hit ? 1 : (vis ? 0.08 : 0.04);
+        ctx.globalAlpha = a;
+        ctx.fillStyle = D.pos[p.pos] || '#9fb2cc';
+        ctx.beginPath(); ctx.arc(x, y, hit ? 4.5 : 2.7, 0, 7); ctx.fill();
+        if (hit) { ctx.globalAlpha = 1; ctx.lineWidth = 1.4; ctx.strokeStyle = '#fff'; ctx.stroke(); }
+        p._x = x; p._y = y;
+      }
+      ctx.globalAlpha = 1;
+      if (hover) {
+        ctx.beginPath(); ctx.arc(hover._x, hover._y, 5.5, 0, 7); ctx.fillStyle = D.pos[hover.pos]; ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke();
+      }
+    }
+
+    function pick(mx, my) {
+      let best = null, bd = 90;
+      for (const p of pts) { if (!shown(p)) continue; const dx = p._x - mx, dy = p._y - my, d = dx * dx + dy * dy; if (d < bd) { bd = d; best = p; } }
+      return best;
+    }
+    const rect = () => cv.getBoundingClientRect();
+    cv.addEventListener('mousemove', e => {
+      const r = rect(); const p = pick(e.clientX - r.left, e.clientY - r.top);
+      cv.style.cursor = p ? 'pointer' : 'default';
+      if (p !== hover) { hover = p; draw(); }
+      if (p) { tip.hidden = false; tip.innerHTML = `<b>${p.n}</b><span>${p.tn} · ${p.club}</span><em>${p.pos} · age ${p.age} · ${p.r}</em>`; tip.style.left = (e.clientX - r.left) + 'px'; tip.style.top = (e.clientY - r.top) + 'px'; }
+      else tip.hidden = true;
+    });
+    cv.addEventListener('mouseleave', () => { hover = null; tip.hidden = true; draw(); });
+    cv.addEventListener('click', e => { const r = rect(); const p = pick(e.clientX - r.left, e.clientY - r.top); if (p) location.href = B + 'players/' + p.id + '/'; });
+
+    document.getElementById('spPos').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; [...e.currentTarget.children].forEach(x => x.classList.toggle('on', x === b)); posF = b.dataset.p; draw(); });
+    document.getElementById('spConf').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; [...e.currentTarget.children].forEach(x => x.classList.toggle('on', x === b)); confF = b.dataset.c; draw(); });
+    document.getElementById('spSearch').addEventListener('input', e => { term = e.target.value.toLowerCase().trim(); draw(); });
+    window.addEventListener('resize', resize);
+    resize();
+  </script>
+</Base>

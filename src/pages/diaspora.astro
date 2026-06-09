@@ -1,0 +1,154 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../public/data.json';
+import { flagImg } from '@shared/lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+
+// [lat, lng] centroids for every nation + club country present in the data
+const GEO = {
+  Algeria:[28,3],Argentina:[-38,-63],Armenia:[40,45],Australia:[-25,134],Austria:[47.5,14],Azerbaijan:[40.3,47.7],Belgium:[50.6,4.6],'Bosnia and Herzegovina':[44,18],Brazil:[-10,-52],Bulgaria:[42.7,25.3],'Cabo Verde':[16,-24],Canada:[56,-98],Chile:[-35,-71],China:[35,103],Colombia:[4,-73],'Costa Rica':[10,-84],Croatia:[45.2,16.4],'Curaçao':[12.2,-69],Cyprus:[35,33],'Czech Republic':[49.8,15.5],Czechia:[49.8,15.5],"Côte d'Ivoire":[7.5,-5.5],'DR Congo':[-2.9,23.6],Denmark:[56,9.5],Ecuador:[-1.4,-78.5],Egypt:[26.8,30],England:[52.6,-1.3],Finland:[63,26],France:[46.6,2.4],Germany:[51,10.4],Ghana:[7.9,-1],Greece:[39,22.5],Haiti:[19,-72.4],Honduras:[15,-86.5],Hungary:[47.2,19.4],'IR Iran':[32,53],Indonesia:[-2,118],Iran:[32,53],Iraq:[33,44],Ireland:[53.4,-8],Israel:[31.4,34.9],Italy:[42.8,12.8],Japan:[36.5,138],Jordan:[31,36.5],Kazakhstan:[48,67],Malaysia:[4,102],Mexico:[23.6,-102],Morocco:[32,-6],Netherlands:[52.2,5.5],'New Zealand':[-41,173],Norway:[62,9],Panama:[8.5,-80],Paraguay:[-23.4,-58],Poland:[52,19.4],Portugal:[39.5,-8],Qatar:[25.3,51.2],'Republic of Ireland':[53.4,-8],Romania:[45.9,24.9],Russia:[56,38],'Saudi Arabia':[24,45],Scotland:[56.8,-4.2],Senegal:[14.5,-14.5],Serbia:[44,20.9],Slovakia:[48.7,19.5],Slovenia:[46.1,14.8],'South Africa':[-29,25],'South Korea':[36.5,127.9],Spain:[40.2,-3.7],Sweden:[60,15],Switzerland:[46.8,8.2],Thailand:[15,101],Tunisia:[34,9.5],Turkey:[39,35.2],'Türkiye':[39,35.2],USA:[39.8,-98.5],'United Arab Emirates':[24,54],'United States':[39.8,-98.5],Uruguay:[-33,-56],Uzbekistan:[41.4,63.8],Venezuela:[7,-66],Wales:[52.3,-3.7],
+};
+const byTeam = {};
+DB.players.forEach(p => (byTeam[p.fifa_code] = byTeam[p.fifa_code] || []).push(p));
+const nodeTot = {};
+DB.players.forEach(p => { if (p.club_country && GEO[p.club_country]) nodeTot[p.club_country] = (nodeTot[p.club_country] || 0) + 1; });
+const NATIONS = DB.teams.map(t => {
+  const sq = byTeam[t.fifa_code] || [];
+  const dmap = {};
+  sq.forEach(p => { if (p.club_country && GEO[p.club_country]) dmap[p.club_country] = (dmap[p.club_country] || 0) + 1; });
+  const dests = Object.entries(dmap).map(([country, count]) => ({ country, count })).sort((a, b) => b.count - a.count);
+  const homeKey = GEO[t.team_name] ? t.team_name : null;
+  const homeCount = homeKey ? (dmap[t.team_name] || dmap[homeKey] || 0) : 0;
+  const abroad = dests.filter(d => d.country !== t.team_name).reduce((s, d) => s + d.count, 0);
+  return { c: t.fifa_code, name: t.team_name, flag: flagImg(t.fifa_code, 40), home: homeKey, conf: t.confederation, dests, abroad, countries: dests.length };
+}).filter(n => n.home).sort((a, b) => a.name.localeCompare(b.name));
+const PAYLOAD = { geo: GEO, nodeTot, nations: NATIONS };
+---
+<Base title="The Diaspora — where the World Cup's players are scattered" description="A world map of every World Cup squad: pick a nation and watch its players' club football spread across the globe. Most roads lead to Europe.">
+  <div class="app-page dp-page">
+    <header class="phead dp-head">
+      <div>
+        <div class="pe">The scatter</div>
+        <h1>The Diaspora</h1>
+        <p class="psub">Pick a nation and see where its players actually earn their living. For most of the world, the arrows point to Europe.</p>
+      </div>
+      <div class="dp-read" id="dpRead"></div>
+    </header>
+    <div class="dp-nations" id="dpNations">
+      {NATIONS.map(n => (
+        <button class="dp-nat" data-c={n.c} title={n.name}><img src={n.flag} alt="" loading="lazy" /><span>{n.c}</span></button>
+      ))}
+    </div>
+    <div class="app-grow dp-stage">
+      <canvas id="dpCanvas" class="dp-canvas"></canvas>
+      <div class="dp-tip" id="dpTip" hidden></div>
+    </div>
+  </div>
+
+  <script type="application/json" id="dpData" set:html={JSON.stringify(PAYLOAD)}></script>
+  <script>
+    const D = JSON.parse(document.getElementById('dpData').textContent);
+    const cv = document.getElementById('dpCanvas'), ctx = cv.getContext('2d');
+    const tip = document.getElementById('dpTip'), read = document.getElementById('dpRead');
+    const DPR = Math.min(2, window.devicePixelRatio || 1);
+    const LAT = [72, -46], LNG = [-138, 184]; // top,bottom / left,right
+    const M = { l: 12, r: 12, t: 10, b: 10 };
+    let W = 0, H = 0, sel = null, hover = null, t = 0;
+    const nodes = Object.keys(D.nodeTot).map(k => ({ k, lat: D.geo[k][0], lng: D.geo[k][1], n: D.nodeTot[k] }));
+    const maxN = Math.max(...nodes.map(n => n.n));
+
+    const px = lng => M.l + (lng - LNG[0]) / (LNG[1] - LNG[0]) * (W - M.l - M.r);
+    const py = lat => M.t + (LAT[0] - lat) / (LAT[0] - LAT[1]) * (H - M.t - M.b);
+
+    function resize() { const s = cv.parentElement; W = s.clientWidth; H = s.clientHeight; cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px'; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
+
+    function graticule() {
+      ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(90,162,255,.07)';
+      for (let lng = -120; lng <= 180; lng += 30) { ctx.beginPath(); ctx.moveTo(px(lng), py(LAT[0])); ctx.lineTo(px(lng), py(LAT[1])); ctx.stroke(); }
+      for (let lat = 60; lat >= -40; lat -= 30) { ctx.beginPath(); ctx.moveTo(px(LNG[0]), py(lat)); ctx.lineTo(px(LNG[1]), py(lat)); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(90,162,255,.14)'; ctx.beginPath(); ctx.moveTo(px(LNG[0]), py(0)); ctx.lineTo(px(LNG[1]), py(0)); ctx.stroke(); // equator
+    }
+
+    function arc(x0, y0, x1, y1, lift) {
+      const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+      const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy) || 1;
+      const cx = mx - dy / len * lift, cy = my + dx / len * lift;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(cx, cy, x1, y1); ctx.stroke();
+      return [cx, cy];
+    }
+
+    function frame() {
+      t += 0.016; ctx.clearRect(0, 0, W, H);
+      graticule();
+      const s = sel ? D.nations.find(n => n.c === sel) : null;
+      const active = new Set(); if (s) s.dests.forEach(d => active.add(d.country));
+      // base nodes
+      for (const nd of nodes) {
+        const x = px(nd.lng), y = py(nd.lat);
+        const on = s ? active.has(nd.k) : true;
+        const r = 2 + Math.sqrt(nd.n / maxN) * 9;
+        ctx.globalAlpha = s ? (on ? 1 : 0.12) : 0.5;
+        ctx.fillStyle = on ? '#58ddff' : '#5a7088';
+        ctx.shadowColor = '#58ddff'; ctx.shadowBlur = on && s ? 10 : 0;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+        nd._x = x; nd._y = y; nd._r = r;
+      }
+      ctx.globalAlpha = 1;
+      // arcs for selected nation
+      if (s) {
+        const hx = px(D.geo[s.home][1]), hy = py(D.geo[s.home][0]);
+        const maxC = Math.max(...s.dests.map(d => d.count));
+        s.dests.forEach(d => {
+          if (d.country === s.name) return;
+          const x1 = px(D.geo[d.country][1]), y1 = py(D.geo[d.country][0]);
+          const lift = Math.min(120, Math.hypot(x1 - hx, y1 - hy) * 0.28);
+          ctx.lineWidth = 1 + d.count / maxC * 3.2;
+          ctx.strokeStyle = `rgba(88,221,255,${0.28 + d.count / maxC * 0.5})`;
+          arc(hx, hy, x1, y1, lift);
+          // travelling pulse
+          const tt = (t * 0.5 + d.count) % 1;
+          const mx = (hx + x1) / 2, my = (hy + y1) / 2, dx = x1 - hx, dy = y1 - hy, len = Math.hypot(dx, dy) || 1;
+          const cx = mx - dy / len * lift, cy = my + dx / len * lift;
+          const bx = (1 - tt) * (1 - tt) * hx + 2 * (1 - tt) * tt * cx + tt * tt * x1;
+          const by = (1 - tt) * (1 - tt) * hy + 2 * (1 - tt) * tt * cy + tt * tt * y1;
+          ctx.fillStyle = '#bdf0ff'; ctx.beginPath(); ctx.arc(bx, by, 1.8, 0, 7); ctx.fill();
+        });
+        // home node
+        ctx.fillStyle = '#ffd23f'; ctx.shadowColor = '#ffd23f'; ctx.shadowBlur = 16;
+        ctx.beginPath(); ctx.arc(hx, hy, 6, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+      }
+      requestAnimationFrame(frame);
+    }
+
+    function pick(mx, my) { let best = null, bd = 100; for (const nd of nodes) { const dx = nd._x - mx, dy = nd._y - my, d = dx * dx + dy * dy; if (d < Math.max(bd, (nd._r + 4) ** 2)) { bd = d; best = nd; } } return best; }
+    const rect = () => cv.getBoundingClientRect();
+    cv.addEventListener('mousemove', e => {
+      const r = rect(); const nd = pick(e.clientX - r.left, e.clientY - r.top); hover = nd;
+      if (nd) {
+        const s = sel ? D.nations.find(n => n.c === sel) : null;
+        const cnt = s ? (s.dests.find(d => d.country === nd.k) || {}).count : nd.n;
+        tip.hidden = false; tip.innerHTML = `<b>${nd.k}</b><span>${cnt || 0} ${s ? s.c + ' player' + (cnt === 1 ? '' : 's') : 'WC players'}</span>`;
+        tip.style.left = (e.clientX - r.left) + 'px'; tip.style.top = (e.clientY - r.top) + 'px';
+      } else tip.hidden = true;
+    });
+    cv.addEventListener('mouseleave', () => tip.hidden = true);
+
+    function select(c) {
+      sel = c;
+      [...document.getElementById('dpNations').children].forEach(b => b.classList.toggle('on', b.dataset.c === c));
+      const s = D.nations.find(n => n.c === c);
+      if (s) {
+        const top = s.dests.filter(d => d.country !== s.name).slice(0, 3).map(d => `${d.country} ${d.count}`).join(' · ');
+        read.innerHTML = `<img src="${s.flag}" alt=""/><div><b>${s.name}</b><span>${s.abroad} abroad in ${s.countries} countries</span><em>${top}</em></div>`;
+      }
+      const btn = [...document.getElementById('dpNations').children].find(b => b.dataset.c === c);
+      if (btn) btn.scrollIntoView({ inline: 'center', block: 'nearest' });
+    }
+    document.getElementById('dpNations').addEventListener('click', e => { const b = e.target.closest('.dp-nat'); if (b) select(b.dataset.c); });
+    window.addEventListener('resize', resize);
+    resize();
+    select((D.nations.find(n => n.c === 'MAR') || D.nations[0]).c);
+    frame();
+  </script>
+</Base>
