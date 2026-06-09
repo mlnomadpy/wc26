@@ -1,0 +1,34 @@
+---
+import Base from '@app/layouts/Base.astro';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const STORIES = [
+  { slug: 'the-last-dance', eyebrow: 'Rivalry', title: 'The Last Dance', sub: 'Messi & Ronaldo, almost certainly at their final World Cup.', emoji: '🐐' },
+  { slug: 'group-of-death', eyebrow: 'The draw', title: 'The Group of Death', sub: 'Where the draw was cruellest — by the numbers.', emoji: '💀' },
+  { slug: 'old-and-young', eyebrow: 'Generations', title: 'Old Heads & Wonderkids', sub: 'The veterans chasing a last shot and the teens arriving.', emoji: '⏳' },
+];
+---
+<Base title="Stories — WC26 Matchday" description="Scroll-driven data stories from the 2026 World Cup: The Last Dance, the Group of Death, old heads and wonderkids.">
+  <div class="app-page">
+  <header class="phead">
+    <div>
+      <div class="pe">The narrative</div>
+      <h1>Stories</h1>
+      <p class="psub">Scroll-driven reads built from the data — rivalries, the draw, and the generations meeting in 2026.</p>
+    </div>
+    <div class="pstat"><div class="s"><b>{STORIES.length}</b><span>Stories</span></div></div>
+  </header>
+  <div class="app-grow scroll">
+    <div class="storygrid">
+      {STORIES.map(s => (
+        <a class="storytile" href={`${B}stories/${s.slug}/`}>
+          <span class="st-emoji">{s.emoji}</span>
+          <span class="st-eye">{s.eyebrow}</span>
+          <h3>{s.title}</h3>
+          <p>{s.sub}</p>
+          <span class="st-go">Read →</span>
+        </a>
+      ))}
+    </div>
+  </div>
+  </div>
+</Base>

@@ -1,0 +1,132 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../../public/data.json';
+import { teamRating, rating, flagImg, money, surname } from '@shared/lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const teamByCode = {}; DB.teams.forEach(t => teamByCode[t.fifa_code] = t);
+const fl = c => flagImg(c, 40);
+const find = n => DB.players.find(p => p.player_name.includes(n));
+const messi = find('Messi'), ronaldo = find('Cristiano Ronaldo');
+
+// Group of Death — hardest group by average squad rating
+const groups = {}; DB.teams.forEach(t => (groups[t.group_letter] = groups[t.group_letter] || []).push(t));
+const groupStr = Object.entries(groups).map(([g, ts]) => ({ g, avg: Math.round(ts.reduce((s, t) => s + (teamRating(t.fifa_ranking) || 60), 0) / ts.length), teams: [...ts].sort((a, b) => (a.fifa_ranking || 999) - (b.fifa_ranking || 999)) }));
+const god = [...groupStr].sort((a, b) => b.avg - a.avg)[0];
+const easiest = [...groupStr].sort((a, b) => a.avg - b.avg)[0];
+
+// Old & Young
+const aged = DB.players.filter(p => p.age);
+const oldest = [...aged].sort((a, b) => b.age - a.age)[0];
+const youngest = [...aged].sort((a, b) => a.age - b.age)[0];
+const teens = aged.filter(p => p.age <= 19).length;
+const over35 = aged.filter(p => p.age >= 35).length;
+const topVets = [...aged].filter(p => p.age >= 35).sort((a, b) => rating(b) - rating(a)).slice(0, 4);
+const topKids = [...aged].filter(p => p.age <= 20).sort((a, b) => rating(b) - rating(a)).slice(0, 4);
+
+const pcard = (p, val, sub) => ({ name: surname(p.player_name), full: p.player_name, c: p.fifa_code, f: fl(p.fifa_code), val, sub: sub || p.club });
+
+const STORIES = {
+  'the-last-dance': {
+    meta: { eyebrow: 'Rivalry', title: 'The Last Dance', sub: 'Messi and Ronaldo, almost certainly at their final World Cup.' },
+    scenes: [
+      { k: 'big', text: `For twenty years they bent football around themselves. In 2026, the two greatest of their generation arrive for what is — almost surely — their <em>last</em> World Cup.` },
+      { k: 'duel', a: pcard(messi, messi.international_goals + ' goals', 'Argentina · ' + messi.age), b: pcard(ronaldo, ronaldo.international_goals + ' goals', 'Portugal · ' + ronaldo.age) },
+      { k: 'bars', title: 'By the numbers', rows: [
+        ['Intl goals', messi.international_goals, ronaldo.international_goals],
+        ['Caps', messi.caps, ronaldo.caps],
+        ['Age in 2026', messi.age, ronaldo.age],
+      ] },
+      { k: 'stat', value: (messi.international_goals + ronaldo.international_goals), label: 'international goals between them', note: 'and counting.' },
+      { k: 'outro', title: 'One more dance.', sub: 'Compare them head-to-head, or follow their road to the final.', links: [['Compare them', 'compare/?a=ARG&b=POR'], ['The bracket', 'bracket/']] },
+    ],
+  },
+  'group-of-death': {
+    meta: { eyebrow: 'The draw', title: 'The Group of Death', sub: `Group ${god.g} — where the draw was cruellest.` },
+    scenes: [
+      { k: 'big', text: `Forty-eight teams, twelve groups. One was always going to be brutal. By average squad strength, that group is <em>Group ${god.g}</em>.` },
+      { k: 'group', title: `Group ${god.g} · avg rating ${god.avg}`, teams: god.teams },
+      { k: 'stat', value: god.avg, label: `average squad rating in Group ${god.g}`, note: `the strongest of all twelve — ${god.avg - easiest.avg} points above the kindest draw (Group ${easiest.g}).` },
+      { k: 'outro', title: 'Survive and advance.', sub: 'Two go through automatically. See the projected table.', links: [['Group ' + god.g + ' standings', 'groups/' + god.g + '/'], ['All groups', 'groups/']] },
+    ],
+  },
+  'old-and-young': {
+    meta: { eyebrow: 'Generations', title: 'Old Heads & Wonderkids', sub: 'The veterans chasing a last shot, and the teenagers announcing themselves.' },
+    scenes: [
+      { k: 'duel', a: pcard(oldest, oldest.age + ' years', 'Oldest at the Cup'), b: pcard(youngest, youngest.age + ' years', 'Youngest at the Cup') },
+      { k: 'big', text: `From a ${oldest.age}-year-old refusing to leave the stage to a ${youngest.age}-year-old just arriving on it — this is a tournament of two clocks.` },
+      { k: 'cards', title: 'The old guard', items: topVets.map(p => pcard(p, p.age + 'y', p.team_name + ' · ' + rating(p))) },
+      { k: 'cards', title: 'The wonderkids', items: topKids.map(p => pcard(p, p.age + 'y', p.team_name + ' · ' + rating(p))) },
+      { k: 'stat', value: teens, label: 'teenagers at the World Cup', note: `against ${over35} players aged 35 or older.` },
+      { k: 'outro', title: 'Two clocks, one stage.', sub: 'Browse every squad by age, value and rating.', links: [['All players', 'players/'], ['All nations', 'teams/']] },
+    ],
+  },
+};
+export function getStaticPaths() { return ['the-last-dance', 'group-of-death', 'old-and-young'].map(slug => ({ params: { slug } })); }
+const { slug } = Astro.params;
+const story = STORIES[slug];
+const scenes = story.scenes;
+---
+<Base title={`${story.meta.title} — WC26 Matchday stories`} description={story.meta.sub}>
+  <div class="story">
+    <a class="btn back story-back" href={B + 'stories/'}>← Stories</a>
+    <section class="scene scene-cover">
+      <div class="sc-in">
+        <div class="story-eye">{story.meta.eyebrow}</div>
+        <h1>{story.meta.title}</h1>
+        <p class="story-sub">{story.meta.sub}</p>
+        <div class="scroll-cue">scroll ↓</div>
+      </div>
+    </section>
+
+    {scenes.map(s => (
+      <section class={`scene scene-${s.k} reveal`}>
+        <div class="sc-in">
+          {s.k === 'big' && <p class="sc-big" set:html={s.text}></p>}
+          {s.k === 'stat' && <div class="sc-stat"><b>{s.value}</b><span>{s.label}</span><em>{s.note}</em></div>}
+          {s.k === 'duel' && (
+            <div class="sc-duel">
+              <div class="sc-duelp"><img src={s.a.f} alt="" /><b>{s.a.name}</b><span>{s.a.val}</span><i>{s.a.sub}</i></div>
+              <div class="sc-vs">VS</div>
+              <div class="sc-duelp"><img src={s.b.f} alt="" /><b>{s.b.name}</b><span>{s.b.val}</span><i>{s.b.sub}</i></div>
+            </div>
+          )}
+          {s.k === 'bars' && (
+            <div class="sc-bars">
+              <h3>{s.title}</h3>
+              {s.rows.map(([l, a, b]) => { const tot = (a + b) || 1; return (
+                <div class="sc-bar"><span class="sb-a">{a}</span><span class="sb-track"><i style={`width:${a / tot * 100}%`}></i><u style={`width:${b / tot * 100}%`}></u></span><span class="sb-b">{b}</span><span class="sb-l">{l}</span></div>
+              ); })}
+            </div>
+          )}
+          {s.k === 'group' && (
+            <div class="sc-group">
+              <h3>{s.title}</h3>
+              <div class="sc-teams">{s.teams.map(t => (
+                <a class="sc-team" href={`${B}teams/${t.fifa_code.toLowerCase()}/`}><img src={fl(t.fifa_code)} alt="" /><b>{t.team_name}</b><span>#{t.fifa_ranking || '—'}</span></a>
+              ))}</div>
+            </div>
+          )}
+          {s.k === 'cards' && (
+            <div class="sc-cards">
+              <h3>{s.title}</h3>
+              <div class="sc-crow">{s.items.map(p => (
+                <div class="sc-pcard"><img src={p.f} alt="" /><b>{p.name}</b><span>{p.val}</span><i>{p.sub}</i></div>
+              ))}</div>
+            </div>
+          )}
+          {s.k === 'outro' && (
+            <div class="sc-outro">
+              <h2>{s.title}</h2><p>{s.sub}</p>
+              <div class="hh-cta">{s.links.map(([t, u], i) => <a class={`btn ${i === 0 ? 'primary' : ''}`} href={B + u}>{t}</a>)}</div>
+            </div>
+          )}
+        </div>
+      </section>
+    ))}
+  </div>
+
+  <script>
+    const io = new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); o.unobserve(e.target); } }), { threshold: 0.18 });
+    document.querySelectorAll('.scene.reveal').forEach(s => io.observe(s));
+  </script>
+</Base>
