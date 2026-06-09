@@ -2,7 +2,7 @@
 import Base from '@app/layouts/Base.astro';
 import Flag from '@shared/ui/Flag.astro';
 import DB from '../../../public/data.json';
-import { indexes, autoForm, pickXI, FORMATIONS, FORMNAMES, POSC, CONF, surname, num, money, avgAge, flagImg, teamRating, rating, tier, monogram } from '@shared/lib/wc.js';
+import { indexes, autoForm, pickXI, FORMATIONS, FORMNAMES, POSC, CONF, surname, num, money, avgAge, flagImg, teamRating, rating, tier, monogram, posDetail } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const IDX = indexes(DB);
 export function getStaticPaths() {
@@ -111,7 +111,7 @@ const face = id => `${B}faces/${id}.jpg`;
               </span>
               <span class="spl-id">
                 <span class="spl-nm">{surname(p.player_name)}{p.is_captain ? ' (C)' : ''}</span>
-                <span class="spl-meta"><span class={`pill ${p.position}`}>{p.position}</span> {p.club || ''}</span>
+                <span class="spl-meta"><span class={`pill ${p.position}`}>{p.position}</span>{(p.position_detail || posDetail(p)) && <span class="role-mini">{p.position_detail || posDetail(p)}</span>} {p.club || ''}</span>
               </span>
               <span class={`lbovr ${tier(p)} spl-ovr`}>{rating(p)}</span>
             </a>

@@ -2,7 +2,7 @@
 import Base from '@app/layouts/Base.astro';
 import Flag from '@shared/ui/Flag.astro';
 import DB from '../../../public/data.json';
-import { indexes, slugify, monogram, surname, rating, tier, POSC } from '@shared/lib/wc.js';
+import { indexes, slugify, monogram, surname, rating, tier, POSC, posDetail } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const IDX = indexes(DB);
 export function getStaticPaths() {
@@ -47,7 +47,7 @@ const STATS = [['Players', ps.length, true], ['Nations', nations.length], ['Top 
           </span>
           <span class="spl-id">
             <span class="spl-nm">{surname(p.player_name)}{p.is_captain ? ' (C)' : ''}</span>
-            <span class="spl-meta"><span class={`pill ${p.position}`}>{p.position}</span> <Flag code={p.fifa_code} cls="sm" /> {p.team_name}</span>
+            <span class="spl-meta"><span class={`pill ${p.position}`}>{p.position}</span>{(p.position_detail || posDetail(p)) && <span class="role-mini">{p.position_detail || posDetail(p)}</span>} <Flag code={p.fifa_code} cls="sm" /> {p.team_name}</span>
           </span>
           <span class={`lbovr ${tier(p)} spl-ovr`}>{rating(p)}</span>
         </a>

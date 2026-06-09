@@ -12,6 +12,8 @@ export function getStaticPaths() {
 const m = DB.matches.find(x => String(x.match_number) === Astro.params.n);
 const ht = m.home_code ? IDX.teamByCode[m.home_code] : null;
 const at = m.away_code ? IDX.teamByCode[m.away_code] : null;
+const city = m.city_id ? DB.cities.find(c => c.id === m.city_id) : null;
+const pedigree = t => !t ? '' : t.is_debut ? '★ World Cup debut' : t.titles > 0 ? `★ ${t.titles}× World Champion${t.titles > 1 ? 's' : ''}` : t.best_finish ? `Best · ${t.best_finish}` : '';
 const sum = (t, k) => (IDX.playersByTeam[t.fifa_code] || []).reduce((s, p) => s + (p[k] || 0), 0);
 const aa = t => avgAge(IDX.playersByTeam[t.fifa_code] || []) || 0;
 const kick = (m.kickoff_at || '').replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00');
@@ -75,17 +77,20 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
       {ht ? <Flag code={ht.fifa_code} cls="lg" /> : <div class="ms-slot">{lbl[0]}</div>}
       <div class="ms-name">{ht ? ht.team_name : 'TBD'}</div>
       {ht && <div class="ms-sub">{ht.head_coach} · FIFA {ht.fifa_ranking ? '#' + ht.fifa_ranking : '—'} · <b class="ms-rate">{tr(ht)}</b> rating</div>}
+      {ht && pedigree(ht) && <div class={`ms-ped ${ht.titles > 0 ? 'champ' : ''}`}>{pedigree(ht)}</div>}
     </div>
     <div class="ms-vs">
       <div class="ms-stage">{m.stage}</div>
       <div class="ms-vstxt">VS</div>
       {kick && <div class="ms-cd" id="mcd" data-kick={kick}>—</div>}
-      <div class="ms-when">{m.venue} · {m.city} · {(m.kickoff_at || '').slice(0, 10)}</div>
+      <div class="ms-when">{m.venue} · {m.city}{city?.capacity ? ` · ${(city.capacity / 1000).toFixed(0)}k seats` : ''}{city?.altitude_m >= 1000 ? ` · ◆ ${(city.altitude_m / 1000).toFixed(1)}km` : ''}</div>
+      <div class="ms-when ms-date">{(m.kickoff_at || '').slice(0, 10)}</div>
     </div>
     <div class="ms-team">
       {at ? <Flag code={at.fifa_code} cls="lg" /> : <div class="ms-slot">{lbl[1]}</div>}
       <div class="ms-name">{at ? at.team_name : 'TBD'}</div>
       {at && <div class="ms-sub">{at.head_coach} · FIFA {at.fifa_ranking ? '#' + at.fifa_ranking : '—'} · <b class="ms-rate">{tr(at)}</b> rating</div>}
+      {at && pedigree(at) && <div class={`ms-ped ${at.titles > 0 ? 'champ' : ''}`}>{pedigree(at)}</div>}
     </div>
   </section>
 
