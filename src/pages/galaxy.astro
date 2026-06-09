@@ -1,0 +1,300 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../public/data.json';
+import { teamRating, rating, flagImg, CONF, surname } from '@shared/lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+
+// Slim galaxy model: one node per team, sized by strength, coloured by confederation,
+// each carrying its brightest stars. Rendered client-side on a canvas.
+const players = {};
+DB.players.forEach(p => (players[p.fifa_code] = players[p.fifa_code] || []).push(p));
+const NODES = DB.teams.map(t => {
+  const sq = (players[t.fifa_code] || []);
+  const top = [...sq].sort((a, b) => rating(b) - rating(a)).slice(0, 5)
+    .map(p => ({ n: surname(p.player_name), r: rating(p), pos: p.position }));
+  const star = top[0] ? top[0].r : 60;
+  return {
+    c: t.fifa_code,
+    name: t.team_name,
+    conf: t.confederation || 'Unknown',
+    grp: t.group_letter,
+    rank: t.fifa_ranking || null,
+    r: teamRating(t.fifa_ranking) || 60,
+    star,
+    flag: flagImg(t.fifa_code, 80),
+    top,
+  };
+});
+// Confederations present, ordered by how many teams qualified (biggest constellation first)
+const confCount = {};
+NODES.forEach(n => confCount[n.conf] = (confCount[n.conf] || 0) + 1);
+const CONFS = Object.keys(confCount).sort((a, b) => confCount[b] - confCount[a]);
+const CONF_FULL = { UEFA: 'Europe', CONMEBOL: 'South America', CAF: 'Africa', AFC: 'Asia', CONCACAF: 'N. America', OFC: 'Oceania', Unknown: 'TBD' };
+const strongest = [...NODES].sort((a, b) => b.r - a.r)[0];
+---
+<Base title="Talent Galaxy — WC26 Matchday" description="An orbital map of the 48 World Cup teams — every nation a star, sized by strength and clustered by confederation. Drift through the talent of 2026.">
+  <div class="app-page galaxy-page">
+    <header class="phead galaxy-head">
+      <div>
+        <div class="pe">The map</div>
+        <h1>Talent Galaxy</h1>
+        <p class="psub">48 nations, six constellations. Each star sized by squad strength — drift, hover, and pull one in.</p>
+      </div>
+      <div class="gx-ctrls">
+        <div class="gx-seg" id="gxMode" role="tablist">
+          <button class="on" data-mode="conf">Constellations</button>
+          <button data-mode="group">Groups</button>
+        </div>
+        <label class="gx-toggle"><input type="checkbox" id="gxStars" /> <span>Show stars</span></label>
+      </div>
+    </header>
+
+    <div class="app-grow galaxy-stage">
+      <canvas id="gx" class="gx-canvas"></canvas>
+      <div class="gx-legend" id="gxLegend"></div>
+      <div class="gx-hint" id="gxHint">Hover a star · click to lock</div>
+
+      <aside class="gx-panel" id="gxPanel" hidden>
+        <button class="gx-x" id="gxClose" aria-label="Close">✕</button>
+        <div class="gx-pflag"><img id="gxFlag" src="" alt="" /></div>
+        <div class="gx-pmeta">
+          <span class="gx-pconf" id="gxConf"></span>
+          <h2 id="gxName"></h2>
+          <div class="gx-prow"><span id="gxRank"></span><span class="gx-dot">·</span><span id="gxGroup"></span></div>
+        </div>
+        <div class="gx-prating"><b id="gxR"></b><span>strength</span></div>
+        <div class="gx-stars" id="gxStarsList"></div>
+        <a class="btn primary gx-go" id="gxGo" href="#">Open nation →</a>
+      </aside>
+    </div>
+  </div>
+
+  <script type="application/json" id="gxData" set:html={JSON.stringify({ nodes: NODES, confs: CONFS, confFull: CONF_FULL, confColor: CONF })}></script>
+
+  <script define:vars={{ B }}>
+    const DATA = JSON.parse(document.getElementById('gxData').textContent);
+    const { nodes: NODES, confs: CONFS, confFull: CFULL, confColor: CCOL } = DATA;
+    const canvas = document.getElementById('gx');
+    const ctx = canvas.getContext('2d');
+    const panel = document.getElementById('gxPanel');
+    const hint = document.getElementById('gxHint');
+    let W = 0, H = 0, DPR = Math.min(2, window.devicePixelRatio || 1);
+    let mode = 'conf', showStars = false, locked = null, hover = null;
+    const GROUPS = [...new Set(NODES.map(n => n.grp).filter(Boolean))].sort();
+
+    // preload flags
+    const imgs = {};
+    NODES.forEach(n => { if (n.flag) { const i = new Image(); i.src = n.flag; imgs[n.c] = i; } });
+
+    // physics state
+    const P = NODES.map((n, i) => ({ n, x: 0, y: 0, vx: 0, vy: 0, rad: 0, phase: i * 1.7, stars: [] }));
+    const byCode = {}; P.forEach(p => byCode[p.n.c] = p);
+
+    function clusters() {
+      // returns map key -> {cx, cy, color, label}
+      const keys = mode === 'conf' ? CONFS : GROUPS;
+      const map = {};
+      const cols = ['#5aa2ff', '#3ddc97', '#ffb454', '#ff6b9d', '#b48cff', '#5fd6ce', '#ff8f5a', '#8ad0ff', '#c8ff8a', '#ff7ad0', '#7affd0', '#d0a0ff'];
+      const R = Math.min(W, H) * (keys.length > 6 ? 0.34 : 0.3);
+      keys.forEach((k, i) => {
+        const a = (i / keys.length) * Math.PI * 2 - Math.PI / 2;
+        map[k] = {
+          cx: W / 2 + Math.cos(a) * R,
+          cy: H / 2 + Math.sin(a) * R,
+          color: mode === 'conf' ? (CCOL[k] || '#6b7a90') : cols[i % cols.length],
+          label: mode === 'conf' ? (CFULL[k] || k) : ('Group ' + k),
+        };
+      });
+      return map;
+    }
+    let CL = {};
+    const keyOf = p => mode === 'conf' ? p.n.conf : p.n.grp;
+
+    function sizeOf(p) { return 6 + (p.n.r - 58) / 37 * 16; } // 6..22 px by strength
+
+    function resize() {
+      const stage = canvas.parentElement;
+      W = stage.clientWidth; H = stage.clientHeight;
+      canvas.width = W * DPR; canvas.height = H * DPR;
+      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      CL = clusters();
+      P.forEach(p => { p.rad = sizeOf(p); });
+    }
+
+    function seed() {
+      CL = clusters();
+      P.forEach(p => {
+        const c = CL[keyOf(p)] || { cx: W / 2, cy: H / 2 };
+        const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 80;
+        p.x = c.cx + Math.cos(a) * d; p.y = c.cy + Math.sin(a) * d; p.vx = p.vy = 0;
+      });
+    }
+
+    function step() {
+      // spring to own cluster + soft all-pairs repulsion
+      for (const p of P) {
+        const c = CL[keyOf(p)]; if (!c) continue;
+        p.vx += (c.cx - p.x) * 0.009;
+        p.vy += (c.cy - p.y) * 0.009;
+      }
+      for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
+        const a = P[i], b = P[j];
+        let dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy || 0.01;
+        const min = a.rad + b.rad + 16;
+        if (d2 < min * min * 5) {
+          const f = (min * min) / d2 * 0.9;
+          const d = Math.sqrt(d2); dx /= d; dy /= d;
+          a.vx += dx * f * 0.09; a.vy += dy * f * 0.09;
+          b.vx -= dx * f * 0.09; b.vy -= dy * f * 0.09;
+        }
+      }
+      for (const p of P) {
+        if (locked === p) { p.vx *= 0.6; p.vy *= 0.6; }
+        p.x += p.vx; p.y += p.vy; p.vx *= 0.86; p.vy *= 0.86;
+      }
+    }
+
+    let t = 0;
+    function frame() {
+      t += 0.016;
+      step();
+      ctx.clearRect(0, 0, W, H);
+      // faint cluster halos + labels
+      for (const k in CL) {
+        const c = CL[k];
+        const g = ctx.createRadialGradient(c.cx, c.cy, 0, c.cx, c.cy, Math.min(W, H) * 0.18);
+        g.addColorStop(0, c.color + '14'); g.addColorStop(1, 'transparent');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c.cx, c.cy, Math.min(W, H) * 0.18, 0, 7); ctx.fill();
+      }
+      // links: nearest within cluster (constellation lines)
+      ctx.lineWidth = 1;
+      for (let i = 0; i < P.length; i++) {
+        const a = P[i]; let best = null, bd = 1e9;
+        for (let j = 0; j < P.length; j++) {
+          if (i === j) continue; const b = P[j];
+          if (keyOf(a) !== keyOf(b)) continue;
+          const dx = a.x - b.x, dy = a.y - b.y, d = dx * dx + dy * dy;
+          if (d < bd) { bd = d; best = b; }
+        }
+        if (best) {
+          const c = CL[keyOf(a)];
+          ctx.strokeStyle = c.color + '22';
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(best.x, best.y); ctx.stroke();
+        }
+      }
+      // labels
+      ctx.textAlign = 'center'; ctx.font = '600 11px Inter, system-ui, sans-serif';
+      for (const k in CL) {
+        const c = CL[k];
+        ctx.fillStyle = c.color + 'cc';
+        ctx.fillText(c.label.toUpperCase(), c.cx, c.cy - Math.min(W, H) * 0.15);
+      }
+      // nodes
+      for (const p of P) {
+        const c = CL[keyOf(p)]; const col = c ? c.color : '#6b7a90';
+        const isHL = (hover === p || locked === p);
+        const rr = p.rad * (isHL ? 1.32 : 1) + (isHL ? 2 : 0);
+        // orbiting stars
+        if (showStars) {
+          for (let s = 0; s < Math.min(4, p.n.top.length); s++) {
+            const or = rr + 7 + s * 4, an = t * (0.5 + s * 0.18) + p.phase + s * 1.6;
+            const sx = p.x + Math.cos(an) * or, sy = p.y + Math.sin(an) * or;
+            ctx.fillStyle = col + (isHL ? 'ee' : '88');
+            ctx.beginPath(); ctx.arc(sx, sy, isHL ? 2.2 : 1.5, 0, 7); ctx.fill();
+          }
+        }
+        // glow
+        ctx.shadowColor = col; ctx.shadowBlur = isHL ? 26 : 12;
+        // flag disc
+        ctx.save();
+        ctx.beginPath(); ctx.arc(p.x, p.y, rr, 0, 7); ctx.closePath();
+        ctx.fillStyle = '#0b1220'; ctx.fill();
+        ctx.clip();
+        const im = imgs[p.n.c];
+        if (im && im.complete && im.naturalWidth) {
+          const w = rr * 2 * 1.5, h = rr * 2;
+          ctx.drawImage(im, p.x - w / 2, p.y - h / 2, w, h);
+        } else {
+          ctx.fillStyle = col; ctx.fillRect(p.x - rr, p.y - rr, rr * 2, rr * 2);
+        }
+        ctx.restore();
+        ctx.shadowBlur = 0;
+        // ring
+        ctx.lineWidth = isHL ? 2.4 : 1.4;
+        ctx.strokeStyle = isHL ? '#fff' : col;
+        ctx.beginPath(); ctx.arc(p.x, p.y, rr, 0, 7); ctx.stroke();
+        // label for big/locked/hover
+        if (isHL || p.n.r >= 86) {
+          ctx.fillStyle = isHL ? '#eaf2ff' : 'rgba(220,232,255,.7)';
+          ctx.font = (isHL ? '700 12px' : '600 10px') + ' Inter, system-ui, sans-serif';
+          ctx.fillText(p.n.c, p.x, p.y + rr + 13);
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    function pick(mx, my) {
+      let best = null, bd = 1e9;
+      for (const p of P) {
+        const dx = p.x - mx, dy = p.y - my, d = dx * dx + dy * dy;
+        const rr = p.rad + 6;
+        if (d < rr * rr && d < bd) { bd = d; best = p; }
+      }
+      return best;
+    }
+
+    const rect = () => canvas.getBoundingClientRect();
+    canvas.addEventListener('mousemove', e => {
+      const r = rect(); hover = pick(e.clientX - r.left, e.clientY - r.top);
+      canvas.style.cursor = hover ? 'pointer' : 'default';
+    });
+    canvas.addEventListener('mouseleave', () => hover = null);
+    canvas.addEventListener('click', e => {
+      const r = rect(); const p = pick(e.clientX - r.left, e.clientY - r.top);
+      if (p) openPanel(p); else closePanel();
+    });
+
+    function openPanel(p) {
+      locked = p; const n = p.n;
+      document.getElementById('gxFlag').src = n.flag || '';
+      document.getElementById('gxName').textContent = n.name;
+      const cf = document.getElementById('gxConf'); cf.textContent = CFULL[n.conf] || n.conf;
+      cf.style.color = CCOL[n.conf] || '#9fb2cc';
+      document.getElementById('gxRank').textContent = n.rank ? 'FIFA #' + n.rank : 'Unranked';
+      document.getElementById('gxGroup').textContent = 'Group ' + n.grp;
+      document.getElementById('gxR').textContent = n.r;
+      document.getElementById('gxStarsList').innerHTML = n.top.map(s =>
+        `<div class="gx-star"><span class="gx-spos pos-${s.pos}">${s.pos}</span><b>${s.n}</b><span class="gx-sr">${s.r}</span></div>`).join('');
+      document.getElementById('gxGo').href = B + 'teams/' + n.c.toLowerCase() + '/';
+      panel.hidden = false; hint.style.opacity = 0;
+    }
+    function closePanel() { locked = null; panel.hidden = true; hint.style.opacity = ''; }
+    document.getElementById('gxClose').addEventListener('click', closePanel);
+
+    // legend
+    const legend = document.getElementById('gxLegend');
+    function drawLegend() {
+      const keys = mode === 'conf' ? CONFS : GROUPS;
+      legend.innerHTML = keys.map(k => {
+        const c = CL[k] || {};
+        const lab = mode === 'conf' ? (CFULL[k] || k) : ('Grp ' + k);
+        return `<span class="gx-lg"><i style="background:${c.color}"></i>${lab}</span>`;
+      }).join('');
+    }
+
+    // controls
+    document.getElementById('gxMode').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      [...e.currentTarget.children].forEach(x => x.classList.toggle('on', x === b));
+      mode = b.dataset.mode; CL = clusters(); seed(); drawLegend();
+    });
+    document.getElementById('gxStars').addEventListener('change', e => showStars = e.target.checked);
+
+    window.addEventListener('resize', () => { resize(); seed(); drawLegend(); });
+    resize(); seed(); drawLegend();
+    // settle a bit before first paint so it opens already-clustered
+    for (let i = 0; i < 240; i++) step();
+    frame();
+  </script>
+</Base>

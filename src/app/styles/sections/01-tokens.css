@@ -22,6 +22,7 @@
   --hud-b2:color-mix(in srgb,var(--accent2) 46%,var(--line2));  /* stronger HUD border */
   --cut:polygon(0 0,100% 0,100% 66%,calc(100% - 9px) 100%,0 100%); /* card bottom-right chamfer */
   --cut-edge:polygon(2% 0,100% 0,97% 100%,0 100%);              /* angled tile/stat chamfer */
+  --hex:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);  /* pointy-top hexagon — pitch tokens */
   --ease:cubic-bezier(.22,.61,.36,1); --t:.18s var(--ease);
   /* fonts */
   --fdisp:'Bricolage Grotesque',system-ui,sans-serif;
