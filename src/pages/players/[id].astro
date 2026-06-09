@@ -18,6 +18,7 @@ const rec = [['team_wins_2025_26', 'Won'], ['team_draws_2025_26', 'Drew'], ['tea
 const career = [['career_club_apps', 'Career apps'], ['career_club_goals', 'Career goals']].map(([k, l]) => stat(k, l)).filter(Boolean);
 const hasStory = !!(p.backstory || (p.facts && p.facts.length) || srcs.length);
 const STATS = [['Rating', rating(p), true], p.caps != null && ['Caps', num(p.caps)], p.international_goals != null && ['Goals', num(p.international_goals)], p.market_value_eur && ['Value', money(p.market_value_eur)], p.age && ['Age', p.age], p.height_cm && ['Height', p.height_cm]].filter(Boolean);
+const role = p.position_detail || posDetail(p);  // structural first, curated fallback
 const desc = `${p.player_name} — ${p.team_name} (${p.position}) at the 2026 FIFA World Cup. ${p.club}${p.caps ? `, ${p.caps} caps` : ''}${p.international_goals ? `, ${p.international_goals} goals` : ''}. 2025/26 club stats and profile.`;
 const jsonld = {
   '@context': 'https://schema.org', '@type': 'Person', name: p.player_name,
@@ -35,7 +36,7 @@ const jsonld = {
       <h1>{p.player_name}{p.is_captain ? ' (C)' : ''}</h1>
       <span class="tv2-sub">
         <a class="dh-glink" href={`${B}clubs/${slugify(p.club)}/`}>{p.club || '—'}</a> ·
-        <span class={`pill ${p.position}`}>{p.position}</span>{posDetail(p) && <span class="role-tag">{posDetail(p)}</span>} #{p.shirt_number ?? '–'} ·
+        <span class={`pill ${p.position}`}>{p.position}</span>{role && <span class="role-tag">{role}</span>} #{p.shirt_number ?? '–'} ·
         <a class="dh-glink" href={`${B}teams/${p.fifa_code.toLowerCase()}/`}>{p.team_name}</a> · Group {p.group_letter}
       </span>
     </div>
@@ -76,7 +77,7 @@ const jsonld = {
           <span class="k">Nationality</span><span><a class="dh-glink" href={`${B}teams/${p.fifa_code.toLowerCase()}/`}>{p.team_name}</a></span>
           <span class="k">Club</span><span>{p.club || '—'}{p.club_country ? ' · ' + p.club_country : ''}</span>
           <span class="k">League</span><span>{p.club_league || '—'}</span>
-          <span class="k">Position</span><span><span class={`pill ${p.position}`}>{p.position}</span>{posDetail(p) && <> · {POSD_NAME[posDetail(p)]}</>} · #{p.shirt_number ?? '–'}</span>
+          <span class="k">Position</span><span><span class={`pill ${p.position}`}>{p.position}</span>{role && <> · {POSD_NAME[role]}</>} · #{p.shirt_number ?? '–'}</span>
           <span class="k">Height</span><span>{p.height_cm ? p.height_cm + ' cm' : '—'}</span>
           <span class="k">Preferred foot</span><span>{p.preferred_foot || '—'}</span>
           <span class="k">Market value</span><span class="mono">{p.market_value_eur ? money(p.market_value_eur) : '—'}</span>

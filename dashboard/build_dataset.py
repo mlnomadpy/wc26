@@ -16,7 +16,7 @@ START = date(2026, 6, 11)
 # (column, sqlite type). int=>INTEGER, else TEXT
 PLAYER_SCHEMA = [
     ("player_id","int"),("team_id","int"),("fifa_code","t"),("team_name","t"),("group_letter","t"),
-    ("confederation","t"),("shirt_number","int"),("position","t"),("player_name","t"),
+    ("confederation","t"),("shirt_number","int"),("position","t"),("position_detail","t"),("player_name","t"),
     ("date_of_birth","t"),("age","int"),("caps","int"),("international_goals","int"),("is_captain","t"),
     ("club","t"),("club_country","t"),("club_league","t"),("height_cm","int"),("preferred_foot","t"),
     ("market_value_eur","int"),("club_apps_2025_26","int"),("club_starts_2025_26","int"),
