@@ -142,14 +142,27 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
     const setTheme = t => { document.documentElement.dataset.theme = t; localStorage.setItem('wc-theme', t); const b = document.getElementById('themeb'); if (b) b.innerHTML = t === 'light' ? MOON : SUN; };
     setTheme(localStorage.getItem('wc-theme') || 'dark');
     document.getElementById('themeb').addEventListener('click', () => setTheme((localStorage.getItem('wc-theme') || 'dark') === 'dark' ? 'light' : 'dark'));
-    // command palette (lazy index)
+    // command palette (lazy index) + actions
     let IDX = null, sel = 0;
     const pal = document.getElementById('palette'), q = document.getElementById('palq'), res = document.getElementById('palres');
+    const ACTIONS = [
+      { n: 'Footle — daily puzzle', d: 'Play', t: 'Play', k: '⚡', u: 'footle/', s: 'footle daily puzzle play game guess' },
+      { n: 'Build your XI', d: 'Play', t: 'Play', k: '⚽', u: 'xi/', s: 'build your xi dream team play game squad' },
+      { n: 'Predict the bracket', d: 'Play', t: 'Play', k: '🏆', u: 'predict/', s: 'predict bracket play game knockout champion' },
+      { n: 'Higher or Lower', d: 'Play', t: 'Play', k: '📈', u: 'hilo/', s: 'higher or lower play game streak' },
+      { n: 'Compare head-to-head', d: 'Tool', t: 'Play', k: '⚔', u: 'compare/', s: 'compare head to head radar versus' },
+      { n: 'Surprise me — random player', d: 'Action', t: 'Play', k: '🎲', u: '__random__', s: 'surprise me random player shuffle lucky' },
+    ];
     async function ensure() { if (!IDX) { try { IDX = await (await fetch(B + 'search.json')).json(); } catch (e) { IDX = []; } } }
     function draw() {
       const t = q.value.toLowerCase().trim();
+      const acts = (t ? ACTIONS.filter(a => a.s.includes(t)) : ACTIONS).map(a => {
+        if (a.u !== '__random__') return a;
+        const pls = IDX.filter(x => x.t === 'Player'); const rp = pls[Math.floor(Math.random() * pls.length)];
+        return { ...a, u: rp ? rp.u : 'players/' };
+      });
       let r = t ? IDX.filter(x => x.s.includes(t)) : IDX.filter(x => x.t === 'Page' || x.t === 'Team');
-      r = r.slice(0, 40); sel = 0;
+      r = [...acts, ...r].slice(0, 40); sel = 0;
       res.innerHTML = r.map((x, i) => `<a class="palrow ${i === 0 ? 'sel' : ''}" href="${B}${x.u}"><span class="palk">${x.k || x.t[0]}</span><span class="pall">${x.n}</span><span class="palsub faint">${x.d || ''}</span><span class="palt faint">${x.t}</span></a>`).join('') || '<div class="palrow faint">No matches.</div>';
     }
     async function open() { await ensure(); pal.classList.add('show'); q.value = ''; draw(); q.focus(); }
