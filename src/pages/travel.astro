@@ -1,0 +1,130 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../public/data.json';
+import { flagImg, CONF } from '@shared/lib/wc.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+
+const cityById = {}; DB.cities.forEach(c => cityById[c.id] = c);
+const teamByCode = {}; DB.teams.forEach(t => teamByCode[t.fifa_code] = t);
+function hav(a, b) {
+  const R = 6371, toR = x => x * Math.PI / 180;
+  const dLat = toR(b[0] - a[0]), dLng = toR(b[1] - a[1]);
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(toR(a[0])) * Math.cos(toR(b[0])) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+// each team's group-stage journey, in date order
+const stopsByTeam = {};
+DB.matches.filter(m => m.match_label && m.match_label.startsWith('Group'))
+  .forEach(m => {
+    const c = cityById[m.city_id]; if (!c || c.lat == null) return;
+    [[m.home_code, m.away_code], [m.away_code, m.home_code]].forEach(([code, opp]) => {
+      if (!teamByCode[code]) return;
+      (stopsByTeam[code] = stopsByTeam[code] || []).push({
+        city: c.city_name, lat: c.lat, lng: c.lng, kick: m.kickoff_at,
+        date: (m.kickoff_at || '').slice(0, 10), opp, grp: m.match_label,
+      });
+    });
+  });
+const TEAMS = DB.teams.map(t => {
+  const stops = (stopsByTeam[t.fifa_code] || []).sort((a, b) => new Date(a.kick) - new Date(b.kick));
+  let km = 0; for (let i = 1; i < stops.length; i++) km += hav([stops[i - 1].lat, stops[i - 1].lng], [stops[i].lat, stops[i].lng]);
+  return { c: t.fifa_code, name: t.team_name, conf: t.confederation, flag: flagImg(t.fifa_code, 40), km: Math.round(km), stops };
+}).filter(t => t.stops.length).sort((a, b) => b.km - a.km);
+const maxKm = TEAMS[0].km;
+const most = TEAMS[0], least = TEAMS[TEAMS.length - 1];
+const avg = Math.round(TEAMS.reduce((s, t) => s + t.km, 0) / TEAMS.length);
+const PAYLOAD = { teams: TEAMS, conf: CONF };
+---
+<Base title="Travel Map — how far every team flies at the 2026 World Cup" description="The 2026 World Cup spans three nations and a continent. See how far each team travels in the group stage — from Bosnia's 5,000 km to Egypt's 400.">
+  <div class="app-page tr-page">
+    <header class="phead tr-head">
+      <div>
+        <div class="pe">The continental cup</div>
+        <h1>Travel Map</h1>
+        <p class="psub">Three nations, one continent. How far each squad flies between its three group-stage venues.</p>
+      </div>
+      <div class="pstat">
+        <div class="s"><b>{most.km.toLocaleString()}</b><span>{most.c} — most km</span></div>
+        <div class="s"><b>{avg.toLocaleString()}</b><span>Average</span></div>
+        <div class="s"><b>{least.km.toLocaleString()}</b><span>{least.c} — least</span></div>
+      </div>
+    </header>
+    <div class="app-grow tr-main">
+      <div class="panel tr-list scroll" id="trList">
+        {TEAMS.map((t, i) => (
+          <button class="tr-row" data-c={t.c} style={`--cc:${CONF[t.conf] || '#6b7a90'}`}>
+            <span class="tr-rank">{i + 1}</span>
+            <img class="tr-flag" src={t.flag} alt="" loading="lazy" />
+            <span class="tr-id"><b>{t.c}</b><span class="tr-bar"><i style={`width:${Math.round(t.km / maxKm * 100)}%`}></i></span></span>
+            <span class="tr-km">{t.km.toLocaleString()}<i>km</i></span>
+          </button>
+        ))}
+      </div>
+      <div class="panel tr-stage">
+        <canvas id="trCanvas" class="tr-canvas"></canvas>
+        <div class="tr-cap" id="trCap"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="trData" set:html={JSON.stringify(PAYLOAD)}></script>
+  <script define:vars={{ B }}>
+    const D = JSON.parse(document.getElementById('trData').textContent);
+    const cv = document.getElementById('trCanvas'), ctx = cv.getContext('2d'), cap = document.getElementById('trCap');
+    const DPR = Math.min(2, window.devicePixelRatio || 1);
+    const NA = [[60,-141],[54,-130],[48.4,-124.7],[40,-124.3],[34,-120.5],[30,-116],[23,-110],[20,-105.5],[16,-96],[15.5,-92.5],[18,-94.5],[21,-97],[26,-97.3],[29.2,-94.8],[30,-89],[29.5,-84],[25,-81],[27,-80],[31,-81.2],[35,-76],[38.9,-74],[41.5,-70],[44.5,-67],[47,-65],[48.5,-64],[52,-55.5],[57,-61],[60,-64],[63,-77.5],[58,-94],[69,-95],[70,-128],[69.5,-141]];
+    const LAT = [60, 13], LNG = [-128, -64];
+    const M = { l: 16, r: 16, t: 14, b: 14 };
+    let W = 0, H = 0, sel = D.teams[0], t = 0;
+    const px = lng => M.l + (lng - LNG[0]) / (LNG[1] - LNG[0]) * (W - M.l - M.r);
+    const py = lat => M.t + (LAT[0] - lat) / (LAT[0] - LAT[1]) * (H - M.t - M.b);
+
+    function resize() { const s = cv.parentElement; W = s.clientWidth; H = s.clientHeight; cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px'; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
+    function arc(x0, y0, x1, y1, lift) { const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy) || 1; const cx = mx - dy / len * lift, cy = my + dx / len * lift; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(cx, cy, x1, y1); ctx.stroke(); return [cx, cy]; }
+
+    function frame() {
+      t += 0.016; ctx.clearRect(0, 0, W, H);
+      ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(90,162,255,.06)';
+      for (let lng = -120; lng <= -60; lng += 15) { ctx.beginPath(); ctx.moveTo(px(lng), py(LAT[0])); ctx.lineTo(px(lng), py(LAT[1])); ctx.stroke(); }
+      for (let lat = 20; lat <= 60; lat += 10) { ctx.beginPath(); ctx.moveTo(px(LNG[0]), py(lat)); ctx.lineTo(px(LNG[1]), py(lat)); ctx.stroke(); }
+      ctx.beginPath(); NA.forEach((p, i) => { const x = px(p[1]), y = py(p[0]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.closePath();
+      ctx.fillStyle = 'rgba(30,72,128,.16)'; ctx.fill();
+      ctx.lineWidth = 1.3; ctx.strokeStyle = 'rgba(88,221,255,.34)'; ctx.shadowColor = '#58ddff'; ctx.shadowBlur = 8; ctx.stroke(); ctx.shadowBlur = 0;
+      const s = sel.stops;
+      // journey arcs
+      for (let i = 1; i < s.length; i++) {
+        const x0 = px(s[i - 1].lng), y0 = py(s[i - 1].lat), x1 = px(s[i].lng), y1 = py(s[i].lat);
+        const lift = Math.min(70, Math.hypot(x1 - x0, y1 - y0) * 0.22);
+        ctx.lineWidth = 2.4; ctx.strokeStyle = 'rgba(255,180,84,.85)'; ctx.shadowColor = '#ffb454'; ctx.shadowBlur = 8;
+        arc(x0, y0, x1, y1, lift); ctx.shadowBlur = 0;
+        // travelling pulse
+        const tt = (t * 0.4 + i) % 1, mx = (x0 + x1) / 2, my = (y0 + y1) / 2, dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy) || 1, cx = mx - dy / len * lift, cy = my + dx / len * lift;
+        const bx = (1 - tt) ** 2 * x0 + 2 * (1 - tt) * tt * cx + tt * tt * x1, by = (1 - tt) ** 2 * y0 + 2 * (1 - tt) * tt * cy + tt * tt * y1;
+        ctx.fillStyle = '#ffe1a8'; ctx.beginPath(); ctx.arc(bx, by, 2.2, 0, 7); ctx.fill();
+      }
+      // stop nodes (numbered)
+      s.forEach((st, i) => {
+        const x = px(st.lng), y = py(st.lat);
+        ctx.fillStyle = '#ffb454'; ctx.shadowColor = '#ffb454'; ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+        ctx.fillStyle = '#1a1300'; ctx.font = '700 10px Inter, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(i + 1, x, y + 0.5);
+        ctx.fillStyle = '#eaf4ff'; ctx.font = '600 10.5px Inter, system-ui, sans-serif'; ctx.textBaseline = 'middle';
+        ctx.textAlign = x > W - 110 ? 'end' : 'start';
+        ctx.fillText(st.city + ' · vs ' + st.opp, x + (x > W - 110 ? -11 : 11), y);
+      });
+      requestAnimationFrame(frame);
+    }
+
+    function select(c) {
+      sel = D.teams.find(x => x.c === c) || D.teams[0];
+      document.querySelectorAll('.tr-row').forEach(b => b.classList.toggle('on', b.dataset.c === sel.c));
+      cap.innerHTML = `<img src="${sel.flag}" alt=""/> <b>${sel.name}</b> — ${sel.km.toLocaleString()} km across ${sel.stops.length} venues`;
+      const btn = [...document.querySelectorAll('.tr-row')].find(b => b.dataset.c === c);
+      if (btn) btn.scrollIntoView({ block: 'nearest' });
+    }
+    document.getElementById('trList').addEventListener('click', e => { const b = e.target.closest('.tr-row'); if (b) select(b.dataset.c); });
+    window.addEventListener('resize', resize);
+    resize(); select(D.teams[0].c); frame();
+  </script>
+</Base>
