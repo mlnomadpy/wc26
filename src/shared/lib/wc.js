@@ -33,6 +33,35 @@ export const groupColor = L => `hsl(${(L.charCodeAt(0)-65)*30},44%,30%)`;
 // by the teams directory and group pages so a team rates the same everywhere.
 export const teamRating = (rank) => rank ? Math.max(58, Math.min(95, Math.round(95 - 13 * Math.log10(rank)))) : null;
 
+/* AI score model — Poisson expected-goals from the two team strength ratings
+   (the same teamRating used across groups/bracket, so predictions stay consistent).
+   Returns expected goals (la/lb), the most-likely exact scoreline (ha/aa), and
+   win / draw / loss probabilities. Pure + deterministic. */
+const _fact = n => { let f = 1; for (let i = 2; i <= n; i++) f *= i; return f; };
+const _pois = (k, l) => Math.exp(-l) * Math.pow(l, k) / _fact(k);
+export function predictMatch(rA, rB) {
+  const BASE = 1.32;                                  // avg goals per side at a WC
+  const d = ((rA ?? 60) - (rB ?? 60)) / 14;
+  const la = Math.max(0.25, Math.min(4.4, BASE * Math.exp(d * 0.42)));
+  const lb = Math.max(0.25, Math.min(4.4, BASE * Math.exp(-d * 0.42)));
+  const N = 9; let pH = 0, pD = 0, pA = 0;
+  const grid = [];
+  for (let i = 0; i <= N; i++) for (let j = 0; j <= N; j++) {
+    const p = _pois(i, la) * _pois(j, lb);
+    grid.push({ p, i, j });
+    if (i > j) pH += p; else if (i === j) pD += p; else pA += p;
+  }
+  // headline scoreline = most-likely score WITHIN the most-likely result, so the
+  // predicted score never contradicts the favourite (no "favoured team drawn").
+  const outcome = pH >= pD && pH >= pA ? 'H' : pA >= pD && pA >= pH ? 'A' : 'D';
+  const oOf = g => g.i > g.j ? 'H' : g.i < g.j ? 'A' : 'D';
+  let best = { p: -1, i: 1, j: 1 };
+  for (const g of grid) if (oOf(g) === outcome && g.p > best.p) best = g;
+  const r = x => Math.round(x * 100);
+  return { la, lb, ha: best.i, aa: best.j, xgA: +la.toFixed(1), xgB: +lb.toFixed(1),
+           pH: r(pH), pD: r(pD), pA: r(pA), top: r(best.p) };
+}
+
 export function strength(p){
   let s=0;
   if(Number.isFinite(p.club_minutes_2025_26)) s+=p.club_minutes_2025_26/90;

@@ -330,7 +330,7 @@ for p in players:
 for c in cities:
     search.append({"n": c["city_name"], "d": c["venue_name"], "t": "City", "u": "map/", "s": c["city_name"].lower()})
 for nm, u in [("Home", ""), ("Teams", "teams/"), ("Players", "players/"), ("Clubs", "clubs/"),
-              ("Groups", "groups/"), ("Bracket", "bracket/"), ("Matches", "matches/"), ("Map", "map/"),
+              ("Groups", "groups/"), ("Bracket", "bracket/"), ("Predictions", "predictions/"), ("Matches", "matches/"), ("Map", "map/"),
               ("Compare", "compare/"), ("Insights", "insights/"), ("Data", "data/")]:
     search.append({"n": nm, "d": "", "t": "Page", "k": "→", "u": u, "s": nm.lower()})
 with open(os.path.join(os.path.dirname(OUT), "search.json"), "w", encoding="utf-8") as f:

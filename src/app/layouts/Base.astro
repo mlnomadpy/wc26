@@ -14,7 +14,7 @@ const {
   ogImage = B + 'og.png',
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, SITE).href;
-const NAV = [['', 'Home'], ['footle/', 'Footle'], ['teams/', 'Teams'], ['players/', 'Players'], ['clubs/', 'Clubs'], ['groups/', 'Groups'], ['bracket/', 'Bracket'], ['matches/', 'Matches'], ['map/', 'Map'], ['compare/', 'Compare'], ['insights/', 'Insights'], ['data/', 'Data']];
+const NAV = [['', 'Home'], ['footle/', 'Footle'], ['teams/', 'Teams'], ['players/', 'Players'], ['clubs/', 'Clubs'], ['groups/', 'Groups'], ['bracket/', 'Bracket'], ['predictions/', 'Predictions'], ['matches/', 'Matches'], ['map/', 'Map'], ['compare/', 'Compare'], ['insights/', 'Insights'], ['data/', 'Data']];
 const here = Astro.url.pathname.replace(/\/$/, '') + '/';
 const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p === '' ? here === B : here.startsWith(full); };
 ---
@@ -158,6 +158,7 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
       { n: 'The Spread', d: 'Explore', t: 'Play', k: '📊', u: 'spread/', s: 'the spread scatter age rating wonderkids veterans visualization plot' },
       { n: 'The Diaspora', d: 'Explore', t: 'Play', k: '🗺️', u: 'diaspora/', s: 'the diaspora world map arcs where players play abroad visualization globe' },
       { n: 'Travel Map', d: 'Explore', t: 'Play', k: '✈️', u: 'travel/', s: 'travel map distance how far teams fly group stage venues continental visualization' },
+      { n: 'AI Predictions', d: 'Explore', t: 'Play', k: '🔮', u: 'predictions/', s: 'ai predictions score prediction every match group stage who will win forecast odds' },
       { n: 'Compare head-to-head', d: 'Tool', t: 'Play', k: '⚔', u: 'compare/', s: 'compare head to head radar versus' },
       { n: 'Surprise me — random player', d: 'Action', t: 'Play', k: '🎲', u: '__random__', s: 'surprise me random player shuffle lucky' },
     ];

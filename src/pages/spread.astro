@@ -1,11 +1,11 @@
 ---
 import Base from '@app/layouts/Base.astro';
 import DB from '../../public/data.json';
-import { rating, CONF, POSC, surname } from '@shared/lib/wc.js';
+import { rating, CONF, POSC, surname, posDetail } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const CONF_FULL = { UEFA: 'Europe', CONMEBOL: 'S. America', CONCACAF: 'N. America', CAF: 'Africa', AFC: 'Asia', OFC: 'Oceania' };
 const PLAYERS = DB.players.filter(p => p.age).map(p => ({
-  id: p.player_id, n: surname(p.player_name), pos: p.position, age: p.age, r: rating(p),
+  id: p.player_id, n: surname(p.player_name), pos: p.position, pd: p.position_detail || posDetail(p) || '', age: p.age, r: rating(p),
   conf: p.confederation, tn: p.team_name, club: p.club || '—',
 }));
 const CONFS = [...new Set(PLAYERS.map(p => p.conf))].sort((a, b) => (CONF_FULL[a] ? -1 : 1));
@@ -106,7 +106,7 @@ const PAYLOAD = { players: PLAYERS, pos: POSC, conf: CONF, confFull: CONF_FULL }
       const r = rect(); const p = pick(e.clientX - r.left, e.clientY - r.top);
       cv.style.cursor = p ? 'pointer' : 'default';
       if (p !== hover) { hover = p; draw(); }
-      if (p) { tip.hidden = false; tip.innerHTML = `<b>${p.n}</b><span>${p.tn} · ${p.club}</span><em>${p.pos} · age ${p.age} · ${p.r}</em>`; tip.style.left = (e.clientX - r.left) + 'px'; tip.style.top = (e.clientY - r.top) + 'px'; }
+      if (p) { tip.hidden = false; tip.innerHTML = `<b>${p.n}</b><span>${p.tn} · ${p.club}</span><em>${p.pd || p.pos} · age ${p.age} · ${p.r}</em>`; tip.style.left = (e.clientX - r.left) + 'px'; tip.style.top = (e.clientY - r.top) + 'px'; }
       else tip.hidden = true;
     });
     cv.addEventListener('mouseleave', () => { hover = null; tip.hidden = true; draw(); });

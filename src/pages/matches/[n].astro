@@ -2,7 +2,7 @@
 import Base from '@app/layouts/Base.astro';
 import Flag from '@shared/ui/Flag.astro';
 import DB from '../../../public/data.json';
-import { indexes, autoForm, pickXI, FORMATIONS, surname, num, money, avgAge, rating, teamRating } from '@shared/lib/wc.js';
+import { indexes, autoForm, pickXI, FORMATIONS, surname, num, money, avgAge, rating, teamRating, predictMatch } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const HOME = '#e9bb4c', AWAY = '#5b9cff';
 const IDX = indexes(DB);
@@ -54,21 +54,31 @@ const sH = ht && star(ht), sA = at && star(at);
 const tr = t => teamRating(t.fifa_ranking) ?? 60;
 let pred = null, fav = null;
 if (ht && at) {
-  const e = 1 / (1 + Math.pow(10, -(tr(ht) - tr(at)) / 11));   // home expected score
-  const pd = 0.32 * (1 - Math.abs(2 * e - 1));                 // draw likeliest when even
-  let ph = Math.max(0, e - pd / 2), pa = Math.max(0, (1 - e) - pd / 2);
-  const s = ph + pd + pa;
-  pred = { h: Math.round(ph / s * 100), d: Math.round(pd / s * 100), a: 0 };
-  pred.a = 100 - pred.h - pred.d;
+  const P = predictMatch(tr(ht), tr(at));
+  pred = { h: P.pH, d: P.pD, a: P.pA, ha: P.ha, aa: P.aa, xgA: P.xgA, xgB: P.xgB };
   fav = pred.h > pred.a && pred.h >= pred.d ? ht.team_name
       : pred.a > pred.h && pred.a >= pred.d ? at.team_name : null;
 }
 
 const lbl = (m.match_label || '').split(/\s+vs\s+/);
 const titleTeams = ht && at ? `${ht.team_name} vs ${at.team_name}` : m.match_label;
-const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.kickoff_at || '').slice(0, 10)}, ${m.venue}, ${m.city}. Projected lineups and head-to-head.`;
+const mdate = (m.kickoff_at || '').slice(0, 10);
+const predScore = pred ? `${pred.ha}–${pred.aa}` : null;
+const seoTitle = pred
+  ? `${ht.team_name} vs ${at.team_name} Prediction: ${predScore} — World Cup 2026`
+  : `${titleTeams} — 2026 World Cup ${m.stage} (Match ${m.match_number})`;
+const desc = pred
+  ? `AI prediction for ${ht.team_name} vs ${at.team_name} at the 2026 FIFA World Cup: predicted score ${ht.team_name} ${predScore} ${at.team_name}, ${fav ? fav + ' favoured' : 'too close to call'} — win ${pred.h}% · draw ${pred.d}% · win ${pred.a}%. Projected lineups, head-to-head & tale of the tape · ${m.venue}, ${m.city}, ${mdate}.`
+  : `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${mdate}, ${m.venue}, ${m.city}. Projected lineups and head-to-head.`;
+const jsonld = (ht && at) ? {
+  '@context': 'https://schema.org', '@type': 'SportsEvent',
+  name: `${ht.team_name} vs ${at.team_name}`, sport: 'Football', startDate: mdate,
+  location: { '@type': 'Place', name: m.venue, address: m.city },
+  competitor: [{ '@type': 'SportsTeam', name: ht.team_name }, { '@type': 'SportsTeam', name: at.team_name }],
+  description: desc,
+} : undefined;
 ---
-<Base title={`${titleTeams} — 2026 World Cup ${m.stage} (Match ${m.match_number})`} description={desc} ogImage={B + 'og/match/' + m.match_number + '.png'}>
+<Base title={seoTitle} description={desc} jsonld={jsonld} ogImage={B + 'og/match/' + m.match_number + '.png'}>
   <div class="app-page tv2">
   <a class="btn back" href={B + 'matches/'}>← Schedule</a>
 
@@ -81,7 +91,12 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
     </div>
     <div class="ms-vs">
       <div class="ms-stage">{m.stage}</div>
-      <div class="ms-vstxt">VS</div>
+      {pred ? (
+        <div class="ms-pred" title="AI predicted score">
+          <span class="ms-pred-lab">AI prediction</span>
+          <b class="ms-pred-score">{pred.ha} <i>–</i> {pred.aa}</b>
+        </div>
+      ) : <div class="ms-vstxt">VS</div>}
       {kick && <div class="ms-cd" id="mcd" data-kick={kick}>—</div>}
       <div class="ms-when">{m.venue} · {m.city}{city?.capacity ? ` · ${(city.capacity / 1000).toFixed(0)}k seats` : ''}{city?.altitude_m >= 1000 ? ` · ◆ ${(city.altitude_m / 1000).toFixed(1)}km` : ''}</div>
       <div class="ms-when ms-date">{(m.kickoff_at || '').slice(0, 10)}</div>
@@ -115,13 +130,19 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
       <!-- RIGHT — tabbed: Prediction / Tale of the tape / Key man -->
       <section class="panel tv2-right">
         <div class="rtabs" id="mtabs">
-          <button class="rtab on" data-r="pred">Prediction</button>
+          <button class="rtab on" data-r="pred">AI Prediction</button>
           <button class="rtab" data-r="tape">Tale of the tape</button>
           <button class="rtab" data-r="duel">Key man</button>
         </div>
 
         <div class="rpane" data-r="pred">
           {pred && <>
+            <div class="pred-score">
+              <span class="pred-st"><span class="dotg" style={`background:${HOME}`}></span> {ht.team_name}</span>
+              <b class="pred-sc">{pred.ha}<i>–</i>{pred.aa}</b>
+              <span class="pred-st">{at.team_name} <span class="dotb" style={`background:${AWAY}`}></span></span>
+            </div>
+            <div class="pred-xg">Expected goals <b>{pred.xgA}</b> – <b>{pred.xgB}</b> · projected scoreline</div>
             <div class="pred-bar">
               {pred.h > 0 && <div class="pred-seg pred-h" style={`width:${pred.h}%`}>{pred.h}%</div>}
               {pred.d > 0 && <div class="pred-seg pred-d" style={`width:${pred.d}%`}>{pred.d}%</div>}
@@ -132,7 +153,7 @@ const desc = `${m.stage} · ${titleTeams} at the 2026 FIFA World Cup — ${(m.ki
               <span>Draw</span>
               <span>{at.team_name} win <span class="dotb" style={`background:${AWAY}`}></span></span>
             </div>
-            <div class="pred-call faint">{fav ? `${fav} favoured` : 'Too close to call — a coin-flip'} · {Math.abs(tr(ht) - tr(at)) <= 2 ? 'even matchup' : 'clear rating edge'}. Projected from squad strength.</div>
+            <div class="pred-call faint">{fav ? `${fav} favoured` : 'Too close to call — a coin-flip'} · {Math.abs(tr(ht) - tr(at)) <= 2 ? 'even matchup' : 'clear rating edge'}. AI model — Poisson expected-goals from team strength ratings.</div>
           </>}
         </div>
 

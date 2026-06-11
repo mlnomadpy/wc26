@@ -2,8 +2,11 @@
 import Base from '@app/layouts/Base.astro';
 import Flag from '@shared/ui/Flag.astro';
 import DB from '../../../public/data.json';
+import { teamRating, predictMatch } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const matches = [...DB.matches].sort((a, b) => (a.kickoff_at || '').localeCompare(b.kickoff_at || ''));
+const rOf = {}; DB.teams.forEach(t => rOf[t.fifa_code] = teamRating(t.fifa_ranking) || 60);
+const predOf = m => (m.home_code && m.away_code) ? predictMatch(rOf[m.home_code], rOf[m.away_code]) : null;
 const stages = [...new Set(DB.matches.map(m => m.stage))];
 ---
 <Base title="Match schedule — all 104 fixtures of the 2026 FIFA World Cup" description="The complete 2026 FIFA World Cup schedule: all 104 matches with kickoff times, venues and host cities. Open a match for projected head-to-head lineups.">
@@ -23,9 +26,9 @@ const stages = [...new Set(DB.matches.map(m => m.stage))];
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>#</th><th>Kickoff</th><th>Stage</th><th>Match</th><th>Venue</th></tr></thead>
+        <thead><tr><th>#</th><th>Kickoff</th><th>Stage</th><th>Match</th><th class="mp-pcol">AI score</th><th>Venue</th></tr></thead>
         <tbody id="mb">
-          {matches.map(m => (
+          {matches.map(m => { const pr = predOf(m); return (
             <tr data-stage={m.stage} onclick={`location.href='${B}matches/${m.match_number}/'`}>
               <td class="mono">{m.match_number}</td>
               <td class="faint mono">{(m.kickoff_at || '').replace('T', ' ').slice(0, 16)}</td>
@@ -33,9 +36,10 @@ const stages = [...new Set(DB.matches.map(m => m.stage))];
               <td>{m.home_code
                 ? <span class="nat"><Flag code={m.home_code} cls="sm" /> {m.home_team} <span class="faint">v</span> <Flag code={m.away_code} cls="sm" /> {m.away_team}</span>
                 : <span class="faint">{m.match_label}</span>}</td>
+              <td class="mp-pcol">{pr ? <span class="mp-pscore">{pr.ha}<i>–</i>{pr.aa}</span> : <span class="faint">—</span>}</td>
               <td class="faint">{m.venue}, {(m.city || '').split('/')[0]}</td>
             </tr>
-          ))}
+          ); })}
         </tbody>
       </table>
     </div>

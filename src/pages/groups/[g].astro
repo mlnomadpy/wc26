@@ -2,7 +2,7 @@
 import Base from '@app/layouts/Base.astro';
 import Flag from '@shared/ui/Flag.astro';
 import DB from '../../../public/data.json';
-import { CONF, teamRating, indexes, rating } from '@shared/lib/wc.js';
+import { CONF, teamRating, indexes, rating, predictMatch } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 
 export function getStaticPaths() {
@@ -42,6 +42,8 @@ const gs = [...new Set(DB.teams.map(t => t.group_letter))].sort();
 const liveRows = (DB.standings && DB.standings[g] && DB.standings[g].length) ? DB.standings[g] : null;
 const byCode = {}; teams.forEach(t => (byCode[t.fifa_code] = t));
 const hasScore = (m) => m.home_score != null && m.away_score != null;
+const rOf = {}; teams.forEach(t => (rOf[t.fifa_code] = t.rating));
+const predOf = m => (rOf[m.home_code] != null && rOf[m.away_code] != null) ? predictMatch(rOf[m.home_code], rOf[m.away_code]) : null;
 ---
 <Base title={`Group ${g} — projected standings · FIFA World Cup 2026`} description={`Group ${g} at the 2026 FIFA World Cup: the four teams, their projected finishing order and qualification outlook, plus all six group fixtures.`}>
   <div class="app-page">
@@ -127,17 +129,19 @@ const hasScore = (m) => m.home_score != null && m.away_score != null;
       <section class="panel">
         <h3><span class="tag">Fixtures</span></h3>
         <div class="fxlist">
-          {fixtures.map(m => (
+          {fixtures.map(m => { const pr = predOf(m); return (
             <a class="fxrow" href={`${B}matches/${m.match_number}/`}>
               <span class="fx-day mono">{fmtDay(m.kickoff_at)}</span>
               <span class="fx-match">
                 <span class="fx-side fx-home"><b>{m.home_team}</b> <Flag code={m.home_code} cls="sm" /></span>
-                <span class={`fx-vs mono ${hasScore(m) ? 'fx-score' : ''}`}>{hasScore(m) ? `${m.home_score}–${m.away_score}` : 'vs'}</span>
+                {hasScore(m)
+                  ? <span class="fx-vs mono fx-score">{m.home_score}–{m.away_score}</span>
+                  : <span class="fx-vs fx-pred" title="AI predicted score">{pr ? `${pr.ha}–${pr.aa}` : 'vs'}</span>}
                 <span class="fx-side fx-away"><Flag code={m.away_code} cls="sm" /> <b>{m.away_team}</b></span>
               </span>
               <span class="fx-city faint">{m.city}</span>
             </a>
-          ))}
+          ); })}
         </div>
       </section>
     </div>
