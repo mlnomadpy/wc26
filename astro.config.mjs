@@ -17,7 +17,7 @@ export default defineConfig({
   // other locales serve under /<lang>/. hreflang is emitted from Base.astro.
   i18n: {
     defaultLocale: 'en',
-    locales: ['en', 'es'],
+    locales: ['en', 'es', 'pt', 'fr', 'de', 'it'],
     routing: { prefixDefaultLocale: false },
   },
   integrations: [sitemap()],
