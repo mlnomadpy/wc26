@@ -1,7 +1,7 @@
 ---
 import MatchPage from '@widgets/MatchPage.astro';
-import DB from '../../../public/data.json';
+import DB from '../../../../public/data.json';
 export function getStaticPaths() { return DB.matches.map(m => ({ params: { n: String(m.match_number) } })); }
 const { n } = Astro.params;
 ---
-<MatchPage lang="en" n={n} />
+<MatchPage lang="de" n={n} />

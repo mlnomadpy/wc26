@@ -1,0 +1,212 @@
+---
+import Base from '@app/layouts/Base.astro';
+import Flag from '@shared/ui/Flag.astro';
+import DB from '../../public/data.json';
+import { indexes, autoForm, pickXI, FORMATIONS, surname, num, money, avgAge, rating, teamRating, predictMatch, explainMatch } from '@shared/lib/wc.js';
+import { t, teamName, explainPack } from '@shared/lib/i18n.js';
+const { lang = 'en', n } = Astro.props;
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const HOME = '#e9bb4c', AWAY = '#5b9cff';
+const IDX = indexes(DB);
+const L = explainPack(lang);
+const nm = team => teamName(team, lang);
+
+const m = DB.matches.find(x => String(x.match_number) === String(n));
+const ht = m.home_code ? IDX.teamByCode[m.home_code] : null;
+const at = m.away_code ? IDX.teamByCode[m.away_code] : null;
+const city = m.city_id ? DB.cities.find(c => c.id === m.city_id) : null;
+const pedigree = tm => !tm ? '' : tm.is_debut ? t(lang, 'm.ped.debut') : tm.titles > 0 ? t(lang, 'm.ped.champ', { n: tm.titles, s: tm.titles > 1 ? 's' : '' }) : tm.best_finish ? t(lang, 'm.ped.best', { finish: tm.best_finish }) : '';
+const sum = (tm, k) => (IDX.playersByTeam[tm.fifa_code] || []).reduce((s, p) => s + (p[k] || 0), 0);
+const aa = tm => avgAge(IDX.playersByTeam[tm.fifa_code] || []) || 0;
+const kick = (m.kickoff_at || '').replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00');
+
+let tokens = [], hf2 = '', af2 = '';
+if (ht && at) {
+  const hsq = IDX.playersByTeam[ht.fifa_code], asq = IDX.playersByTeam[at.fifa_code];
+  const hf = autoForm(hsq), af = autoForm(asq); hf2 = hf; af2 = af;
+  const hx = pickXI(hsq, hf), ax = pickXI(asq, af);
+  const hById = {}; hsq.forEach(p => hById[p.player_id] = p);
+  const aById = {}; asq.forEach(p => aById[p.player_id] = p);
+  const mk = (xi, form, byId, bottom, col) => xi.map((id, i) => {
+    const p = id ? byId[id] : null, [, x, y] = FORMATIONS[form][i];
+    return { x: bottom ? x : 100 - x, y: bottom ? 50 + (y / 100) * 47 : 50 - (y / 100) * 47, n: p ? (p.shirt_number ?? '') : '', nm: p ? surname(p.player_name) : '', id, col };
+  });
+  tokens = [...mk(ax, af, aById, false, AWAY), ...mk(hx, hf, hById, true, HOME)];
+}
+
+const metric = (label, a, b, fmt, better) => {
+  const tot = (a + b) || 1;
+  let shareA = better === 'low' ? b / tot * 100 : better === null ? 50 : a / tot * 100;
+  const win = better === null ? '' : better === 'low' ? (a < b ? 'A' : a > b ? 'B' : '') : (a > b ? 'A' : a < b ? 'B' : '');
+  return { label, fa: fmt(a), fb: fmt(b), shareA, win };
+};
+const tape = (ht && at) ? [
+  metric(t(lang, 'm.tape.attack'), ht.attack || 70, at.attack || 70, x => Math.round(x), 'high'),
+  metric(t(lang, 'm.tape.defence'), ht.defense || 70, at.defense || 70, x => Math.round(x), 'high'),
+  metric(t(lang, 'm.tape.fifa'), ht.fifa_ranking || 999, at.fifa_ranking || 999, x => x >= 999 ? '—' : '#' + x, 'low'),
+  metric(t(lang, 'm.tape.value'), sum(ht, 'market_value_eur'), sum(at, 'market_value_eur'), x => x ? money(x) : '—', 'high'),
+  metric(t(lang, 'm.tape.caps'), sum(ht, 'caps'), sum(at, 'caps'), num, 'high'),
+  metric(t(lang, 'm.tape.goals'), sum(ht, 'international_goals'), sum(at, 'international_goals'), num, 'high'),
+  metric(t(lang, 'm.tape.age'), aa(ht), aa(at), x => x ? x.toFixed(1) : '—', null),
+] : [];
+const star = tm => [...(IDX.playersByTeam[tm.fifa_code] || [])].sort((a, b) => rating(b) - rating(a))[0];
+const sH = ht && star(ht), sA = at && star(at);
+
+const tr = tm => teamRating(tm.fifa_ranking) ?? 60;
+let pred = null, favTeam = null;
+if (ht && at) {
+  const P = predictMatch(ht, at);
+  pred = { h: P.pH, d: P.pD, a: P.pA, ha: P.ha, aa: P.aa, xgA: P.xgA, xgB: P.xgB, why: explainMatch(ht, at, P, { name: nm, L }) };
+  favTeam = pred.h > pred.a && pred.h >= pred.d ? ht : pred.a > pred.h && pred.a >= pred.d ? at : null;
+}
+const favnote = pred ? (favTeam ? t(lang, 'm.favoured', { team: nm(favTeam) }) : t(lang, 'm.coin')) : '';
+const edge = (ht && at) ? (Math.abs(tr(ht) - tr(at)) <= 2 ? t(lang, 'm.even') : t(lang, 'm.edge')) : '';
+
+const lbl = (m.match_label || '').split(/\s+vs\s+/);
+const mdate = (m.kickoff_at || '').slice(0, 10);
+const predScore = pred ? `${pred.ha}–${pred.aa}` : null;
+const seoTitle = pred ? t(lang, 'm.title', { a: nm(ht), b: nm(at), score: predScore })
+                      : `${m.match_label} — World Cup 2026 (${m.stage})`;
+const desc = pred
+  ? t(lang, 'm.desc', { a: nm(ht), b: nm(at), score: predScore, favnote, h: pred.h, d: pred.d, ag: pred.a, why: pred.why, venue: m.venue, city: m.city, date: mdate })
+  : `${m.match_label} · ${m.stage} · 2026 FIFA World Cup — ${m.venue}, ${m.city}, ${mdate}.`;
+const jsonld = (ht && at) ? {
+  '@context': 'https://schema.org', '@type': 'SportsEvent',
+  name: `${nm(ht)} vs ${nm(at)}`, sport: 'Football', startDate: mdate,
+  location: { '@type': 'Place', name: m.venue, address: m.city },
+  competitor: [{ '@type': 'SportsTeam', name: nm(ht) }, { '@type': 'SportsTeam', name: nm(at) }],
+  description: desc,
+} : undefined;
+---
+<Base title={seoTitle} description={desc} jsonld={jsonld} ogImage={B + 'og/match/' + m.match_number + '.png'} lang={lang} i18n={{ path: 'matches/' + m.match_number + '/', locales: ['en', 'es', 'pt', 'fr', 'de', 'it'] }}>
+  <div class="app-page tv2">
+  <a class="btn back" href={B + 'matches/'}>← {t(lang, 'm.back')}</a>
+
+  <section class="mscore2">
+    <div class="ms-team">
+      {ht ? <Flag code={ht.fifa_code} cls="lg" /> : <div class="ms-slot">{lbl[0]}</div>}
+      <div class="ms-name">{ht ? nm(ht) : t(lang, 'm.tbd')}</div>
+      {ht && <div class="ms-sub">{ht.head_coach} · FIFA {ht.fifa_ranking ? '#' + ht.fifa_ranking : '—'} · <b class="ms-rate">{tr(ht)}</b> {t(lang, 'm.rating')}</div>}
+      {ht && pedigree(ht) && <div class={`ms-ped ${ht.titles > 0 ? 'champ' : ''}`}>{pedigree(ht)}</div>}
+    </div>
+    <div class="ms-vs">
+      <div class="ms-stage">{m.stage}</div>
+      {pred ? (
+        <div class="ms-pred" title={t(lang, 'm.predlab')}>
+          <span class="ms-pred-lab">{t(lang, 'm.predlab')}</span>
+          <b class="ms-pred-score">{pred.ha} <i>–</i> {pred.aa}</b>
+        </div>
+      ) : <div class="ms-vstxt">VS</div>}
+      {kick && <div class="ms-cd" id="mcd" data-kick={kick}>—</div>}
+      <div class="ms-when">{m.venue} · {m.city}{city?.capacity ? ` · ${(city.capacity / 1000).toFixed(0)}k` : ''}{city?.altitude_m >= 1000 ? ` · ◆ ${(city.altitude_m / 1000).toFixed(1)}km` : ''}</div>
+      <div class="ms-when ms-date">{mdate}</div>
+    </div>
+    <div class="ms-team">
+      {at ? <Flag code={at.fifa_code} cls="lg" /> : <div class="ms-slot">{lbl[1]}</div>}
+      <div class="ms-name">{at ? nm(at) : t(lang, 'm.tbd')}</div>
+      {at && <div class="ms-sub">{at.head_coach} · FIFA {at.fifa_ranking ? '#' + at.fifa_ranking : '—'} · <b class="ms-rate">{tr(at)}</b> {t(lang, 'm.rating')}</div>}
+      {at && pedigree(at) && <div class={`ms-ped ${at.titles > 0 ? 'champ' : ''}`}>{pedigree(at)}</div>}
+    </div>
+  </section>
+
+  {ht && at ? (
+    <div class="app-grow mv-main">
+      <section class="panel mv-pitch">
+        <div class="tv2-h">
+          <h3>{t(lang, 'm.projXIs')} <span class="tag">{hf2} vs {af2}</span></h3>
+          <div class="mhead"><span><span class="dotg" style={`background:${HOME}`}></span> {nm(ht)}</span><span>{nm(at)} <span class="dotb" style={`background:${AWAY}`}></span></span></div>
+        </div>
+        <div class="pitch tall" id="pitch">
+          <div class="line ch"></div><div class="line cc"></div><div class="line box top"></div><div class="line box bot"></div><div class="line six top"></div><div class="line six bot"></div>
+          {tokens.map(tk => (
+            <a class="token sm" style={`left:${tk.x}%;top:${tk.y}%`} href={tk.id ? `${B}players/${tk.id}/` : '#'} title={tk.nm}>
+              <div class="sh" style={`--tc:${tk.col}`}>{tk.n}</div><div class="nm">{tk.nm}</div>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section class="panel tv2-right">
+        <div class="rtabs" id="mtabs">
+          <button class="rtab on" data-r="pred">{t(lang, 'm.tab.pred')}</button>
+          <button class="rtab" data-r="tape">{t(lang, 'm.tab.tape')}</button>
+          <button class="rtab" data-r="duel">{t(lang, 'm.tab.duel')}</button>
+        </div>
+
+        <div class="rpane" data-r="pred">
+          {pred && <>
+            <div class="pred-score">
+              <span class="pred-st"><span class="dotg" style={`background:${HOME}`}></span> {nm(ht)}</span>
+              <b class="pred-sc">{pred.ha}<i>–</i>{pred.aa}</b>
+              <span class="pred-st">{nm(at)} <span class="dotb" style={`background:${AWAY}`}></span></span>
+            </div>
+            <div class="pred-xg">{t(lang, 'm.xg')} <b>{pred.xgA}</b> – <b>{pred.xgB}</b> · {t(lang, 'm.projscore')}</div>
+            <p class="pred-why">{pred.why}</p>
+            <div class="pred-bar">
+              {pred.h > 0 && <div class="pred-seg pred-h" style={`width:${pred.h}%`}>{pred.h}%</div>}
+              {pred.d > 0 && <div class="pred-seg pred-d" style={`width:${pred.d}%`}>{pred.d}%</div>}
+              {pred.a > 0 && <div class="pred-seg pred-a" style={`width:${pred.a}%`}>{pred.a}%</div>}
+            </div>
+            <div class="pred-leg">
+              <span><span class="dotg" style={`background:${HOME}`}></span> {nm(ht)} {t(lang, 'm.win')}</span>
+              <span>{t(lang, 'm.draw')}</span>
+              <span>{nm(at)} {t(lang, 'm.win')} <span class="dotb" style={`background:${AWAY}`}></span></span>
+            </div>
+            <div class="pred-call faint">{t(lang, 'm.modelnote', { favnote, edge })}</div>
+          </>}
+        </div>
+
+        <div class="rpane" data-r="tape" hidden>
+          <div class="tot-head"><span class="dotg"></span>{nm(ht)}<span style="flex:1"></span>{nm(at)}<span class="dotb"></span></div>
+          {tape.map(tt => (
+            <div class="tot">
+              <div class="tot-top"><b class={tt.win === 'A' ? 'w' : ''}>{tt.fa}</b><span class="tot-l">{tt.label}</span><b class={tt.win === 'B' ? 'w' : ''}>{tt.fb}</b></div>
+              <div class="tot-bar"><i class="ta" style={`width:${tt.shareA}%`}></i><i class="tb" style={`width:${100 - tt.shareA}%`}></i></div>
+            </div>
+          ))}
+        </div>
+
+        <div class="rpane" data-r="duel" hidden>
+          <div class="duel">
+            {[[sH, ht, HOME], [sA, at, AWAY]].map(([s, tm, c]) => s && (
+              <a class="duelman" href={`${B}players/${s.player_id}/`}>
+                <div class="duel-num" style={`color:${c}`}>{s.shirt_number ?? ''}</div>
+                <div><div class="duel-nm">{s.player_name} <span class="duel-ovr">{rating(s)}</span></div><div class="faint" style="font-size:12px">{s.club}</div>
+                  <div class="duel-st"><b>{s.international_goals ?? 0}</b> {t(lang, 'm.goals')} · <b>{s.caps ?? 0}</b> {t(lang, 'm.caps')}</div></div>
+              </a>
+            ))}
+          </div>
+          <div class="faint" style="font-size:12px;margin-top:10px">{t(lang, 'm.keyman.note')}</div>
+        </div>
+      </section>
+    </div>
+  ) : (
+    <div class="app-grow scroll">
+      <div class="panel" style="margin-top:16px"><div class="faint">{t(lang, 'm.knockout', { label: m.match_label })}</div></div>
+    </div>
+  )}
+  </div>
+
+  {kick && (
+    <script is:inline>
+      (function () {
+        var cd = document.getElementById('mcd'); if (!cd) return;
+        var t = new Date(cd.dataset.kick).getTime();
+        function u() { var d = t - Date.now(); if (d <= 0) { cd.textContent = '—'; return; } var days = Math.floor(d / 864e5), h = Math.floor(d / 36e5) % 24, m = Math.floor(d / 6e4) % 60; cd.textContent = (days > 0 ? days + 'd ' : '') + h + 'h ' + m + 'm'; }
+        u(); setInterval(u, 30000);
+      })();
+    </script>
+  )}
+  <script is:inline>
+    (function () {
+      var tabs = document.getElementById('mtabs'); if (!tabs) return;
+      var panes = document.querySelectorAll('.mv-main .rpane');
+      tabs.querySelectorAll('.rtab').forEach(function (b) {
+        b.addEventListener('click', function () {
+          tabs.querySelectorAll('.rtab').forEach(function (x) { x.classList.toggle('on', x === b); });
+          panes.forEach(function (p) { p.hidden = p.dataset.r !== b.dataset.r; });
+        });
+      });
+    })();
+  </script>
+</Base>
