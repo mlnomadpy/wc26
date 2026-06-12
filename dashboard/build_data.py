@@ -235,6 +235,68 @@ for p in players:
     if p.get("is_captain"): fun.append("©️ Captain")
     p["fun"] = fun[:5]
 
+# ---- per-team attack / defence strength (feeds the AI score model) ----
+# Uses as much player signal as we have: population rating, 2025/26 club goals
+# (current form), international goals (pedigree), assists (creativity), GK quality
+# and clean sheets — blended with FIFA-ranking pedigree. Then normalised to
+# attack/defence INDEXES so the score model can model each attack vs the
+# opponent's defence and produce a realistic spread of scorelines.
+def _team_rating(rank):
+    try:
+        return max(58, min(95, round(95 - 13 * math.log10(rank)))) if rank else 60
+    except (ValueError, TypeError):
+        return 60
+def _mean_top(vals, n):
+    v = sorted(vals, reverse=True)[:n]
+    return sum(v) / len(v) if v else 70.0
+# league strength — a goal/clean sheet in a tougher league counts for more
+LEAGUE_STRENGTH = {
+    "Premier League": 1.00, "La Liga": 0.96, "Bundesliga": 0.94, "Serie A": 0.93, "Ligue 1": 0.89,
+    "Primeira Liga": 0.82, "Eredivisie": 0.80, "EFL Championship": 0.78, "Belgian Pro League": 0.76,
+    "Süper Lig": 0.76, "Série A": 0.76, "Saudi Pro League": 0.74, "Liga MX": 0.72, "Primera División": 0.72,
+    "Scottish Premiership": 0.72, "Czech First League": 0.70, "Major League Soccer": 0.70,
+    "Egyptian Premier League": 0.62, "A-League Men": 0.62, "Qatar Stars League": 0.60,
+    "Persian Gulf Pro League": 0.60, "UAE Pro League": 0.58, "Uzbekistan Super League": 0.55,
+}
+def _ls(p): return LEAGUE_STRENGTH.get(p.get("club_league"), 0.62)
+def _threat(p):
+    # quality (rating) + LIVE club form: league-weighted goal involvements per game
+    r = nv(p, "data_rating")
+    ap = nv(p, "club_apps_2025_26")
+    form = 0.0
+    if ap >= 6:
+        gi = (nv(p, "club_goals_2025_26") + 0.55 * nv(p, "club_assists_2025_26")) / ap
+        form = min(gi * _ls(p), 1.1) * 26                 # a prolific scorer -> big boost
+    intl = min(nv(p, "international_goals"), 45) * 0.22    # pedigree
+    return r + form + intl
+def _solidity(p):
+    r = nv(p, "data_rating")
+    ap = nv(p, "club_apps_2025_26")
+    if p.get("position") == "GK" and ap >= 6:
+        r += (nv(p, "club_clean_sheets_2025_26") / ap) * _ls(p) * 22   # clean-sheet rate
+    return r
+for t in teams:
+    grp = byteam.get(t["fifa_code"], [])
+    atk = sorted((_threat(p) for p in grp if p.get("position") in ("FW", "MF")), reverse=True)
+    gks = sorted((_solidity(p) for p in grp if p.get("position") == "GK"), reverse=True)
+    dfs = sorted((_solidity(p) for p in grp if p.get("position") == "DF"), reverse=True)
+    rk = _team_rating(t.get("fifa_ranking"))
+    A = _mean_top(atk, 5)
+    D = 0.42 * (gks[0] if gks else 66.0) + 0.58 * _mean_top(dfs, 4)
+    # squad + live form drive it; FIFA rank is a light anchor only
+    t["attack"]  = round(0.80 * A + 0.20 * rk, 1)
+    t["defense"] = round(0.80 * D + 0.20 * rk, 1)
+    t["overall"] = round((t["attack"] + t["defense"]) / 2, 1)
+# normalise to indexes around the field average (1.0 = average team). A floor of
+# 50 widens the spread so genuine mismatches separate (a minnow's index is much
+# lower than an average team's), which the score model needs to predict blowouts.
+_B0 = 50.0
+amean = sum(t["attack"] for t in teams) / len(teams)
+dmean = sum(t["defense"] for t in teams) / len(teams)
+for t in teams:
+    t["attIdx"] = round((t["attack"] - _B0) / (amean - _B0), 3)
+    t["defIdx"] = round((t["defense"] - _B0) / (dmean - _B0), 3)
+
 # ---- live group standings (computed from match results once scores exist) ----
 # Dormant until home_score/away_score appear on group-stage rows in matches.csv;
 # tiebreak by points -> goal difference -> goals for (head-to-head not yet applied).

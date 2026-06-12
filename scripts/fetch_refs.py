@@ -21,7 +21,7 @@ REFS = os.path.join(ROOT, "refs")
 LIMIT = int(sys.argv[sys.argv.index("--limit") + 1]) if "--limit" in sys.argv else 0
 API = "https://en.wikipedia.org/w/api.php"
 S = requests.Session()
-S.headers["User-Agent"] = "WC26Matchday/1.0 (Astro WC2026 data explorer; reference image fetch)"
+S.headers["User-Agent"] = "WC26MatchdayBot/1.0 (https://github.com/mlnomadpy/wc26; tahabhs14@gmail.com)"
 def is_image(b):
     return b[:3] == b"\xff\xd8\xff" or b[:8] == b"\x89PNG\r\n\x1a\n" or b[:4] == b"RIFF" or b[:6] in (b"GIF87a", b"GIF89a")
 
@@ -103,7 +103,7 @@ def main():
             rows.append([pid, name, title or "", url, lic, art])
             got += 1
             print(f"✓ {pid} {name}  [{lic or '?'}]")
-            time.sleep(0.5 if '--fast' in sys.argv else 0.3)
+            time.sleep(1.1 if '--fast' in sys.argv else 0.3)
             if LIMIT and got >= LIMIT: break
         except Exception as e:
             print(f"✗ {name}: {e}"); time.sleep(1)

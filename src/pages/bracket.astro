@@ -1,9 +1,15 @@
 ---
 import Base from '@app/layouts/Base.astro';
+import Flag from '@shared/ui/Flag.astro';
 import DB from '../../public/data.json';
-import { BTREE, STAGE_R, decodeSlot, groupColor } from '@shared/lib/wc.js';
+import { BTREE, STAGE_R, decodeSlot, groupColor, simulateTournament } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const byNum = {}; DB.matches.forEach(m => byNum[m.match_number] = m);
+// AI-predicted bracket fill (group sim -> qualifiers -> knockout sim)
+const sim = simulateTournament(DB);
+const teamByCode = {}; DB.teams.forEach(t => teamByCode[t.fifa_code] = t);
+const nmCode = c => teamByCode[c] ? teamByCode[c].team_name : c;
+const nodeTeams = n => BTREE[n] ? [sim.result[BTREE[n][0]], sim.result[BTREE[n][1]]] : [sim.leafTeams[n] && sim.leafTeams[n].a, sim.leafTeams[n] && sim.leafTeams[n].b];
 const roundOf = n => { const m = byNum[n]; return m ? (STAGE_R[m.stage] || 0) : 0; };
 const leaves = []; (function dfs(n) { const ch = BTREE[n]; if (!ch) { leaves.push(n); return; } ch.forEach(dfs); })(104);
 const Y = {}; leaves.forEach((n, i) => Y[n] = i);
@@ -18,14 +24,15 @@ Object.entries(BTREE).forEach(([p, ch]) => { const px = colX(roundOf(+p)), pyc =
 lines.push({ d: `M${colX(4) + cardW} ${yc(104)} H${colX(5)}`, cls: 'bcon win' });
 const allNodes = [...leaves, ...Object.keys(BTREE).map(Number)].map(n => {
   const m = byNum[n], r = roundOf(n); const [a, b] = (m.match_label || '').split(/\s+vs\s+/);
-  return { n, r, x: colX(r), y: Y[n] * rowUnit + padT, a: decodeSlot(a), b: decodeSlot(b), city: (m.city || '').split('/')[0] };
+  const [t1, t2] = nodeTeams(n);
+  return { n, r, x: colX(r), y: Y[n] * rowUnit + padT, a: decodeSlot(a), b: decodeSlot(b), t1, t2, win: sim.result[n], city: (m.city || '').split('/')[0] };
 });
 const tp = byNum[103];
 const legend = [['A', groupColor('A'), 'Group A winner / runner-up'], ['3rd', '#3b3320', 'Best third-placed team'], ['W', '#26406b', 'Winner of an earlier match'], ['RU', '#5a2740', 'Runner-up (third-place playoff)']];
 ---
-<Base title="Bracket — FIFA World Cup 2026 knockout 'Road to the Final'" description="The 2026 FIFA World Cup knockout bracket: Round of 32 through the Final, with decoded slots and host cities. The first 48-team World Cup knockout tree.">
+<Base title={`World Cup 2026 Predicted Bracket — ${nmCode(sim.champion)} to Win | Road to the Final`} description={`The AI-predicted 2026 FIFA World Cup knockout bracket, Round of 32 to the Final: every tie simulated from the group stage, with ${nmCode(sim.champion)} predicted to lift the trophy. The first 48-team World Cup knockout tree.`}>
   <div class="app-page">
-  <div class="brkhead"><h2 class="sec" style="margin:0">Road to the final</h2><span class="tag">48 → 1 · projected by the model</span><a class="btn primary" href={B + 'predict/'} style="margin-left:auto">⚡ Predict your own →</a></div>
+  <div class="brkhead"><h2 class="sec" style="margin:0">Road to the final</h2><span class="tag">48 → 1 · AI-predicted bracket</span><a class="btn primary" href={B + 'predict/'} style="margin-left:auto">⚡ Predict your own →</a></div>
   <div class="app-grow scroll">
   <div class="bktwrap">
     <div class="bktree" style={`width:${W}px;height:${H}px`}>
@@ -34,15 +41,17 @@ const legend = [['A', groupColor('A'), 'Group A winner / runner-up'], ['3rd', '#
       <div class="bhead" style={`left:${colX(5)}px;width:170px`}>Champion</div>
       {allNodes.map(nd => (
         <a class={`bnode r${nd.r}`} style={`left:${nd.x}px;top:${nd.y}px;width:${cardW}px;height:${cardH}px`} href={`${B}matches/${nd.n}/`} aria-label={`Match ${nd.n}`}>
-          <div class="brow"><span class="bchip" style={`background:${nd.a.color}`}>{nd.a.code}</span><span class="blabel">{nd.a.label}</span></div>
+          <div class={`brow ${nd.win && nd.win === nd.t1 ? 'bwin' : ''}`}>{nd.t1 ? <><Flag code={nd.t1} cls="sm" /><span class="blabel">{nmCode(nd.t1)}</span></> : <><span class="bchip" style={`background:${nd.a.color}`}>{nd.a.code}</span><span class="blabel">{nd.a.label}</span></>}</div>
           <div class="bvs"><span>vs</span></div>
-          <div class="brow"><span class="bchip" style={`background:${nd.b.color}`}>{nd.b.code}</span><span class="blabel">{nd.b.label}</span></div>
+          <div class={`brow ${nd.win && nd.win === nd.t2 ? 'bwin' : ''}`}>{nd.t2 ? <><Flag code={nd.t2} cls="sm" /><span class="blabel">{nmCode(nd.t2)}</span></> : <><span class="bchip" style={`background:${nd.b.color}`}>{nd.b.code}</span><span class="blabel">{nd.b.label}</span></>}</div>
           <div class="bnum">#{nd.n} · {nd.city}</div>
         </a>
       ))}
-      <div class="bchamp" style={`left:${colX(5)}px;top:${Y[104] * rowUnit + padT - 6}px`}>
-        <div class="trophy"><svg width="34" height="34" viewBox="0 0 24 24" fill="var(--gold)" aria-hidden="true"><path d="M18 2H6v2H2v3a4 4 0 0 0 4 4 6 6 0 0 0 5 4.9V19H8v3h8v-3h-3v-3.1A6 6 0 0 0 18 11a4 4 0 0 0 4-4V4h-4V2zM6 9a2 2 0 0 1-2-2V6h2v3zm14-2a2 2 0 0 1-2 2V6h2v1z"/></svg></div><div class="ct">Champion 2026</div><div class="faint cs">Lifts the trophy<br>Jul 19 · New York</div>
-      </div>
+      <a class="bchamp bchamp-on" href={`${B}teams/${(teamByCode[sim.champion]?.fifa_code || '').toLowerCase()}/`} style={`left:${colX(5)}px;top:${Y[104] * rowUnit + padT - 6}px`}>
+        <div class="trophy"><svg width="34" height="34" viewBox="0 0 24 24" fill="var(--gold)" aria-hidden="true"><path d="M18 2H6v2H2v3a4 4 0 0 0 4 4 6 6 0 0 0 5 4.9V19H8v3h8v-3h-3v-3.1A6 6 0 0 0 18 11a4 4 0 0 0 4-4V4h-4V2zM6 9a2 2 0 0 1-2-2V6h2v3zm14-2a2 2 0 0 1-2 2V6h2v1z"/></svg></div>
+        <div class="bchamp-flag"><Flag code={sim.champion} cls="lg" /></div>
+        <div class="ct">{nmCode(sim.champion)}</div><div class="faint cs">Predicted champions<br>Jul 19 · New York</div>
+      </a>
     </div>
   </div>
   <div class="grid2">
@@ -56,7 +65,7 @@ const legend = [['A', groupColor('A'), 'Group A winner / runner-up'], ['3rd', '#
     <div class="panel">
       <h3>How to read the slots</h3>
       <div class="kv">{legend.map(([c, col, t]) => [<span class="bchip" style={`background:${col}`}>{c}</span>, <span>{t}</span>])}</div>
-      <div class="faint" style="margin-top:10px">Teams fill in once the group stage and each knockout round finish.</div>
+      <div class="faint" style="margin-top:10px">Teams are filled by the AI model — group tables simulated, then every knockout tie. The winner of each tie is highlighted. <a class="dh-glink" href={B + 'predictions/'}>See all predictions →</a></div>
     </div>
   </div>
   </div>

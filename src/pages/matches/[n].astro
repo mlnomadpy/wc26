@@ -2,7 +2,7 @@
 import Base from '@app/layouts/Base.astro';
 import Flag from '@shared/ui/Flag.astro';
 import DB from '../../../public/data.json';
-import { indexes, autoForm, pickXI, FORMATIONS, surname, num, money, avgAge, rating, teamRating, predictMatch } from '@shared/lib/wc.js';
+import { indexes, autoForm, pickXI, FORMATIONS, surname, num, money, avgAge, rating, teamRating, predictMatch, explainMatch } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const HOME = '#e9bb4c', AWAY = '#5b9cff';
 const IDX = indexes(DB);
@@ -40,6 +40,8 @@ const metric = (label, a, b, fmt, better) => {
   return { label, fa: fmt(a), fb: fmt(b), shareA, win };
 };
 const tape = (ht && at) ? [
+  metric('Attack rating', ht.attack || 70, at.attack || 70, x => Math.round(x), 'high'),
+  metric('Defence rating', ht.defense || 70, at.defense || 70, x => Math.round(x), 'high'),
   metric('FIFA ranking', ht.fifa_ranking || 999, at.fifa_ranking || 999, x => x >= 999 ? '—' : '#' + x, 'low'),
   metric('Squad value', sum(ht, 'market_value_eur'), sum(at, 'market_value_eur'), x => x ? money(x) : '—', 'high'),
   metric('Total caps', sum(ht, 'caps'), sum(at, 'caps'), num, 'high'),
@@ -54,8 +56,8 @@ const sH = ht && star(ht), sA = at && star(at);
 const tr = t => teamRating(t.fifa_ranking) ?? 60;
 let pred = null, fav = null;
 if (ht && at) {
-  const P = predictMatch(tr(ht), tr(at));
-  pred = { h: P.pH, d: P.pD, a: P.pA, ha: P.ha, aa: P.aa, xgA: P.xgA, xgB: P.xgB };
+  const P = predictMatch(ht, at);
+  pred = { h: P.pH, d: P.pD, a: P.pA, ha: P.ha, aa: P.aa, xgA: P.xgA, xgB: P.xgB, why: explainMatch(ht, at, P) };
   fav = pred.h > pred.a && pred.h >= pred.d ? ht.team_name
       : pred.a > pred.h && pred.a >= pred.d ? at.team_name : null;
 }
@@ -143,6 +145,7 @@ const jsonld = (ht && at) ? {
               <span class="pred-st">{at.team_name} <span class="dotb" style={`background:${AWAY}`}></span></span>
             </div>
             <div class="pred-xg">Expected goals <b>{pred.xgA}</b> – <b>{pred.xgB}</b> · projected scoreline</div>
+            <p class="pred-why">{pred.why}</p>
             <div class="pred-bar">
               {pred.h > 0 && <div class="pred-seg pred-h" style={`width:${pred.h}%`}>{pred.h}%</div>}
               {pred.d > 0 && <div class="pred-seg pred-d" style={`width:${pred.d}%`}>{pred.d}%</div>}
@@ -153,7 +156,7 @@ const jsonld = (ht && at) ? {
               <span>Draw</span>
               <span>{at.team_name} win <span class="dotb" style={`background:${AWAY}`}></span></span>
             </div>
-            <div class="pred-call faint">{fav ? `${fav} favoured` : 'Too close to call — a coin-flip'} · {Math.abs(tr(ht) - tr(at)) <= 2 ? 'even matchup' : 'clear rating edge'}. AI model — Poisson expected-goals from team strength ratings.</div>
+            <div class="pred-call faint">{fav ? `${fav} favoured` : 'Too close to call — a coin-flip'} · {Math.abs(tr(ht) - tr(at)) <= 2 ? 'even matchup' : 'clear rating edge'}. AI model — each attack vs the other's defence (squad ratings, club & international goals, assists, goalkeeping), Poisson scoreline.</div>
           </>}
         </div>
 

@@ -39,27 +39,35 @@ export const teamRating = (rank) => rank ? Math.max(58, Math.min(95, Math.round(
    win / draw / loss probabilities. Pure + deterministic. */
 const _fact = n => { let f = 1; for (let i = 2; i <= n; i++) f *= i; return f; };
 const _pois = (k, l) => Math.exp(-l) * Math.pow(l, k) / _fact(k);
-export function predictMatch(rA, rB) {
-  const BASE = 1.32;                                  // avg goals per side at a WC
-  const d = ((rA ?? 60) - (rB ?? 60)) / 14;
-  const la = Math.max(0.25, Math.min(4.4, BASE * Math.exp(d * 0.42)));
-  const lb = Math.max(0.25, Math.min(4.4, BASE * Math.exp(-d * 0.42)));
-  const N = 9; let pH = 0, pD = 0, pA = 0;
+export function predictMatch(teamA, teamB) {
+  // attack/defence indexes (1.0 = field average), precomputed in build_data.py
+  // from squad ratings + club goals/assists + GK/clean sheets + FIFA pedigree.
+  // Fallback: a plain rating number -> rough index off a 50 floor / 77 average.
+  const idx = (t, k) => typeof t === 'number' ? (t - 50) / 27 : (t?.[k] ?? (((t?.overall ?? 74) - 50) / 27));
+  const aAtt = idx(teamA, 'attIdx'), aDef = idx(teamA, 'defIdx');
+  const bAtt = idx(teamB, 'attIdx'), bDef = idx(teamB, 'defIdx');
+  const BASE = 1.4, P = 1.6, CAP = 3.6;               // expected goals = each attack vs the other defence
+  const clamp = x => Math.max(0.15, Math.min(CAP, x));
+  const la = clamp(BASE * Math.pow(aAtt / bDef, P));
+  const lb = clamp(BASE * Math.pow(bAtt / aDef, P));
+  // full Poisson grid -> win/draw/loss + most-likely exact scoreline
+  let pH = 0, pD = 0, pA = 0, best = { p: -1, i: 0, j: 0 };
   const grid = [];
-  for (let i = 0; i <= N; i++) for (let j = 0; j <= N; j++) {
+  for (let i = 0; i <= 8; i++) for (let j = 0; j <= 8; j++) {
     const p = _pois(i, la) * _pois(j, lb);
     grid.push({ p, i, j });
     if (i > j) pH += p; else if (i === j) pD += p; else pA += p;
+    if (p > best.p) best = { p, i, j };
   }
-  // headline scoreline = most-likely score WITHIN the most-likely result, so the
-  // predicted score never contradicts the favourite (no "favoured team drawn").
-  const outcome = pH >= pD && pH >= pA ? 'H' : pA >= pD && pA >= pH ? 'A' : 'D';
-  const oOf = g => g.i > g.j ? 'H' : g.i < g.j ? 'A' : 'D';
-  let best = { p: -1, i: 1, j: 1 };
-  for (const g of grid) if (oOf(g) === outcome && g.p > best.p) best = g;
+  let ha = best.i, aa = best.j;
+  // break a predicted draw toward a clear favourite (keeps genuinely even games drawn)
+  if (ha === aa) {
+    if (pH - pA > 0.12) { let b = { p: -1, i: 1, j: 0 }; for (const g of grid) if (g.i > g.j && g.p > b.p) b = g; ha = b.i; aa = b.j; }
+    else if (pA - pH > 0.12) { let b = { p: -1, i: 0, j: 1 }; for (const g of grid) if (g.j > g.i && g.p > b.p) b = g; ha = b.i; aa = b.j; }
+  }
   const r = x => Math.round(x * 100);
-  return { la, lb, ha: best.i, aa: best.j, xgA: +la.toFixed(1), xgB: +lb.toFixed(1),
-           pH: r(pH), pD: r(pD), pA: r(pA), top: r(best.p) };
+  return { la, lb, ha, aa, xgA: +la.toFixed(1), xgB: +lb.toFixed(1),
+           pH: r(pH), pD: r(pD), pA: r(pA), top: Math.max(r(pH), r(pD), r(pA)) };
 }
 
 export function strength(p){
@@ -94,6 +102,80 @@ export function decodeSlot(s){let m;s=(s||'').trim();
   if(m=s.match(/^(\d)([A-L])$/)) return {code:m[2],label:(m[1]==='1'?'Winner Grp ':m[1]==='2'?'Runner-up Grp ':m[1]+'rd Grp ')+m[2],color:groupColor(m[2])};
   if(m=s.match(/^3([A-L]+)$/)) return {code:'3rd',label:'Best 3rd · '+m[1].split('').join('/'),color:'#3b3320'};
   return {code:'·',label:s,color:'#2a3647'};
+}
+
+/* Plain-English reasoning for a predicted scoreline — grounded in the model's
+   own inputs (attack vs defence, win probability, projected goals). */
+export function explainMatch(teamA, teamB, p) {
+  const fav = p.pH > p.pA ? teamA : p.pA > p.pH ? teamB : null;
+  const dog = fav === teamA ? teamB : teamA;
+  const aAtt = Math.round(teamA.attack || 0), aDef = Math.round(teamA.defense || 0);
+  const bAtt = Math.round(teamB.attack || 0), bDef = Math.round(teamB.defense || 0);
+  const goals = p.ha + p.aa;
+  let lead;
+  if (!fav) {
+    lead = `${teamA.team_name} and ${teamB.team_name} are line-ball — the model splits it ${p.pH}/${p.pD}/${p.pA}%`;
+  } else {
+    const fAtt = fav === teamA ? aAtt : bAtt, oDef = fav === teamA ? bDef : aDef;
+    const fp = fav === teamA ? p.pH : p.pA;
+    const verb = (fAtt - oDef) > 22 ? 'is in a different class to' : (fAtt - oDef) > 8 ? 'has a clear edge over' : 'narrowly outguns';
+    lead = `${fav.team_name}'s attack (rated ${fAtt}) ${verb} ${dog.team_name}'s defence (${oDef}), so the model makes them ${fp}% favourites`;
+  }
+  const tail = goals >= 4 ? 'with goals likely at both ends' : goals <= 1 ? 'in what shapes up as a cagey, low-scoring tie' : 'in a game that should stay competitive';
+  return `${lead}, ${tail}. Projected ${p.ha}–${p.aa}.`;
+}
+
+/* Full tournament simulation: predict every group game -> points/standings ->
+   qualifiers (top 2 + best 8 thirds) -> seed the knockout via the real bracket
+   slots -> simulate every tie -> predicted champion. Deterministic. */
+export function simulateTournament(DB) {
+  const T = {}; DB.teams.forEach(t => T[t.fifa_code] = t);
+  const byNum = {}; DB.matches.forEach(m => byNum[m.match_number] = m);
+  const roundOf = n => { const m = byNum[n]; return m ? (STAGE_R[m.stage] || 0) : 0; };
+  const byGroup = {}; DB.teams.forEach(t => (byGroup[t.group_letter] = byGroup[t.group_letter] || []).push(t.fifa_code));
+  const rec = {}; DB.teams.forEach(t => rec[t.fifa_code] = { code: t.fifa_code, name: t.team_name, g: t.group_letter, P: 0, W: 0, D: 0, L: 0, GF: 0, GA: 0, GD: 0, Pts: 0 });
+  DB.matches.filter(m => m.match_label && m.match_label.startsWith('Group') && m.home_code && m.away_code).forEach(m => {
+    const p = predictMatch(T[m.home_code], T[m.away_code]);
+    for (const [c, gf, ga] of [[m.home_code, p.ha, p.aa], [m.away_code, p.aa, p.ha]]) {
+      const r = rec[c]; r.P++; r.GF += gf; r.GA += ga; r.GD = r.GF - r.GA;
+      if (gf > ga) { r.W++; r.Pts += 3; } else if (gf === ga) { r.D++; r.Pts += 1; } else r.L++;
+    }
+  });
+  const cmp = (a, b) => b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GA || a.name.localeCompare(b.name);
+  const standings = {}, rank = {};
+  Object.entries(byGroup).forEach(([g, cs]) => {
+    const rows = cs.map(c => rec[c]).sort(cmp); rows.forEach((r, i) => (r.rank = i + 1));
+    standings[g] = rows; rank[g] = rows.map(r => r.code);
+  });
+  const thirds = Object.values(standings).map(r => r[2]).sort(cmp);
+  const qual3 = new Set(thirds.slice(0, 8).map(r => r.code));
+  const leaves = []; (function dfs(n) { const ch = BTREE[n]; if (!ch) { leaves.push(n); return; } ch.forEach(dfs); })(104);
+  const leafTeams = {}; const slot3 = [];
+  const non3 = s => { const m = (s || '').match(/^([12])([A-L])$/); return m ? (rank[m[2]] ? rank[m[2]][+m[1] - 1] : null) : undefined; };
+  leaves.forEach(n => {
+    const [a, b] = (byNum[n].match_label || '').split(/\s+vs\s+/);
+    leafTeams[n] = { a: non3(a), b: non3(b) };
+    [['a', a], ['b', b]].forEach(([side, code]) => { const mm = (code || '').match(/^3([A-L]+)$/); if (mm) slot3.push({ n, side, groups: mm[1].split('') }); });
+  });
+  const usedT = new Set();
+  slot3.forEach(slot => {
+    let pick = slot.groups.map(g => standings[g] && standings[g][2]).filter(r => r && qual3.has(r.code) && !usedT.has(r.code)).sort(cmp)[0];
+    if (!pick) pick = thirds.filter(r => qual3.has(r.code) && !usedT.has(r.code)).sort(cmp)[0];
+    if (pick) { usedT.add(pick.code); leafTeams[slot.n][slot.side] = pick.code; }
+  });
+  const koWin = (a, b) => {
+    if (!a) return b; if (!b) return a;
+    const p = predictMatch(T[a], T[b]);
+    return (p.pH > p.pA || (p.pH === p.pA && (T[a].overall || 0) >= (T[b].overall || 0))) ? a : b;
+  };
+  const result = {};
+  leaves.forEach(n => (result[n] = koWin(leafTeams[n].a, leafTeams[n].b)));
+  Object.keys(BTREE).map(Number).sort((x, y) => roundOf(x) - roundOf(y)).forEach(n => { const [c1, c2] = BTREE[n]; result[n] = koWin(result[c1], result[c2]); });
+  const champion = result[104];
+  const finalists = [result[BTREE[104][0]], result[BTREE[104][1]]];
+  const runnerUp = finalists.find(c => c !== champion);
+  const semifinalists = BTREE[104].flatMap(sn => BTREE[sn].map(qn => result[qn]));
+  return { standings, rank, qual3: [...qual3], leafTeams, result, champion, finalists, runnerUp, semifinalists };
 }
 
 /* indexes built from the (server-only) DB object */

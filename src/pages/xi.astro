@@ -1,10 +1,10 @@
 ---
 import Base from '@app/layouts/Base.astro';
 import DB from '../../public/data.json';
-import { rating, FORMATIONS, FORMNAMES, POSC, surname, flagImg } from '@shared/lib/wc.js';
+import { rating, FORMATIONS, FORMNAMES, POSC, surname, flagImg, posDetail } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const price = (r) => Math.min(220, Math.round(2 * Math.pow(1.16, r - 60)));
-const slim = DB.players.map(p => ({ id: p.player_id, n: p.player_name, s: surname(p.player_name), c: p.fifa_code, nat: p.team_name, club: p.club || '—', pos: p.position, r: rating(p), pr: price(rating(p)) }));
+const slim = DB.players.map(p => ({ id: p.player_id, n: p.player_name, s: surname(p.player_name), c: p.fifa_code, nat: p.team_name, club: p.club || '—', pos: p.position, pd: p.position_detail || posDetail(p) || '', r: rating(p), pr: price(rating(p)) }));
 const flags = {}; DB.teams.forEach(t => { flags[t.fifa_code] = flagImg(t.fifa_code, 40); });
 const BUDGET = 700;
 const jsonld = { '@context': 'https://schema.org', '@type': 'Game', name: 'Build your XI', description: 'Build your dream World Cup 2026 XI on a budget.' };
@@ -104,7 +104,7 @@ const jsonld = { '@context': 'https://schema.org', '@type': 'Game', name: 'Build
         const own = picks[active] === p.id, used = chosen.has(p.id) && !own, afford = p.pr <= left;
         return `<button class="xiopt ${own ? 'own' : ''} ${(!afford || used) ? 'off' : ''}" data-id="${p.id}" ${used ? 'disabled' : ''}>
           <img src="${FLAGS[p.c] || ''}" alt="" width="20">
-          <span class="xio-id"><b>${p.n}</b><em>${p.nat} · ${p.club}</em></span>
+          <span class="xio-id"><b>${p.n}${p.pd ? ` <span class="role-mini">${p.pd}</span>` : ''}</b><em>${p.nat} · ${p.club}</em></span>
           <span class="xio-r">${p.r}</span><span class="xio-pr">€${p.pr}m</span></button>`;
       }).join('') || '<div class="empty">No players.</div>';
     }

@@ -42,8 +42,8 @@ const gs = [...new Set(DB.teams.map(t => t.group_letter))].sort();
 const liveRows = (DB.standings && DB.standings[g] && DB.standings[g].length) ? DB.standings[g] : null;
 const byCode = {}; teams.forEach(t => (byCode[t.fifa_code] = t));
 const hasScore = (m) => m.home_score != null && m.away_score != null;
-const rOf = {}; teams.forEach(t => (rOf[t.fifa_code] = t.rating));
-const predOf = m => (rOf[m.home_code] != null && rOf[m.away_code] != null) ? predictMatch(rOf[m.home_code], rOf[m.away_code]) : null;
+const byC = {}; teams.forEach(t => (byC[t.fifa_code] = t));
+const predOf = m => (byC[m.home_code] && byC[m.away_code]) ? predictMatch(byC[m.home_code], byC[m.away_code]) : null;
 ---
 <Base title={`Group ${g} — projected standings · FIFA World Cup 2026`} description={`Group ${g} at the 2026 FIFA World Cup: the four teams, their projected finishing order and qualification outlook, plus all six group fixtures.`}>
   <div class="app-page">
