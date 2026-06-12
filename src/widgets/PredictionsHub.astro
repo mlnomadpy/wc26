@@ -1,0 +1,106 @@
+---
+import Base from '@app/layouts/Base.astro';
+import Flag from '@shared/ui/Flag.astro';
+import DB from '../../public/data.json';
+import { predictMatch, explainMatch, simulateTournament } from '@shared/lib/wc.js';
+import { t, teamName, explainPack } from '@shared/lib/i18n.js';
+const { lang = 'en' } = Astro.props;
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const L = explainPack(lang);
+const nm = c => teamName(T[c], lang);
+const expl = (a, b, p) => explainMatch(T[a], T[b], p, { name: tm => teamName(tm, lang), L });
+const fmtDay = (s) => { const d = new Date((s || '').replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00')); return isNaN(d) ? '' : d.toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: 'numeric' }); };
+
+const T = {}; DB.teams.forEach(x => T[x.fifa_code] = x);
+const sim = simulateTournament(DB);
+const champ = T[sim.champion], runner = T[sim.runnerUp];
+const finalP = predictMatch(champ, runner);
+const cWin = finalP.ha >= finalP.aa ? [finalP.ha, finalP.aa] : [finalP.aa, finalP.ha];
+const cScore = `${cWin[0]}–${cWin[1]}`;
+const semis = sim.semifinalists.map(c => T[c]);
+
+const groupMatches = DB.matches
+  .filter(m => m.match_label && m.match_label.startsWith('Group') && m.home_code && m.away_code)
+  .map(m => { const p = predictMatch(T[m.home_code], T[m.away_code]); return { ...m, g: m.match_label.replace('Group ', ''), p, why: expl(m.home_code, m.away_code, p) }; })
+  .sort((a, b) => a.g.localeCompare(b.g) || a.match_number - b.match_number);
+const groups = {}; groupMatches.forEach(m => (groups[m.g] = groups[m.g] || []).push(m));
+const letters = Object.keys(groups).sort();
+const qHelp = (rows, code) => { const r = rows.find(x => x.code === code); if (!r) return ''; return r.rank <= 2 ? 'adv' : (r.rank === 3 && sim.qual3.includes(code)) ? 'thrd' : 'out'; };
+
+const V = { champ: nm(champ.fifa_code), runner: nm(runner.fifa_code), score: cScore, n: groupMatches.length };
+const desc = t(lang, 'pred.desc', V);
+const jsonld = {
+  '@context': 'https://schema.org', '@type': 'FAQPage',
+  mainEntity: [
+    { '@type': 'Question', name: t(lang, 'faq.q.champion'), acceptedAnswer: { '@type': 'Answer', text: t(lang, 'faq.a.champion', { ...V, semis: semis.map(x => nm(x.fifa_code)).join(', ') } ) } },
+    ...groupMatches.slice(0, 16).map(m => ({ '@type': 'Question', name: t(lang, 'faq.q.match', { a: nm(m.home_code), b: nm(m.away_code) }), acceptedAnswer: { '@type': 'Answer', text: t(lang, 'faq.a.match', { a: nm(m.home_code), b: nm(m.away_code), score: `${m.p.ha}–${m.p.aa}`, why: m.why }) } })),
+  ],
+};
+---
+<Base title={t(lang, 'pred.title', V)} description={desc} jsonld={jsonld} lang={lang} i18n={{ path: 'predictions/', locales: ['en', 'es'] }}>
+  <div class="app-page">
+    <header class="phead">
+      <div>
+        <div class="pe">{t(lang, 'pred.eyebrow')}</div>
+        <h1>{t(lang, 'pred.h1')}</h1>
+        <p class="psub">{t(lang, 'pred.sub')}</p>
+      </div>
+      <div class="pstat">
+        <div class="s"><b>{groupMatches.length}</b><span>{t(lang, 'pred.stat.predictions')}</span></div>
+        <div class="s"><b>48→1</b><span>{t(lang, 'pred.stat.simulated')}</span></div>
+      </div>
+    </header>
+
+    <div class="app-grow scroll">
+      <section class="pchamp-hero">
+        <div class="pch-trophy">🏆</div>
+        <div class="pch-body">
+          <div class="pch-eye">{t(lang, 'pred.champion')}</div>
+          <a class="pch-team" href={`${B}teams/${champ.fifa_code.toLowerCase()}/`}><Flag code={champ.fifa_code} cls="lg" /> <b>{nm(champ.fifa_code)}</b></a>
+          <div class="pch-final" set:html={t(lang, 'pred.beats', { runner: `<a href="${B}teams/${runner.fifa_code.toLowerCase()}/">${nm(runner.fifa_code)}</a>`, score: `<b class="pch-score">${cScore}</b>` })}></div>
+        </div>
+        <div class="pch-semis">
+          <div class="pch-semis-h">{t(lang, 'pred.semis')}</div>
+          <div class="pch-semis-row">
+            {semis.map(x => <a class="pch-semi" href={`${B}teams/${x.fifa_code.toLowerCase()}/`}><Flag code={x.fifa_code} cls="sm" /> {x.fifa_code}</a>)}
+          </div>
+        </div>
+      </section>
+
+      <p class="pr-intro" set:html={t(lang, 'pred.intro', { bracket: B + 'bracket/' })}></p>
+
+      {letters.map(g => { const rows = sim.standings[g]; return (
+        <section class="pr-group">
+          <h2 class="pr-gh"><span class="pr-gl">{g}</span> {t(lang, 'pred.group', { g })}</h2>
+          <div class="pr-cols">
+            <div class="pr-table">
+              <div class="prt-row prt-head"><span>{t(lang, 'pred.th.pos')}</span><span>{t(lang, 'pred.th.team')}</span><span>{t(lang, 'pred.th.pld')}</span><span>{t(lang, 'pred.th.gd')}</span><span>{t(lang, 'pred.th.pts')}</span></div>
+              {rows.map((r) => (
+                <div class={`prt-row ${qHelp(rows, r.code)}`}>
+                  <span class="prt-pos">{r.rank}</span>
+                  <span class="prt-team"><Flag code={r.code} cls="sm" /> {nm(r.code)}</span>
+                  <span class="mono">{r.P}</span><span class="mono">{r.GD > 0 ? '+' + r.GD : r.GD}</span><span class="mono"><b>{r.Pts}</b></span>
+                </div>
+              ))}
+              <div class="prt-key faint">{t(lang, 'pred.tablekey')}</div>
+            </div>
+            <div class="pr-fixtures">
+              {groups[g].map(m => (
+                <a class="pr-fx" href={`${B}matches/${m.match_number}/`}>
+                  <span class="pr-fxhead">
+                    <span class="pr-day">{fmtDay(m.kickoff_at)}</span>
+                    <span class="pr-fxteams"><Flag code={m.home_code} cls="sm" /> <b>{nm(m.home_code)}</b> <span class="pr-fxscore">{m.p.ha}<i>–</i>{m.p.aa}</span> <b>{nm(m.away_code)}</b> <Flag code={m.away_code} cls="sm" /></span>
+                    <span class="pr-fxprob">{m.p.pH}/{m.p.pD}/{m.p.pA}%</span>
+                  </span>
+                  <span class="pr-why">{m.why}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      ); })}
+
+      <p class="pr-method faint">{t(lang, 'pred.method')}</p>
+    </div>
+  </div>
+</Base>

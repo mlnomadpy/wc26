@@ -2,6 +2,7 @@
 import '../styles/app.css';
 import DB from '../../../public/data.json';
 import { flagImg, CONF } from '@shared/lib/wc.js';
+import { t, LOCALE_LABEL } from '@shared/lib/i18n.js';
 const NATIONS = DB.teams.map(t => ({ c: t.fifa_code, n: t.team_name, g: t.group_letter, f: flagImg(t.fifa_code, 40), col: CONF[t.confederation] || '#5aa2ff' }))
   .sort((a, b) => a.n.localeCompare(b.n));
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/'; // "/wc26/"
@@ -12,14 +13,19 @@ const {
   description = 'Explore every 2026 FIFA World Cup squad, projected lineup, club and match — 1,247 players, 48 teams, 104 matches.',
   jsonld = null,
   ogImage = B + 'og.png',
+  lang = 'en',
+  i18n = null,   // translated pages pass { path: 'predictions/', locales: ['en','es'] }
 } = Astro.props;
-const canonical = new URL(Astro.url.pathname, SITE).href;
-const NAV = [['', 'Home'], ['footle/', 'Footle'], ['teams/', 'Teams'], ['players/', 'Players'], ['clubs/', 'Clubs'], ['groups/', 'Groups'], ['bracket/', 'Bracket'], ['predictions/', 'Predictions'], ['matches/', 'Matches'], ['map/', 'Map'], ['compare/', 'Compare'], ['insights/', 'Insights'], ['data/', 'Data']];
+const localePrefix = (L) => L === 'en' ? '' : L + '/';
+const urlFor = (L) => SITE + B + localePrefix(L) + (i18n ? i18n.path : '');
+const canonical = i18n ? urlFor(lang) : new URL(Astro.url.pathname, SITE).href;
+const altLocales = i18n ? i18n.locales : [];
+const NAV = [['', 'nav.home'], ['footle/', 'nav.footle'], ['teams/', 'nav.teams'], ['players/', 'nav.players'], ['clubs/', 'nav.clubs'], ['groups/', 'nav.groups'], ['bracket/', 'nav.bracket'], ['predictions/', 'nav.predictions'], ['matches/', 'nav.matches'], ['map/', 'nav.map'], ['compare/', 'nav.compare'], ['insights/', 'nav.insights'], ['data/', 'nav.data']];
 const here = Astro.url.pathname.replace(/\/$/, '') + '/';
 const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p === '' ? here === B : here.startsWith(full); };
 ---
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang={lang} data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -29,6 +35,8 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <meta name="theme-color" content="#080b10" />
   <link rel="canonical" href={canonical} />
+  {altLocales.map(L => <link rel="alternate" hreflang={L} href={urlFor(L)} />)}
+  {altLocales.length > 0 && <link rel="alternate" hreflang="x-default" href={urlFor('en')} />}
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="WC26 Matchday" />
   <meta property="og:title" content={title} />
@@ -58,7 +66,7 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
       <span class="wm">WC<b>26</b> <em>Matchday</em></span>
     </a>
     <nav id="nav" aria-label="Primary">
-      {NAV.map(([p, l]) => <a href={B + p} class={isOn(p) ? 'on' : ''}><span>{l}</span></a>)}
+      {NAV.map(([p, k]) => <a href={B + p} class={isOn(p) ? 'on' : ''}><span>{t(lang, k)}</span></a>)}
     </nav>
     <div class="actions">
       <a class="navcd" id="navcd" href={B + 'matches/1/'} title="Time to the opening match">
@@ -68,6 +76,7 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <span class="sp-t">Search</span><kbd>⌘K</kbd>
       </button>
+      {i18n && <div class="langsw" role="group" aria-label={t(lang, 'a.language')}>{i18n.locales.map(L => <a class={L === lang ? 'on' : ''} href={urlFor(L)} hreflang={L} lang={L} aria-current={L === lang ? 'true' : undefined}>{LOCALE_LABEL[L]}</a>)}</div>}
       <button class="iconbtn favbtn" id="favBtn" aria-label="Follow your nation" title="Follow your nation">☆</button>
       <button class="iconbtn" id="themeb" aria-label="Toggle theme">☀️</button>
     </div>

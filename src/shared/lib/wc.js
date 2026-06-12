@@ -106,7 +106,9 @@ export function decodeSlot(s){let m;s=(s||'').trim();
 
 /* Plain-English reasoning for a predicted scoreline — grounded in the model's
    own inputs (attack vs defence, win probability, projected goals). */
-export function explainMatch(teamA, teamB, p) {
+// opt.name(team)->localized name, opt.L = phrase pack (i18n.explainPack). English by default.
+export function explainMatch(teamA, teamB, p, opt = {}) {
+  const nm = opt.name || (x => x.team_name), L = opt.L || null;
   const fav = p.pH > p.pA ? teamA : p.pA > p.pH ? teamB : null;
   const dog = fav === teamA ? teamB : teamA;
   const aAtt = Math.round(teamA.attack || 0), aDef = Math.round(teamA.defense || 0);
@@ -114,15 +116,22 @@ export function explainMatch(teamA, teamB, p) {
   const goals = p.ha + p.aa;
   let lead;
   if (!fav) {
-    lead = `${teamA.team_name} and ${teamB.team_name} are line-ball — the model splits it ${p.pH}/${p.pD}/${p.pA}%`;
+    lead = L ? L.lineball(nm(teamA), nm(teamB), p.pH, p.pD, p.pA)
+             : `${nm(teamA)} and ${nm(teamB)} are line-ball — the model splits it ${p.pH}/${p.pD}/${p.pA}%`;
   } else {
     const fAtt = fav === teamA ? aAtt : bAtt, oDef = fav === teamA ? bDef : aDef;
-    const fp = fav === teamA ? p.pH : p.pA;
-    const verb = (fAtt - oDef) > 22 ? 'is in a different class to' : (fAtt - oDef) > 8 ? 'has a clear edge over' : 'narrowly outguns';
-    lead = `${fav.team_name}'s attack (rated ${fAtt}) ${verb} ${dog.team_name}'s defence (${oDef}), so the model makes them ${fp}% favourites`;
+    const fp = fav === teamA ? p.pH : p.pA, diff = fAtt - oDef;
+    if (L) {
+      lead = L.fav(nm(fav), fAtt, diff > 22 ? L.classV : diff > 8 ? L.edgeV : L.narrowV, nm(dog), oDef, fp);
+    } else {
+      const verb = diff > 22 ? 'is in a different class to' : diff > 8 ? 'has a clear edge over' : 'narrowly outguns';
+      lead = `${nm(fav)}'s attack (rated ${fAtt}) ${verb} ${nm(dog)}'s defence (${oDef}), so the model makes them ${fp}% favourites`;
+    }
   }
-  const tail = goals >= 4 ? 'with goals likely at both ends' : goals <= 1 ? 'in what shapes up as a cagey, low-scoring tie' : 'in a game that should stay competitive';
-  return `${lead}, ${tail}. Projected ${p.ha}–${p.aa}.`;
+  const tail = L ? (goals >= 4 ? L.tailHigh : goals <= 1 ? L.tailLow : L.tailMid)
+                 : (goals >= 4 ? 'with goals likely at both ends' : goals <= 1 ? 'in what shapes up as a cagey, low-scoring tie' : 'in a game that should stay competitive');
+  const s = `${lead}, ${tail}. ${L ? L.projected(p.ha, p.aa) : `Projected ${p.ha}–${p.aa}.`}`;
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 /* Full tournament simulation: predict every group game -> points/standings ->

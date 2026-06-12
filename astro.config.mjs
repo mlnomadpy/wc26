@@ -13,6 +13,13 @@ export default defineConfig({
   site: 'https://www.tahabouhsine.com',
   base: '/wc26',
   trailingSlash: 'always',
+  // i18n: English stays at the root (no /en/ prefix → existing URLs unchanged);
+  // other locales serve under /<lang>/. hreflang is emitted from Base.astro.
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'es'],
+    routing: { prefixDefaultLocale: false },
+  },
   integrations: [sitemap()],
   build: { assets: 'assets' },
   vite: {

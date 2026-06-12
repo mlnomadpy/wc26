@@ -528,6 +528,12 @@
 .mp-pscore{ font-family:var(--fdisp2); font-weight:800; font-size:14px; color:var(--accent2); } .mp-pscore i{ font-style:normal; color:var(--fg-mute); margin:0 2px; }
 .fx-pred{ font:800 13px var(--fdisp2); color:var(--accent2); opacity:.85; }
 
+/* language switcher (topbar) */
+.langsw{ display:inline-flex; border:1px solid var(--line2); border-radius:8px; overflow:hidden; }
+.langsw a{ font:700 10.5px var(--fmono); letter-spacing:.04em; padding:6px 8px; color:var(--fg-mute); text-decoration:none; transition:var(--t); }
+.langsw a:hover{ color:var(--fg); background:var(--bg2); }
+.langsw a.on{ color:#06101f; background:var(--accent2); }
+
 /* ===================== PREDICTIONS HUB ===================== */
 .pr-intro{ max-width:78ch; font-size:13.5px; color:var(--fg-dim); line-height:1.55; margin:0 0 18px; }
 .pr-intro b{ color:var(--fg); }
