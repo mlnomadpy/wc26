@@ -1,7 +1,7 @@
 ---
 import GroupPage from '@widgets/GroupPage.astro';
-import DB from '../../../public/data.json';
+import DB from '../../../../public/data.json';
 export function getStaticPaths() { return [...new Set(DB.teams.map(t => t.group_letter))].sort().map(g => ({ params: { g } })); }
 const { g } = Astro.params;
 ---
-<GroupPage lang="en" g={g} />
+<GroupPage lang="es" g={g} />

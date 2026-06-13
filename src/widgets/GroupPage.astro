@@ -1,0 +1,127 @@
+---
+import Base from '@app/layouts/Base.astro';
+import Flag from '@shared/ui/Flag.astro';
+import DB from '../../public/data.json';
+import { CONF, teamRating, indexes, rating, predictMatch } from '@shared/lib/wc.js';
+import { t, teamName } from '@shared/lib/i18n.js';
+const { lang = 'en', g } = Astro.props;
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const IX = indexes(DB);
+const nm = tm => teamName(tm, lang);
+const GWORD = { en: 'Group', es: 'Grupo', pt: 'Grupo', fr: 'Groupe', de: 'Gruppe', it: 'Girone' };
+
+const expScore = (dr) => 1 / (1 + Math.pow(10, -dr / 11));
+const xPtsVs = (dr) => 3 * expScore(dr);
+const teams = DB.teams.filter(t0 => t0.group_letter === g).map(t0 => {
+  const sq = IX.playersByTeam[t0.fifa_code] || [];
+  const star = sq.slice().sort((a, b) => rating(b) - rating(a))[0];
+  return { ...t0, rating: teamRating(t0.fifa_ranking) ?? 60, star };
+});
+teams.forEach(tm => { tm.xpts = teams.filter(o => o !== tm).reduce((s, o) => s + xPtsVs(tm.rating - o.rating), 0); });
+const table = teams.slice().sort((a, b) => b.xpts - a.xpts || (a.fifa_ranking || 999) - (b.fifa_ranking || 999));
+const ratings = teams.map(tm => tm.rating);
+const rMin = Math.min(...ratings) - 4, rMax = Math.max(...ratings) + 1;
+const barPct = (r) => Math.round(((r - rMin) / (rMax - rMin)) * 100);
+const outlook = (i) => i < 2 ? { c: 'adv', t: t(lang, 'g.out.adv') } : i === 2 ? { c: 'thrd', t: t(lang, 'g.out.thrd') } : { c: 'out', t: t(lang, 'g.out.out') };
+
+const fixtures = DB.matches.filter(m => m.match_label === 'Group ' + g).sort((a, b) => a.match_number - b.match_number);
+const fmtDay = (s) => { const d = new Date((s || '').replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00')); return isNaN(d) ? '' : d.toLocaleDateString(lang === 'en' ? 'en-US' : lang === 'pt' ? 'pt-BR' : lang + '-' + lang.toUpperCase(), { month: 'short', day: 'numeric' }); };
+const fav = table[0];
+const gs = [...new Set(DB.teams.map(t0 => t0.group_letter))].sort();
+const liveRows = (DB.standings && DB.standings[g] && DB.standings[g].length) ? DB.standings[g] : null;
+const byCode = {}; teams.forEach(tm => (byCode[tm.fifa_code] = tm));
+const hasScore = (m) => m.home_score != null && m.away_score != null;
+const predOf = m => (byCode[m.home_code] && byCode[m.away_code]) ? predictMatch(byCode[m.home_code], byCode[m.away_code]) : null;
+---
+<Base title={t(lang, 'g.title', { g })} description={t(lang, 'g.desc', { g })} lang={lang} i18n={{ path: 'groups/' + g + '/', locales: ['en', 'es', 'pt', 'fr', 'de', 'it'] }}>
+  <div class="app-page">
+    <a class="btn back" href={B + 'groups/'}>← {t(lang, 'g.allgroups')}</a>
+
+    <div class="dhero ghero">
+      <div class="dh-main">
+        <div class="dh-num">{g}</div>
+        <div>
+          <div class="dh-eye">{liveRows ? t(lang, 'g.eyeLive') : t(lang, 'g.eyeProj')}</div>
+          <h1>{(GWORD[lang] || 'Group') + ' ' + g}</h1>
+          <div class="dh-meta">{t(lang, 'g.meta', { n: table.length, f: fixtures.length, fav: nm(fav) })}</div>
+        </div>
+      </div>
+      <div class="ghero-flags">
+        {table.map(tm => <a href={`${B}teams/${tm.fifa_code.toLowerCase()}/`} title={nm(tm)}><Flag code={tm.fifa_code} cls="lg" /></a>)}
+      </div>
+    </div>
+
+    <div class="grp-jump">
+      {gs.map(x => <a class={`gj ${x === g ? 'on' : ''}`} href={B + (lang === 'en' ? '' : lang + '/') + 'groups/' + x + '/'}>{x}</a>)}
+    </div>
+
+    <div class="app-grow scroll">
+    <div class="grid2 grp-grid">
+      <section class="panel">
+        {liveRows ? (
+          <>
+            <h3><span class="tag live">{t(lang, 'g.stLive')}</span></h3>
+            <table class="grp-table">
+              <thead><tr><th>{t(lang, 'pred.th.pos')}</th><th>{t(lang, 'pred.th.team')}</th><th>{t(lang, 'pred.th.pld')}</th><th>{t(lang, 'g.th.w')}</th><th>{t(lang, 'g.th.d')}</th><th>{t(lang, 'g.th.l')}</th><th>{t(lang, 'pred.th.gd')}</th><th>{t(lang, 'pred.th.pts')}</th><th>{t(lang, 'g.th.outlook')}</th></tr></thead>
+              <tbody>
+                {liveRows.map((r, i) => { const o = outlook(i), tm = byCode[r.code] || {}; return (
+                  <tr class={`grp-row ${o.c}`} onclick={`location.href='${B}teams/${r.code.toLowerCase()}/'`} style={`--cc:${CONF[tm.confederation] || '#6b7a90'}`}>
+                    <td class="grp-pos">{i + 1}</td>
+                    <td><span class="nat"><Flag code={r.code} cls="sm" /> <b>{nm(tm.fifa_code ? tm : { fifa_code: r.code, team_name: r.team })}</b></span></td>
+                    <td class="mono faint">{r.P}</td><td class="mono">{r.W}</td><td class="mono">{r.D}</td><td class="mono">{r.L}</td>
+                    <td class="mono">{r.GD > 0 ? '+' + r.GD : r.GD}</td><td class="mono"><b>{r.Pts}</b></td>
+                    <td><span class={`qual ${o.c}`}>{o.t}</span></td>
+                  </tr>
+                ); })}
+              </tbody>
+            </table>
+            <p class="grp-note faint">{t(lang, 'g.noteLive')}</p>
+          </>
+        ) : (
+          <>
+            <h3><span class="tag">{t(lang, 'g.stProj')}</span></h3>
+            <table class="grp-table">
+              <thead><tr><th>{t(lang, 'pred.th.pos')}</th><th>{t(lang, 'pred.th.team')}</th><th>{t(lang, 'g.th.fifa')}</th><th>{t(lang, 'g.th.rating')}</th><th>{t(lang, 'g.th.xpts')}</th><th>{t(lang, 'g.th.outlook')}</th></tr></thead>
+              <tbody>
+                {table.map((tm, i) => { const o = outlook(i); return (
+                  <tr class={`grp-row ${o.c}`} onclick={`location.href='${B}teams/${tm.fifa_code.toLowerCase()}/'`} style={`--cc:${CONF[tm.confederation] || '#6b7a90'}`}>
+                    <td class="grp-pos">{i + 1}</td>
+                    <td>
+                      <span class="nat"><Flag code={tm.fifa_code} cls="sm" /> <b>{nm(tm)}</b></span>
+                      {tm.star && <div class="grp-star">★ {tm.star.player_name}</div>}
+                    </td>
+                    <td class="mono faint">{tm.fifa_ranking ? '#' + tm.fifa_ranking : '—'}</td>
+                    <td><div class="grp-rate"><span class="grp-rnum">{tm.rating}</span><span class="bartrack grp-bar"><span class="bar" style={`width:${barPct(tm.rating)}%`}></span></span></div></td>
+                    <td class="mono"><b>{tm.xpts.toFixed(1)}</b></td>
+                    <td><span class={`qual ${o.c}`}>{o.t}</span></td>
+                  </tr>
+                ); })}
+              </tbody>
+            </table>
+            <p class="grp-note faint">{t(lang, 'g.noteProj')}</p>
+          </>
+        )}
+      </section>
+
+      <section class="panel">
+        <h3><span class="tag">{t(lang, 'g.fixtures')}</span></h3>
+        <div class="fxlist">
+          {fixtures.map(m => { const pr = predOf(m); return (
+            <a class="fxrow" href={`${B}${lang === 'en' ? '' : lang + '/'}matches/${m.match_number}/`}>
+              <span class="fx-day mono">{fmtDay(m.kickoff_at)}</span>
+              <span class="fx-match">
+                <span class="fx-side fx-home"><b>{nm(byCode[m.home_code] || { fifa_code: m.home_code, team_name: m.home_team })}</b> <Flag code={m.home_code} cls="sm" /></span>
+                {hasScore(m)
+                  ? <span class="fx-vs mono fx-score">{m.home_score}–{m.away_score}</span>
+                  : <span class="fx-vs fx-pred" title={t(lang, 'm.predlab')}>{pr ? `${pr.ha}–${pr.aa}` : 'vs'}</span>}
+                <span class="fx-side fx-away"><Flag code={m.away_code} cls="sm" /> <b>{nm(byCode[m.away_code] || { fifa_code: m.away_code, team_name: m.away_team })}</b></span>
+              </span>
+              <span class="fx-city faint">{m.city}</span>
+            </a>
+          ); })}
+        </div>
+      </section>
+    </div>
+    </div>
+  </div>
+</Base>
