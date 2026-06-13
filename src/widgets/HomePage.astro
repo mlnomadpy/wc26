@@ -1,0 +1,276 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../public/data.json';
+import { indexes, flagImg, money, num } from '@shared/lib/wc.js';
+import { t, teamName } from '@shared/lib/i18n.js';
+const { lang = 'en' } = Astro.props;
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const LB = lang === 'en' ? B : B + lang + '/';   // locale base for pages that have translations
+const IDX = indexes(DB);
+const nm = tm => teamName(tm, lang);
+const P = DB.players;
+const m1 = DB.matches.find(m => m.match_number === 1) || DB.matches[0];
+const ht = IDX.teamById[m1.home_team_id], at = IDX.teamById[m1.away_team_id], c1 = IDX.cityById[m1.city_id];
+const target = (m1.kickoff_at || '2026-06-11 15:00:00-06').replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00');
+
+const oldest = [...P].filter(p => p.age).sort((a, b) => b.age - a.age)[0];
+const youngest = [...P].filter(p => p.age).sort((a, b) => a.age - b.age)[0];
+const topVal = [...P].filter(p => p.market_value_eur).sort((a, b) => b.market_value_eur - a.market_value_eur)[0];
+const topScorer = [...P].sort((a, b) => (b.international_goals || 0) - (a.international_goals || 0))[0];
+const clubCount = {}; P.forEach(p => { if (p.club) clubCount[p.club] = (clubCount[p.club] || 0) + 1; });
+const topClub = Object.entries(clubCount).sort((a, b) => b[1] - a[1])[0];
+const pUrl = p => `${B}players/${p.player_id}/`;
+const face = id => `${B}faces/${id}.jpg`;
+const avatar = name => `https://api.dicebear.com/9.x/micah/svg?seed=${encodeURIComponent(name)}&radius=0&backgroundColor=transparent`;
+const onFace = name => `this.onerror=null;this.src='${avatar(name)}'`;
+const find = n => P.find(p => p.player_name.includes(n));
+const messi = find('Messi'), ronaldo = find('Cristiano Ronaldo');
+
+const tiles = [
+  { big: youngest?.age, pid: youngest?.player_id, name: youngest?.player_name, img: flagImg(youngest?.fifa_code), lab: t(lang, 'h.tile.youngest'), sub: youngest?.player_name + ' · ' + youngest?.club, href: pUrl(youngest) },
+  { big: oldest?.age, pid: oldest?.player_id, name: oldest?.player_name, img: flagImg(oldest?.fifa_code), lab: t(lang, 'h.tile.oldest'), sub: oldest?.player_name + ' · ' + oldest?.club, href: pUrl(oldest) },
+  { big: topScorer.international_goals, pid: topScorer.player_id, name: topScorer.player_name, img: flagImg(topScorer.fifa_code), lab: t(lang, 'h.tile.scorer'), sub: topScorer.player_name, href: pUrl(topScorer) },
+  topVal && { big: money(topVal.market_value_eur), pid: topVal.player_id, name: topVal.player_name, img: flagImg(topVal.fifa_code), lab: t(lang, 'h.tile.value'), sub: topVal.player_name + ' · ' + topVal.club, href: pUrl(topVal) },
+  topClub && { big: topClub[1], lab: t(lang, 'h.tile.club'), sub: t(lang, 'h.tile.clubsub', { club: topClub[0], n: topClub[1] }), href: B + 'clubs/' },
+  { big: '12→1', lab: t(lang, 'h.tile.bracket'), sub: t(lang, 'h.tile.bracketsub'), href: B + 'bracket/' },
+].filter(Boolean);
+
+const marquee = [...DB.teams].sort((a, b) => a.group_letter.localeCompare(b.group_letter));
+const teamNext = {};
+[...DB.matches].sort((a, b) => a.match_number - b.match_number).forEach(m => {
+  [[m.home_code, m.away_code], [m.away_code, m.home_code]].forEach(([c, oppCode]) => { if (c && !teamNext[c]) teamNext[c] = { oppCode, n: m.match_number, when: (m.kickoff_at || '').slice(0, 10) }; });
+});
+const MYTEAMS = DB.teams.reduce((o, tm) => {
+  const nx = teamNext[tm.fifa_code];
+  o[tm.fifa_code] = { n: nm(tm), g: tm.group_letter, f: flagImg(tm.fifa_code, 40), next: nx ? { opp: nm(IDX.teamByCode[nx.oppCode] || { fifa_code: nx.oppCode, team_name: nx.oppCode }), when: nx.when } : null };
+  return o;
+}, {});
+const svg = (p) => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const ICON = {
+  teams: svg('<path d="M12 3 4 6v6c0 5 3.5 7.5 8 9 4.5-1.5 8-4 8-9V6l-8-3z"/>'),
+  players: svg('<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.6a3 3 0 0 1 0 5.6M22 20a6 6 0 0 0-5-5.9"/>'),
+  matches: svg('<circle cx="12" cy="12" r="8.5"/><path d="m12 7.6 2.6 1.9-1 3.1h-3.2l-1-3.1z"/>'),
+  map: svg('<path d="M12 21s-6-5.3-6-10a6 6 0 1 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/>'),
+  insights: svg('<path d="M5 19V11M12 19V5M19 19v-6"/><path d="M4 20h16"/>'),
+  compare: svg('<path d="M3 8h13l-3-3M21 16H8l3 3"/>'),
+  groups: svg('<rect x="4" y="4" width="7" height="7" rx="1.2"/><rect x="13" y="4" width="7" height="7" rx="1.2"/><rect x="4" y="13" width="7" height="7" rx="1.2"/><rect x="13" y="13" width="7" height="7" rx="1.2"/>'),
+  data: svg('<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/>'),
+};
+const explore = [
+  [ICON.teams, B + 'teams/', t(lang, 'nav.teams'), t(lang, 'h.x.teams.s')],
+  [ICON.players, B + 'players/', t(lang, 'nav.players'), t(lang, 'h.x.players.s')],
+  [ICON.matches, LB + 'matches/', t(lang, 'h.x.matches.h'), t(lang, 'h.x.matches.s')],
+  [ICON.matches, LB + 'predictions/', t(lang, 'nav.predictions'), t(lang, 'h.x.pred.s')],
+  [ICON.map, B + 'map/', t(lang, 'h.x.map.h'), t(lang, 'h.x.map.s')],
+  [ICON.insights, B + 'insights/', t(lang, 'nav.insights'), t(lang, 'h.x.insights.s')],
+  [ICON.compare, B + 'compare/', t(lang, 'nav.compare'), t(lang, 'h.x.compare.s')],
+  [ICON.groups, LB + 'groups/', t(lang, 'nav.groups'), t(lang, 'h.x.groups.s')],
+  [ICON.data, B + 'data/', t(lang, 'h.x.data.h'), t(lang, 'h.x.data.s')],
+];
+const jsonld = [
+  { '@context': 'https://schema.org', '@type': 'WebSite', name: 'WC26 Matchday', url: 'https://www.tahabouhsine.com' + LB, inLanguage: lang },
+  { '@context': 'https://schema.org', '@type': 'SportsEvent', name: 'FIFA World Cup 2026', sport: 'Association football', startDate: '2026-06-11', endDate: '2026-07-19', location: [{ '@type': 'Country', name: 'United States' }, { '@type': 'Country', name: 'Canada' }, { '@type': 'Country', name: 'Mexico' }] },
+];
+const tx = { following: t(lang, 'h.following', { team: '{team}' }), group: t(lang, 'h.group', { g: '{g}' }), next: t(lang, 'h.next', { opp: '{opp}', when: '{when}' }), opensquad: t(lang, 'h.opensquad'), liveLab: t(lang, 'h.live.lab'), liveTxt: t(lang, 'h.live.txt'), liveBtn: t(lang, 'h.live.btn') };
+---
+<Base title={t(lang, 'h.title')} description={t(lang, 'h.desc')} jsonld={jsonld} lang={lang} i18n={{ path: '', locales: ['en', 'es', 'pt', 'fr', 'de', 'it'] }}>
+  <div class="home">
+  <section class="home-hero bl-hero reveal">
+    <div class="hh-bg" aria-hidden="true" style={`background-image:url(${B}hero/bg.jpg)`}></div>
+    <div class="hh-grad" aria-hidden="true"></div>
+    <div class="hh-inner">
+      <div class="hh-copy">
+        <div class="lh-eye"><span class="lh-dot"></span> {t(lang, 'h.eyebrow')}</div>
+        <h1>{t(lang, 'h.h1a')}<span class="accent">{t(lang, 'h.h1b')}</span>{t(lang, 'h.h1c')}</h1>
+        <p class="hh-lede">{t(lang, 'h.lede')}</p>
+        <div class="hh-cta">
+          <a class="btn primary" href={B + 'teams/'}>{t(lang, 'h.cta.teams')}</a>
+          <a class="btn" href={LB + 'predictions/'}>{t(lang, 'h.cta.predictions')}</a>
+        </div>
+        <a class="lh-cd hh-cd" href={LB + 'matches/1/'} id="cd" data-target={target}>
+          <i class="cardbeam" aria-hidden="true"></i>
+          <div class="cd-lab">{t(lang, 'h.kickoff')}</div>
+          <div class="cd-clock">
+            <span><b id="cd-d">–</b><i>{t(lang, 'h.days')}</i></span>
+            <span><b id="cd-h">–</b><i>{t(lang, 'h.hrs')}</i></span>
+            <span><b id="cd-m">–</b><i>{t(lang, 'h.min')}</i></span>
+            <span><b id="cd-s">–</b><i>{t(lang, 'h.sec')}</i></span>
+          </div>
+          <div class="cd-match">
+            <img class="flagi" src={flagImg(ht.fifa_code)} alt="" /><span>{nm(ht)}</span>
+            <em>vs</em>
+            <span>{nm(at)}</span><img class="flagi" src={flagImg(at.fifa_code)} alt="" />
+          </div>
+          <div class="cd-meta">{c1 ? c1.city_name + ' · ' : ''}{t(lang, 'h.opening')}</div>
+        </a>
+      </div>
+
+      <a class="bl-faceoff" href={B + 'compare/'} aria-label="The Last Dance — compare Messi and Ronaldo">
+        <i class="cardbeam" aria-hidden="true"></i>
+        <div class="bl-fo-head"><span class="bl-spark"></span> {t(lang, 'h.lastdance')} <span class="bl-spark"></span></div>
+        <div class="bl-duel">
+          <div class="bl-player left">
+            <img class="bl-flag" src={flagImg('ARG')} alt="" /><b class="bl-name">Messi</b><span class="bl-club">{nm(IDX.teamByCode['ARG'])}</span>
+            <div class="bl-st"><span>{messi?.international_goals ?? 116}<i>{t(lang, 'h.goals')}</i></span><span>{messi?.caps ?? 198}<i>{t(lang, 'h.caps')}</i></span><span>{messi?.age ?? 38}<i>{t(lang, 'h.age')}</i></span></div>
+          </div>
+          <div class="bl-vs" aria-hidden="true">
+            <svg class="bl-vs-svg" viewBox="0 0 180 112" role="img">
+              <defs>
+                <linearGradient id="vsFill" x1="24" y1="8" x2="152" y2="102" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#6effbb" /><stop offset=".52" stop-color="#22e68c" /><stop offset="1" stop-color="#08a95d" /></linearGradient>
+                <filter id="vsGlow" x="-25%" y="-35%" width="150%" height="170%"><feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#26e98e" flood-opacity=".62" /><feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#02101e" flood-opacity=".72" /></filter>
+              </defs>
+              <path class="vs-shadow" d="M20 15c7-4 19-4 26 0l25 64 41-66c7-5 20-5 27 0l-56 89c-8 8-27 9-34-1L20 15Z" />
+              <path class="vs-shadow" d="M163 19c-18-9-42-8-52 5-9 12 1 22 21 26 23 5 34 17 24 34-12 20-45 23-70 9l12-23c17 8 35 8 41 1 4-5-1-9-15-13-23-6-35-17-27-33 10-20 43-26 77-13l-11 7Z" />
+              <path class="vs-mark" d="M16 9c8-5 21-5 29 0l25 65 42-68c8-4 22-4 30 1l-57 91c-9 9-29 10-37-1L16 9Z" />
+              <path class="vs-mark" d="M159 13c-19-9-43-8-54 6-9 12 1 22 22 27 24 5 35 18 24 35-12 20-46 23-72 9l13-23c17 8 36 8 42 1 4-5-1-9-15-13-24-6-36-18-28-34 11-21 45-27 79-14l-11 6Z" />
+              <path class="vs-cut" d="M35 23 49 62M104 84c15 5 31 4 40-3M117 27c13-5 28-5 42 0M71 75 114 9" />
+            </svg>
+          </div>
+          <div class="bl-player right">
+            <img class="bl-flag" src={flagImg('POR')} alt="" /><b class="bl-name">Ronaldo</b><span class="bl-club">{nm(IDX.teamByCode['POR'])}</span>
+            <div class="bl-st"><span>{ronaldo?.international_goals ?? 143}<i>{t(lang, 'h.goals')}</i></span><span>{ronaldo?.caps ?? 227}<i>{t(lang, 'h.caps')}</i></span><span>{ronaldo?.age ?? 41}<i>{t(lang, 'h.age')}</i></span></div>
+          </div>
+        </div>
+        <div class="bl-fo-foot">{t(lang, 'h.lastdance.foot')}</div>
+      </a>
+    </div>
+
+    <div class="hero-dashboard reveal d1">
+      <section class="home-stats" aria-label="Tournament totals">
+        <a href={B + 'teams/'}><span class="stat-ico" set:html={ICON.teams}></span><b>{DB.teams.length}</b><span>{t(lang, 'h.stat.teams')}</span></a>
+        <a href={B + 'players/'}><span class="stat-ico" set:html={ICON.players}></span><b>{num(P.length)}</b><span>{t(lang, 'h.stat.players')}</span></a>
+        <a href={LB + 'matches/'}><span class="stat-ico" set:html={ICON.matches}></span><b>{DB.matches.length}</b><span>{t(lang, 'h.stat.matches')}</span></a>
+        <a href={B + 'map/'}><span class="stat-ico" set:html={ICON.map}></span><b>{(DB.cities && DB.cities.length) || 16}</b><span>{t(lang, 'h.stat.cities')}</span></a>
+      </section>
+    </div>
+  </section>
+
+  <div class="marquee reveal d1" aria-hidden="true">
+    <div class="mtrack">
+      {[...marquee, ...marquee].map(tm => (
+        <a class="mflag" href={`${B}teams/${tm.fifa_code.toLowerCase()}/`}><img src={flagImg(tm.fifa_code, 40)} alt="" loading="lazy" width="21" height="15" />{tm.fifa_code}</a>
+      ))}
+    </div>
+  </div>
+
+  <a class="myband" id="myband" hidden></a>
+
+  <section class="home-sec reveal d2">
+    <div class="sec-head"><h2 class="sec">{t(lang, 'h.play')}</h2><a class="sec-link" href={B + 'footle/'}>{t(lang, 'h.footlelink')}</a></div>
+    <div class="home-play">
+      <a class="play-hero" href={B + 'footle/'}>
+        <span class="play-tag">{t(lang, 'h.footle.tag')}</span>
+        <h3>Footle</h3>
+        <p>{t(lang, 'h.footle.desc')}</p>
+        <span class="btn primary play-cta">{t(lang, 'h.footle.cta')}</span>
+      </a>
+      <div class="play-side">
+        <a class="play-card" href={B + 'predict/'}><span class="pi">🏆</span><span><span class="ph">{t(lang, 'h.predict.h')}</span><span class="ps">{t(lang, 'h.predict.s')}</span></span></a>
+        <a class="play-card" href={B + 'xi/'}><span class="pi">⚽</span><span><span class="ph">{t(lang, 'h.xi.h')}</span><span class="ps">{t(lang, 'h.xi.s')}</span></span></a>
+        <a class="play-card" href={B + 'hilo/'}><span class="pi">📈</span><span><span class="ph">{t(lang, 'h.hilo.h')}</span><span class="ps">{t(lang, 'h.hilo.s')}</span></span></a>
+        <a class="play-card" href={B + 'album/'}><span class="pi">🎴</span><span><span class="ph">{t(lang, 'h.album.h')}</span><span class="ps">{t(lang, 'h.album.s')}</span></span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="home-sec reveal d2">
+    <div class="sec-head"><h2 class="sec">{t(lang, 'h.visualize')}</h2><a class="sec-link" href={B + 'galaxy/'}>{t(lang, 'h.galaxylink')}</a></div>
+    <div class="viz-grid">
+      <a class="viz-card" href={B + 'galaxy/'} style="--vc:#5aa2ff"><span class="vz-ic">🌌</span><b>Talent Galaxy</b><span>{t(lang, 'h.galaxy.s')}</span></a>
+      <a class="viz-card" href={B + 'flow/'} style="--vc:#3ddc97"><span class="vz-ic">🌊</span><b>Talent Flow</b><span>{t(lang, 'h.flow.s')}</span></a>
+      <a class="viz-card" href={B + 'power/'} style="--vc:#58ddff"><span class="vz-ic">🔷</span><b>Talent Cosmos</b><span>{t(lang, 'h.cosmos.s')}</span></a>
+      <a class="viz-card" href={B + 'spread/'} style="--vc:#ff8fb0"><span class="vz-ic">📊</span><b>The Spread</b><span>{t(lang, 'h.spread.s')}</span></a>
+      <a class="viz-card" href={B + 'diaspora/'} style="--vc:#ffb454"><span class="vz-ic">🗺️</span><b>The Diaspora</b><span>{t(lang, 'h.diaspora.s')}</span></a>
+      <a class="viz-card" href={B + 'travel/'} style="--vc:#ff8f5a"><span class="vz-ic">✈️</span><b>Travel Map</b><span>{t(lang, 'h.travel.s')}</span></a>
+    </div>
+  </section>
+
+  <section class="home-sec reveal d3">
+    <div class="sec-head"><h2 class="sec">{t(lang, 'h.storylines')}</h2><a class="sec-link" href={B + 'stories/'}>{t(lang, 'h.storieslink')}</a></div>
+    <div class="story-feature">
+      <a class="story-opener" href={LB + 'matches/1/'}>
+        <div class="story-flags"><img src={flagImg(ht.fifa_code)} alt="" loading="lazy" /><span>vs</span><img src={flagImg(at.fifa_code)} alt="" loading="lazy" /></div>
+        <div>
+          <span class="tag">{t(lang, 'h.opening')}</span>
+          <h3>{nm(ht)} vs {nm(at)}</h3>
+          <p>{t(lang, 'h.storyintro', { city: c1 ? c1.city_name : 'Mexico City' })}</p>
+        </div>
+        <span class="story-btn">{t(lang, 'h.preview')}</span>
+      </a>
+    </div>
+    <div class="bento">
+      {tiles.map(s => (
+        <a class={`tile${s.pid ? ' tile-face' : ''}`} href={s.href}>
+          {s.pid && <span class="tile-pf"><img src={face(s.pid)} alt="" loading="lazy" onerror={onFace(s.name)} /></span>}
+          <div class="tile-tx"><div class="big">{s.img && <img src={s.img} alt="" width="26" height="18" loading="lazy" />}{s.big}</div><div class="lab">{s.lab}</div><div class="sub faint">{s.sub}</div></div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="home-sec reveal d3">
+    <div class="sec-head"><h2 class="sec">{t(lang, 'h.explore')}</h2></div>
+    <div class="xstrip">
+      {explore.map(([icon, u, h, s]) => (
+        <a class="xrow" href={u}><span class="xi" set:html={icon}></span><span class="xrow-tx"><span class="xh">{h}</span><span class="xs">{s}</span></span></a>
+      ))}
+    </div>
+  </section>
+
+  <section class="home-cta reveal d3">
+    <div class="hc-glow" aria-hidden="true"></div>
+    <h2>{t(lang, 'h.cta.h2')}</h2>
+    <p>{t(lang, 'h.cta.p')}</p>
+    <div class="hh-cta">
+      <a class="btn primary" href={B + 'teams/'}>{t(lang, 'h.cta.teams')}</a>
+      <a class="btn" href={B + 'players/'}>{t(lang, 'h.cta.players')}</a>
+    </div>
+  </section>
+  </div>
+
+  <script type="application/json" id="myteams" set:html={JSON.stringify(MYTEAMS)}></script>
+  <script define:vars={{ tx, LB }}>
+    (function () {
+      const MY = JSON.parse(document.getElementById('myteams').textContent);
+      const B = window.__B__ || '/';
+      const fav = localStorage.getItem('wc-fav'), band = document.getElementById('myband');
+      if (fav && MY[fav] && band) {
+        const tm = MY[fav];
+        band.hidden = false; band.href = `${B}teams/${fav.toLowerCase()}/`;
+        band.innerHTML = `<img src="${tm.f}" alt=""><b>${tx.following.replace('{team}', tm.n)}</b><span>${tx.group.replace('{g}', tm.g)}</span>` +
+          (tm.next ? `<span>${tx.next.replace('{opp}', tm.next.opp).replace('{when}', tm.next.when)}</span>` : '') + `<em>${tx.opensquad}</em>`;
+      }
+    })();
+  </script>
+  <script define:vars={{ tx, LB }}>
+    const root = document.getElementById('cd');
+    if (root) {
+      const target = new Date(root.dataset.target).getTime();
+      const el = id => document.getElementById(id);
+      const u = { d: el('cd-d'), h: el('cd-h'), m: el('cd-m'), s: el('cd-s') };
+      let iv;
+      function tick() {
+        const diff = target - Date.now();
+        if (diff <= 0) { root.innerHTML = `<div class="lab">${tx.liveLab}</div><div class="cdlive">${tx.liveTxt}</div><a class="btn primary" href="${LB}matches/">${tx.liveBtn}</a>`; clearInterval(iv); return; }
+        u.d.textContent = Math.floor(diff / 864e5);
+        u.h.textContent = String(Math.floor(diff / 36e5) % 24).padStart(2, '0');
+        u.m.textContent = String(Math.floor(diff / 6e4) % 60).padStart(2, '0');
+        u.s.textContent = String(Math.floor(diff / 1e3) % 60).padStart(2, '0');
+        u.s.classList.remove('tick'); void u.s.offsetWidth; u.s.classList.add('tick');
+      }
+      tick(); iv = setInterval(tick, 1000);
+    }
+    const RM = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    const reveals = document.querySelectorAll('.reveal');
+    if (RM || !('IntersectionObserver' in window)) { reveals.forEach(r => r.classList.add('in')); }
+    else {
+      const io = new IntersectionObserver((entries, obs) => { entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); } }); }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
+      reveals.forEach(r => io.observe(r));
+    }
+    if (!RM && window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
+      document.querySelectorAll('.home-stats a, .tile, .xrow').forEach(card => {
+        card.addEventListener('pointermove', e => { const r = card.getBoundingClientRect(); card.style.setProperty('--mx', (e.clientX - r.left) + 'px'); card.style.setProperty('--my', (e.clientY - r.top) + 'px'); });
+      });
+    }
+  </script>
+</Base>
