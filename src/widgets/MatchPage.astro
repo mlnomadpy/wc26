@@ -3,7 +3,7 @@ import Base from '@app/layouts/Base.astro';
 import Flag from '@shared/ui/Flag.astro';
 import DB from '../../public/data.json';
 import { indexes, autoForm, pickXI, FORMATIONS, surname, num, money, avgAge, rating, teamRating, predictMatch, explainMatch } from '@shared/lib/wc.js';
-import { t, teamName, explainPack } from '@shared/lib/i18n.js';
+import { t, teamName, explainPack, finishName, stageName } from '@shared/lib/i18n.js';
 const { lang = 'en', n } = Astro.props;
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const HOME = '#e9bb4c', AWAY = '#5b9cff';
@@ -15,7 +15,7 @@ const m = DB.matches.find(x => String(x.match_number) === String(n));
 const ht = m.home_code ? IDX.teamByCode[m.home_code] : null;
 const at = m.away_code ? IDX.teamByCode[m.away_code] : null;
 const city = m.city_id ? DB.cities.find(c => c.id === m.city_id) : null;
-const pedigree = tm => !tm ? '' : tm.is_debut ? t(lang, 'm.ped.debut') : tm.titles > 0 ? t(lang, 'm.ped.champ', { n: tm.titles, s: tm.titles > 1 ? 's' : '' }) : tm.best_finish ? t(lang, 'm.ped.best', { finish: tm.best_finish }) : '';
+const pedigree = tm => !tm ? '' : tm.is_debut ? t(lang, 'm.ped.debut') : tm.titles > 0 ? t(lang, 'm.ped.champ', { n: tm.titles, s: tm.titles > 1 ? 's' : '' }) : tm.best_finish ? t(lang, 'm.ped.best', { finish: finishName(tm.best_finish, lang) }) : '';
 const sum = (tm, k) => (IDX.playersByTeam[tm.fifa_code] || []).reduce((s, p) => s + (p[k] || 0), 0);
 const aa = tm => avgAge(IDX.playersByTeam[tm.fifa_code] || []) || 0;
 const kick = (m.kickoff_at || '').replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00');
@@ -90,7 +90,7 @@ const jsonld = (ht && at) ? {
       {ht && pedigree(ht) && <div class={`ms-ped ${ht.titles > 0 ? 'champ' : ''}`}>{pedigree(ht)}</div>}
     </div>
     <div class="ms-vs">
-      <div class="ms-stage">{m.stage}</div>
+      <div class="ms-stage">{stageName(m.stage, lang)}</div>
       {pred ? (
         <div class="ms-pred" title={t(lang, 'm.predlab')}>
           <span class="ms-pred-lab">{t(lang, 'm.predlab')}</span>

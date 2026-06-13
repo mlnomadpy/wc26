@@ -195,6 +195,24 @@ const TEAM = {
   it: { MEX: 'Messico', RSA: 'Sudafrica', KOR: 'Corea del Sud', CZE: 'Cechia', BIH: 'Bosnia ed Erzegovina', SUI: 'Svizzera', BRA: 'Brasile', MAR: 'Marocco', SCO: 'Scozia', USA: 'Stati Uniti', AUS: 'Australia', TUR: 'Turchia', GER: 'Germania', CIV: 'Costa d’Avorio', NED: 'Paesi Bassi', JPN: 'Giappone', SWE: 'Svezia', BEL: 'Belgio', EGY: 'Egitto', NZL: 'Nuova Zelanda', ESP: 'Spagna', CPV: 'Capo Verde', KSA: 'Arabia Saudita', FRA: 'Francia', NOR: 'Norvegia', ALG: 'Algeria', JOR: 'Giordania', COD: 'RD Congo', COL: 'Colombia', ENG: 'Inghilterra', CRO: 'Croazia', POR: 'Portogallo' },
 };
 
+// best-finish + stage values (data is English) localized for the match pages
+const FINISH = {
+  es: { 'Winners': 'Campeón', 'Runners-up': 'Subcampeón', 'Third place': 'Tercer puesto', 'Fourth place': 'Cuarto puesto', 'Quarter-finals': 'Cuartos de final', 'Round of 16': 'Octavos de final', 'Group stage': 'Fase de grupos', 'Debut': 'Debut' },
+  pt: { 'Winners': 'Campeã', 'Runners-up': 'Vice-campeã', 'Third place': 'Terceiro lugar', 'Fourth place': 'Quarto lugar', 'Quarter-finals': 'Quartas de final', 'Round of 16': 'Oitavas de final', 'Group stage': 'Fase de grupos', 'Debut': 'Estreia' },
+  fr: { 'Winners': 'Vainqueur', 'Runners-up': 'Finaliste', 'Third place': 'Troisième', 'Fourth place': 'Quatrième', 'Quarter-finals': 'Quarts de finale', 'Round of 16': 'Huitièmes de finale', 'Group stage': 'Phase de groupes', 'Debut': '1re participation' },
+  de: { 'Winners': 'Weltmeister', 'Runners-up': 'Vizeweltmeister', 'Third place': 'Dritter', 'Fourth place': 'Vierter', 'Quarter-finals': 'Viertelfinale', 'Round of 16': 'Achtelfinale', 'Group stage': 'Gruppenphase', 'Debut': 'Debüt' },
+  it: { 'Winners': 'Campione', 'Runners-up': 'Finalista', 'Third place': 'Terzo posto', 'Fourth place': 'Quarto posto', 'Quarter-finals': 'Quarti di finale', 'Round of 16': 'Ottavi di finale', 'Group stage': 'Fase a gironi', 'Debut': 'Esordio' },
+};
+const STAGE = {
+  es: { 'Group Stage': 'Fase de grupos', 'Round of 32': 'Dieciseisavos', 'Round of 16': 'Octavos', 'Quarterfinals': 'Cuartos', 'Semifinals': 'Semifinales', 'Final': 'Final' },
+  pt: { 'Group Stage': 'Fase de grupos', 'Round of 32': '16-avos', 'Round of 16': 'Oitavas', 'Quarterfinals': 'Quartas', 'Semifinals': 'Semifinais', 'Final': 'Final' },
+  fr: { 'Group Stage': 'Phase de groupes', 'Round of 32': 'Seizièmes', 'Round of 16': 'Huitièmes', 'Quarterfinals': 'Quarts', 'Semifinals': 'Demi-finales', 'Final': 'Finale' },
+  de: { 'Group Stage': 'Gruppenphase', 'Round of 32': 'Sechzehntelfinale', 'Round of 16': 'Achtelfinale', 'Quarterfinals': 'Viertelfinale', 'Semifinals': 'Halbfinale', 'Final': 'Finale' },
+  it: { 'Group Stage': 'Fase a gironi', 'Round of 32': 'Sedicesimi', 'Round of 16': 'Ottavi', 'Quarterfinals': 'Quarti', 'Semifinals': 'Semifinali', 'Final': 'Finale' },
+};
+export const finishName = (v, lang) => (v && lang !== 'en' && FINISH[lang] && FINISH[lang][v]) || v;
+export const stageName = (v, lang) => (v && lang !== 'en' && STAGE[lang] && STAGE[lang][v]) || v;
+
 export function t(lang, key, vars) {
   let s = (STR[lang] && STR[lang][key]) ?? STR.en[key] ?? key;
   if (vars) for (const k in vars) s = String(s).split('{' + k + '}').join(vars[k]);
