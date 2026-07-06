@@ -2,7 +2,7 @@
 import Base from '@app/layouts/Base.astro';
 import DB from '../../public/data.json';
 import { indexes, flagImg, money, num } from '@shared/lib/wc.js';
-import { t, teamName } from '@shared/lib/i18n.js';
+import { t, teamName, stageName } from '@shared/lib/i18n.js';
 const { lang = 'en' } = Astro.props;
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const LB = lang === 'en' ? B : B + lang + '/';   // locale base for pages that have translations
@@ -12,6 +12,18 @@ const P = DB.players;
 const m1 = DB.matches.find(m => m.match_number === 1) || DB.matches[0];
 const ht = IDX.teamById[m1.home_team_id], at = IDX.teamById[m1.away_team_id], c1 = IDX.cityById[m1.city_id];
 const target = (m1.kickoff_at || '2026-06-11 15:00:00-06').replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00');
+
+// upcoming matches → client picks the true next match in the visitor's timezone
+const isoK = k => (k || '').replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00');
+const upcoming = DB.matches
+  .filter(mm => mm.status !== 'final')
+  .sort((a, b) => (a.kickoff_at || '').localeCompare(b.kickoff_at || ''))
+  .map(mm => ({
+    n: mm.match_number, k: isoK(mm.kickoff_at), stage: stageName(mm.stage, lang), city: (mm.city || '').split('/')[0],
+    hn: mm.home_code ? nm(IDX.teamByCode[mm.home_code]) : null, an: mm.away_code ? nm(IDX.teamByCode[mm.away_code]) : null,
+    hf: mm.home_code ? flagImg(mm.home_code) : null, af: mm.away_code ? flagImg(mm.away_code) : null,
+  }));
+const nextDef = upcoming.find(u => u.hn && u.an) || upcoming[0] || null;
 
 const oldest = [...P].filter(p => p.age).sort((a, b) => b.age - a.age)[0];
 const youngest = [...P].filter(p => p.age).sort((a, b) => a.age - b.age)[0];
@@ -71,7 +83,7 @@ const jsonld = [
   { '@context': 'https://schema.org', '@type': 'WebSite', name: 'WC26 Matchday', url: 'https://www.tahabouhsine.com' + LB, inLanguage: lang },
   { '@context': 'https://schema.org', '@type': 'SportsEvent', name: 'FIFA World Cup 2026', sport: 'Association football', startDate: '2026-06-11', endDate: '2026-07-19', location: [{ '@type': 'Country', name: 'United States' }, { '@type': 'Country', name: 'Canada' }, { '@type': 'Country', name: 'Mexico' }] },
 ];
-const tx = { following: t(lang, 'h.following', { team: '{team}' }), group: t(lang, 'h.group', { g: '{g}' }), next: t(lang, 'h.next', { opp: '{opp}', when: '{when}' }), opensquad: t(lang, 'h.opensquad'), liveLab: t(lang, 'h.live.lab'), liveTxt: t(lang, 'h.live.txt'), liveBtn: t(lang, 'h.live.btn') };
+const tx = { following: t(lang, 'h.following', { team: '{team}' }), group: t(lang, 'h.group', { g: '{g}' }), next: t(lang, 'h.next', { opp: '{opp}', when: '{when}' }), opensquad: t(lang, 'h.opensquad'), liveLab: t(lang, 'h.live.lab'), liveTxt: t(lang, 'h.live.txt'), liveBtn: t(lang, 'h.live.btn'), nxNext: t(lang, 'h.nx.next'), nxLive: t(lang, 'h.nx.live'), nxTbc: t(lang, 'h.nx.tbc') };
 ---
 <Base title={t(lang, 'h.title')} description={t(lang, 'h.desc')} jsonld={jsonld} lang={lang} i18n={{ path: '', locales: ['en', 'es', 'pt', 'fr', 'de', 'it'] }}>
   <div class="home">
@@ -87,22 +99,27 @@ const tx = { following: t(lang, 'h.following', { team: '{team}' }), group: t(lan
           <a class="btn primary" href={B + 'teams/'}>{t(lang, 'h.cta.teams')}</a>
           <a class="btn" href={LB + 'predictions/'}>{t(lang, 'h.cta.predictions')}</a>
         </div>
-        <a class="lh-cd hh-cd" href={LB + 'matches/1/'} id="cd" data-target={target}>
-          <i class="cardbeam" aria-hidden="true"></i>
-          <div class="cd-lab">{t(lang, 'h.kickoff')}</div>
-          <div class="cd-clock">
-            <span><b id="cd-d">–</b><i>{t(lang, 'h.days')}</i></span>
-            <span><b id="cd-h">–</b><i>{t(lang, 'h.hrs')}</i></span>
-            <span><b id="cd-m">–</b><i>{t(lang, 'h.min')}</i></span>
-            <span><b id="cd-s">–</b><i>{t(lang, 'h.sec')}</i></span>
-          </div>
-          <div class="cd-match">
-            <img class="flagi" src={flagImg(ht.fifa_code)} alt="" /><span>{nm(ht)}</span>
-            <em>vs</em>
-            <span>{nm(at)}</span><img class="flagi" src={flagImg(at.fifa_code)} alt="" />
-          </div>
-          <div class="cd-meta">{c1 ? c1.city_name + ' · ' : ''}{t(lang, 'h.opening')}</div>
-        </a>
+        {nextDef ? (
+          <a class="lh-cd hh-cd" href={LB + 'matches/' + nextDef.n + '/'} id="cd" data-target={nextDef.k} data-n={nextDef.n}>
+            <i class="cardbeam" aria-hidden="true"></i>
+            <div class="cd-lab" id="cd-lab">{t(lang, 'h.nx.next')}</div>
+            <div class="cd-clock" id="cd-clock">
+              <span><b id="cd-d">–</b><i>{t(lang, 'h.days')}</i></span>
+              <span><b id="cd-h">–</b><i>{t(lang, 'h.hrs')}</i></span>
+              <span><b id="cd-m">–</b><i>{t(lang, 'h.min')}</i></span>
+              <span><b id="cd-s">–</b><i>{t(lang, 'h.sec')}</i></span>
+            </div>
+            <div class="cd-match" id="cd-match">
+              {nextDef.hf && <img class="flagi" src={nextDef.hf} alt="" />}<span>{nextDef.hn || t(lang, 'h.nx.tbc')}</span>
+              <em>vs</em>
+              <span>{nextDef.an || ''}</span>{nextDef.af && <img class="flagi" src={nextDef.af} alt="" />}
+            </div>
+            <div class="cd-meta" id="cd-meta">{nextDef.stage}{nextDef.city ? ' · ' + nextDef.city : ''}</div>
+          </a>
+        ) : (
+          <div class="lh-cd hh-cd"><div class="cd-lab">{t(lang, 'h.nx.done')}</div></div>
+        )}
+        <a class="hh-today" href={LB + 'today/'}>📅 {t(lang, 'h.live.btn')} <span class="hh-today-ar">→</span></a>
       </div>
 
       <a class="bl-faceoff" href={B + 'compare/'} aria-label="The Last Dance — compare Messi and Ronaldo">
@@ -242,16 +259,38 @@ const tx = { following: t(lang, 'h.following', { team: '{team}' }), group: t(lan
       }
     })();
   </script>
-  <script define:vars={{ tx, LB }}>
+  <script define:vars={{ tx, LB, upcoming }}>
     const root = document.getElementById('cd');
-    if (root) {
+    if (root && upcoming && upcoming.length) {
+      const now = Date.now(), LIVE_MS = 2.5 * 3600 * 1000;
+      upcoming.forEach(u => u.t = new Date(u.k).getTime());
+      // a match in progress right now takes priority; otherwise the soonest kickoff still ahead
+      const live = upcoming.find(u => u.hn && u.an && u.t <= now && now - u.t < LIVE_MS);
+      const future = upcoming.filter(u => u.t > now);
+      const next = future.find(u => u.hn && u.an) || future[0] || null;
+      const show = live || next;
+      if (show) {
+        root.href = `${LB}matches/${show.n}/`;
+        root.dataset.target = show.k;
+        const set = (id, v) => { const e = document.getElementById(id); if (e) e.innerHTML = v; };
+        const flag = f => f ? `<img class="flagi" src="${f}" alt="">` : '';
+        set('cd-match', `${flag(show.hf)}<span>${show.hn || tx.nxTbc}</span><em>vs</em><span>${show.an || ''}</span>${flag(show.af)}`);
+        set('cd-meta', `${show.stage}${show.city ? ' · ' + show.city : ''}`);
+        const lab = document.getElementById('cd-lab');
+        if (live) { root.classList.add('is-live'); if (lab) lab.innerHTML = `<span class="cd-livedot">●</span> ${tx.nxLive}`; }
+        else if (lab) lab.textContent = tx.nxNext;
+      }
       const target = new Date(root.dataset.target).getTime();
       const el = id => document.getElementById(id);
       const u = { d: el('cd-d'), h: el('cd-h'), m: el('cd-m'), s: el('cd-s') };
       let iv;
       function tick() {
         const diff = target - Date.now();
-        if (diff <= 0) { root.innerHTML = `<div class="lab">${tx.liveLab}</div><div class="cdlive">${tx.liveTxt}</div><a class="btn primary" href="${LB}matches/">${tx.liveBtn}</a>`; clearInterval(iv); return; }
+        if (diff <= 0) {
+          const clock = document.getElementById('cd-clock');
+          if (clock) clock.innerHTML = `<span class="cd-livenow">${tx.nxLive}</span>`;
+          clearInterval(iv); return;
+        }
         u.d.textContent = Math.floor(diff / 864e5);
         u.h.textContent = String(Math.floor(diff / 36e5) % 24).padStart(2, '0');
         u.m.textContent = String(Math.floor(diff / 6e4) % 60).padStart(2, '0');

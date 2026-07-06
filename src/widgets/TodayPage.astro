@@ -1,0 +1,148 @@
+---
+import Base from '@app/layouts/Base.astro';
+import DB from '../../public/data.json';
+import { indexes, flagImg } from '@shared/lib/wc.js';
+import { t, teamName, stageName } from '@shared/lib/i18n.js';
+const { lang = 'en' } = Astro.props;
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const LB = lang === 'en' ? B : B + lang + '/';
+const IDX = indexes(DB);
+const nm = c => c ? teamName(IDX.teamByCode[c] || { fifa_code: c, team_name: c }, lang) : null;
+const LOC = { en: 'en-US', es: 'es-ES', pt: 'pt-BR', fr: 'fr-FR', de: 'de-DE', it: 'it-IT' }[lang] || 'en-US';
+
+const iso = k => (k || '').replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00');
+const matches = [...DB.matches].sort((a, b) => (a.kickoff_at || '').localeCompare(b.kickoff_at || '')).map(m => ({
+  n: m.match_number,
+  k: iso(m.kickoff_at),
+  st: stageName(m.stage, lang),
+  city: (m.city || '').split('/')[0],
+  hc: m.home_code || null, ac: m.away_code || null,
+  hn: nm(m.home_code), an: nm(m.away_code),
+  hf: m.home_code ? flagImg(m.home_code) : null, af: m.away_code ? flagImg(m.away_code) : null,
+  hs: m.home_score, as: m.away_score, fin: m.status === 'final', note: m.result_note || null,
+}));
+
+// SSR fallback: group by venue-local date (for SEO / no-JS)
+const ssr = {};
+matches.forEach(m => { const d = (m.k || '').slice(0, 10); (ssr[d] = ssr[d] || []).push(m); });
+const ssrDays = Object.keys(ssr).sort();
+const vs = t(lang, 'td.tbd');
+const jsonld = {
+  '@context': 'https://schema.org', '@type': 'ItemList',
+  name: t(lang, 'td.h1'),
+  itemListElement: matches.filter(m => m.hc && m.ac).slice(0, 30).map((m, i) => ({
+    '@type': 'ListItem', position: i + 1,
+    item: { '@type': 'SportsEvent', name: `${m.hn} vs ${m.an}`, startDate: m.k, sport: 'Football',
+      location: { '@type': 'Place', name: m.city } },
+  })),
+};
+---
+<Base title={t(lang, 'td.title')} description={t(lang, 'td.desc')} jsonld={jsonld} lang={lang} i18n={{ path: 'today/', locales: ['en', 'es', 'pt', 'fr', 'de', 'it'] }}>
+  <div class="app-page today-page">
+    <header class="phead td-head">
+      <div>
+        <div class="pe">{t(lang, 'td.eyebrow')}</div>
+        <h1>{t(lang, 'td.h1')}</h1>
+        <p class="psub">{t(lang, 'td.sub')}</p>
+        <div class="td-tz">🌐 <span id="tznote">{t(lang, 'td.tz')}</span></div>
+      </div>
+      <button class="btn td-jump" id="jumpToday" hidden>↓ {t(lang, 'td.jump')}</button>
+    </header>
+
+    <div class="app-grow scroll">
+      <div class="td-sched" id="sched">
+        {ssrDays.map(d => (
+          <section class="td-day">
+            <h2 class="td-dayhead">{new Date(d + 'T12:00:00Z').toLocaleDateString(LOC, { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
+            <div class="td-rows">
+              {ssr[d].map(m => (
+                <a class="td-row" href={`${LB}matches/${m.n}/`}>
+                  <span class="td-time mono">{(m.k || '').slice(11, 16)}</span>
+                  <span class="td-teams">
+                    <span class="td-side td-h">{m.hf && <img src={m.hf} alt="" width="21" height="15" />}<b>{m.hn || vs}</b></span>
+                    <span class="td-mid mono">{m.fin ? `${m.hs}–${m.as}` : 'vs'}</span>
+                    <span class="td-side td-a">{m.af && <img src={m.af} alt="" width="21" height="15" />}<b>{m.an || vs}</b></span>
+                  </span>
+                  <span class="td-meta faint">{m.st} · {m.city}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="mdata" set:html={JSON.stringify(matches)}></script>
+  <script define:vars={{ LB, LOC, TX: {
+    today: t(lang, 'td.today'), live: t(lang, 'td.live'), ft: t(lang, 'td.ft'), next: t(lang, 'td.next'),
+    starts: t(lang, 'td.starts'), tbd: t(lang, 'td.tbd'), notoday: t(lang, 'td.notoday'),
+  } }}>
+    (function () {
+      const M = JSON.parse(document.getElementById('mdata').textContent);
+      const root = document.getElementById('sched');
+      const now = new Date();
+      const key = dt => dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+      const todayKey = key(now);
+      const LIVE_MS = 2.5 * 3600 * 1000;
+
+      // enrich
+      M.forEach(m => { m.dt = new Date(m.k); m.day = key(m.dt); m.live = !m.fin && (m.dt <= now) && (now - m.dt < LIVE_MS); });
+      // next match: earliest kickoff in the future, teams preferred
+      const future = M.filter(m => m.dt > now);
+      const nextM = future.find(m => m.hc && m.ac) || future[0] || null;
+
+      // group by local day
+      const days = {}; M.forEach(m => (days[m.day] = days[m.day] || []).push(m));
+      const dayKeys = Object.keys(days).sort();
+
+      const fmtDay = k => new Date(k + 'T12:00:00').toLocaleDateString(LOC, { weekday: 'long', day: 'numeric', month: 'long' });
+      const fmtTime = dt => dt.toLocaleTimeString(LOC, { hour: '2-digit', minute: '2-digit' });
+      const countdown = dt => {
+        const s = Math.max(0, Math.floor((dt - new Date()) / 1000));
+        const d = Math.floor(s / 86400), h = Math.floor(s / 3600) % 24, mi = Math.floor(s / 60) % 60;
+        return d > 0 ? `${d}d ${h}h` : h > 0 ? `${h}h ${mi}m` : `${mi}m`;
+      };
+
+      let html = '';
+      dayKeys.forEach(dk => {
+        const isToday = dk === todayKey;
+        html += `<section class="td-day${isToday ? ' is-today' : ''}"${isToday ? ' id="td-today"' : ''}>`;
+        html += `<h2 class="td-dayhead">${isToday ? `<span class="td-todaytag">${TX.today}</span> ` : ''}${fmtDay(dk)}</h2><div class="td-rows">`;
+        days[dk].forEach(m => {
+          const isNext = nextM && m.n === nextM.n;
+          let state = '', badge = '';
+          if (m.fin) { state = `<span class="td-mid mono td-sc">${m.hs}–${m.as}</span>`; badge = `<span class="td-b ft">${TX.ft}</span>`; }
+          else if (m.live) { state = `<span class="td-mid td-livedot">●</span>`; badge = `<span class="td-b live">${TX.live}</span>`; }
+          else { state = `<span class="td-mid mono">vs</span>`; badge = `<span class="td-b up" data-cd="${m.k}">${TX.starts} ${countdown(m.dt)}</span>`; }
+          const hn = m.hn || TX.tbd, an = m.an || TX.tbd;
+          const hf = m.hf ? `<img src="${m.hf}" alt="" width="21" height="15">` : '';
+          const af = m.af ? `<img src="${m.af}" alt="" width="21" height="15">` : '';
+          html += `<a class="td-row${isNext ? ' is-next' : ''}${m.live ? ' is-live' : ''}" href="${LB}matches/${m.n}/">`
+            + `<span class="td-time mono">${fmtTime(m.dt)}</span>`
+            + `<span class="td-teams"><span class="td-side td-h">${hf}<b>${hn}</b></span>${state}<span class="td-side td-a">${af}<b>${an}</b></span></span>`
+            + `<span class="td-meta faint">${isNext ? `<b class="td-nextlab">${TX.next}</b> · ` : ''}${m.st} · ${m.city}</span>${badge}</a>`;
+        });
+        html += `</div></section>`;
+      });
+      root.innerHTML = html;
+
+      // jump-to-today
+      const target = document.getElementById('td-today') || (nextM && document.querySelector('.td-row.is-next'));
+      const jump = document.getElementById('jumpToday');
+      if (target) {
+        jump.hidden = false;
+        jump.addEventListener('click', () => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        // auto-scroll on load (no smooth to avoid jank)
+        setTimeout(() => target.scrollIntoView({ block: 'center' }), 60);
+      }
+      // live countdown refresh
+      setInterval(() => {
+        document.querySelectorAll('.td-b.up[data-cd]').forEach(el => {
+          const dt = new Date(el.dataset.cd);
+          el.textContent = `${TX.starts} ${countdown(dt)}`;
+        });
+      }, 30000);
+    })();
+  </script>
+</Base>

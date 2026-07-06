@@ -7,6 +7,12 @@ const NATIONS = DB.teams.map(t => ({ c: t.fifa_code, n: t.team_name, g: t.group_
   .sort((a, b) => a.n.localeCompare(b.n));
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/'; // "/wc26/"
 const SITE = 'https://www.tahabouhsine.com';
+// upcoming fixtures for the nav countdown chip (client picks the next one in the visitor's tz)
+const upNav = DB.matches
+  .filter(m => m.status !== 'final')
+  .sort((a, b) => (a.kickoff_at || '').localeCompare(b.kickoff_at || ''))
+  .slice(0, 24)
+  .map(m => ({ n: m.match_number, k: (m.kickoff_at || '').replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00'), tm: !!(m.home_code && m.away_code) }));
 const KICKOFF = '2026-06-11T15:00:00-06:00'; // opening match
 const {
   title = 'WC26 Matchday — FIFA World Cup 2026',
@@ -69,7 +75,7 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
       {NAV.map(([p, k]) => <a href={B + p} class={isOn(p) ? 'on' : ''}><span>{t(lang, k)}</span></a>)}
     </nav>
     <div class="actions">
-      <a class="navcd" id="navcd" href={B + 'matches/1/'} title="Time to the opening match">
+      <a class="navcd" id="navcd" href={(lang === 'en' ? B : B + lang + '/') + 'today/'} title={t(lang, 'h.nx.next')}>
         <span class="livedot"></span><span id="navcd-t" class="mono">—</span>
       </a>
       <button class="searchpill" id="palBtn" aria-label="Search">
@@ -100,7 +106,7 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
     </div>
   </div>
 
-  <script define:vars={{ B, KICKOFF, NATIONS }}>
+  <script define:vars={{ B, KICKOFF, NATIONS, upNav }}>
     window.__B__ = B;
     // a11y: make clickable table rows keyboard-operable
     document.querySelectorAll('tr[onclick]').forEach(tr => {
@@ -133,13 +139,20 @@ const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p ==
         });
       });
     }
-    // navbar live countdown chip
+    // navbar live countdown chip — next match in the visitor's timezone (live if in progress)
     (function () {
       const el = document.getElementById('navcd-t'); if (!el) return;
-      const target = new Date(KICKOFF).getTime();
+      const chip = document.getElementById('navcd');
+      const list = (upNav || []).map(u => ({ ...u, t: new Date(u.k).getTime() }));
+      const LIVE_MS = 2.5 * 3600 * 1000;
       function upd() {
-        const d = target - Date.now();
-        if (d <= 0) { el.textContent = 'LIVE'; document.getElementById('navcd').classList.add('live'); return; }
+        const now = Date.now();
+        const live = list.find(u => u.tm && u.t <= now && now - u.t < LIVE_MS);
+        if (live) { el.textContent = 'LIVE'; chip.classList.add('live'); return; }
+        const next = list.filter(u => u.t > now).find(u => u.tm) || list.filter(u => u.t > now)[0];
+        chip.classList.remove('live');
+        if (!next) { el.textContent = '—'; return; }
+        const d = next.t - now;
         const days = Math.floor(d / 864e5), h = Math.floor(d / 36e5) % 24, m = Math.floor(d / 6e4) % 60;
         el.textContent = days > 0 ? days + 'd ' + h + 'h' : h + 'h ' + m + 'm';
       }
