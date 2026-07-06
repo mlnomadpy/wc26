@@ -85,6 +85,7 @@ for m in matches_raw:
         # results pass-through — null until scores are added to matches.csv
         "home_score": mm.get("home_score"), "away_score": mm.get("away_score"),
         "status": mm.get("status") or ("final" if mm.get("home_score") is not None else "scheduled"),
+        "result_note": mm.get("result_note"),
     })
     matches.append(mm)
 

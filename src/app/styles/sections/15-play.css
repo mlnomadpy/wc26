@@ -514,6 +514,15 @@
 .ms-pred-lab{ font:700 8px var(--fmono); letter-spacing:.14em; text-transform:uppercase; color:var(--accent2); }
 .ms-pred-score{ font-family:var(--fdisp2); font-weight:800; font-size:34px; line-height:1; color:#eaf4ff; letter-spacing:.02em; text-shadow:0 0 22px color-mix(in srgb,var(--accent2) 45%,transparent); }
 .ms-pred-score i{ font-style:normal; color:var(--accent2); margin:0 3px; }
+/* actual full-time result */
+.ms-result{ display:flex; flex-direction:column; align-items:center; gap:3px; margin:2px 0; }
+.ms-ft{ font:700 8px var(--fmono); letter-spacing:.14em; text-transform:uppercase; color:#8fe9b6; }
+.ms-ft-score{ font-family:var(--fdisp2); font-weight:800; font-size:40px; line-height:1; color:#eafff2; letter-spacing:.02em; text-shadow:0 0 24px color-mix(in srgb,#33e08a 50%,transparent); }
+.ms-ft-score i{ font-style:normal; color:#57e39a; margin:0 4px; }
+.ms-ft-note{ font:600 9px var(--fmono); color:var(--muted); text-align:center; letter-spacing:.02em; }
+.ms-aipred{ font:600 9px var(--fmono); letter-spacing:.02em; padding:2px 7px; border-radius:999px; margin-top:1px; }
+.ms-aipred.ok{ color:#8fe9b6; background:color-mix(in srgb,#33e08a 15%,transparent); }
+.ms-aipred.miss{ color:#f0a6a6; background:color-mix(in srgb,#e06767 14%,transparent); }
 /* AI prediction pane */
 .pred-score{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; margin-bottom:8px; }
 .pred-st{ font-size:11.5px; color:var(--fg-dim); }
@@ -526,6 +535,7 @@
 /* predicted score in lists */
 .mp-pcol{ text-align:center; white-space:nowrap; }
 .mp-pscore{ font-family:var(--fdisp2); font-weight:800; font-size:14px; color:var(--accent2); } .mp-pscore i{ font-style:normal; color:var(--fg-mute); margin:0 2px; }
+.mp-ftscore{ font-family:var(--fdisp2); font-weight:800; font-size:15px; color:#7fe6ad; } .mp-ftscore i{ font-style:normal; color:var(--fg-mute); margin:0 2px; }
 .fx-pred{ font:800 13px var(--fdisp2); color:var(--accent2); opacity:.85; }
 
 /* language switcher (topbar) */

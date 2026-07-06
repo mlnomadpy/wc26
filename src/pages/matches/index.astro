@@ -26,17 +26,19 @@ const stages = [...new Set(DB.matches.map(m => m.stage))];
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>#</th><th>Kickoff</th><th>Stage</th><th>Match</th><th class="mp-pcol">AI score</th><th>Venue</th></tr></thead>
+        <thead><tr><th>#</th><th>Kickoff</th><th>Stage</th><th>Match</th><th class="mp-pcol">Score</th><th>Venue</th></tr></thead>
         <tbody id="mb">
-          {matches.map(m => { const pr = predOf(m); return (
+          {matches.map(m => { const pr = predOf(m); const done = m.home_score != null && m.away_score != null; return (
             <tr data-stage={m.stage} onclick={`location.href='${B}matches/${m.match_number}/'`}>
               <td class="mono">{m.match_number}</td>
               <td class="faint mono">{(m.kickoff_at || '').replace('T', ' ').slice(0, 16)}</td>
-              <td>{m.match_label}</td>
+              <td>{m.match_label && m.match_label.startsWith('Group') ? m.match_label : m.stage}</td>
               <td>{m.home_code
                 ? <span class="nat"><Flag code={m.home_code} cls="sm" /> {m.home_team} <span class="faint">v</span> <Flag code={m.away_code} cls="sm" /> {m.away_team}</span>
                 : <span class="faint">{m.match_label}</span>}</td>
-              <td class="mp-pcol">{pr ? <span class="mp-pscore">{pr.ha}<i>–</i>{pr.aa}</span> : <span class="faint">—</span>}</td>
+              <td class="mp-pcol">{done
+                ? <span class="mp-ftscore" title="Full-time result">{m.home_score}<i>–</i>{m.away_score}</span>
+                : pr ? <span class="mp-pscore" title="AI predicted score">{pr.ha}<i>–</i>{pr.aa}</span> : <span class="faint">—</span>}</td>
               <td class="faint">{m.venue}, {(m.city || '').split('/')[0]}</td>
             </tr>
           ); })}

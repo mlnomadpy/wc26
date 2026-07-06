@@ -62,14 +62,25 @@ if (ht && at) {
 const favnote = pred ? (favTeam ? t(lang, 'm.favoured', { team: nm(favTeam) }) : t(lang, 'm.coin')) : '';
 const edge = (ht && at) ? (Math.abs(tr(ht) - tr(at)) <= 2 ? t(lang, 'm.even') : t(lang, 'm.edge')) : '';
 
+// actual result (real-world) — present once the match has been played
+const played = m.home_score != null && m.away_score != null;
+const res = played ? { hs: m.home_score, as: m.away_score, note: m.result_note } : null;
+const sign = (h, a) => h > a ? 1 : h < a ? -1 : 0;
+const aiCorrect = (played && pred) ? sign(pred.ha, pred.aa) === sign(res.hs, res.as) : null;
+const aiExact = (played && pred) ? (pred.ha === res.hs && pred.aa === res.as) : null;
+
 const lbl = (m.match_label || '').split(/\s+vs\s+/);
 const mdate = (m.kickoff_at || '').slice(0, 10);
 const predScore = pred ? `${pred.ha}–${pred.aa}` : null;
-const seoTitle = pred ? t(lang, 'm.title', { a: nm(ht), b: nm(at), score: predScore })
-                      : `${m.match_label} — World Cup 2026 (${m.stage})`;
-const desc = pred
-  ? t(lang, 'm.desc', { a: nm(ht), b: nm(at), score: predScore, favnote, h: pred.h, d: pred.d, ag: pred.a, why: pred.why, venue: m.venue, city: m.city, date: mdate })
-  : `${m.match_label} · ${m.stage} · 2026 FIFA World Cup — ${m.venue}, ${m.city}, ${mdate}.`;
+const seoTitle = played
+  ? t(lang, 'm.rtitle', { a: nm(ht), b: nm(at), hs: res.hs, as: res.as })
+  : pred ? t(lang, 'm.title', { a: nm(ht), b: nm(at), score: predScore })
+         : `${m.match_label} — World Cup 2026 (${m.stage})`;
+const desc = played
+  ? t(lang, 'm.rdesc', { a: nm(ht), b: nm(at), hs: res.hs, as: res.as, stage: stageName(m.stage, lang), venue: m.venue, city: m.city, date: mdate, note: res.note ? ' ' + res.note + '.' : '' })
+  : pred
+    ? t(lang, 'm.desc', { a: nm(ht), b: nm(at), score: predScore, favnote, h: pred.h, d: pred.d, ag: pred.a, why: pred.why, venue: m.venue, city: m.city, date: mdate })
+    : `${m.match_label} · ${m.stage} · 2026 FIFA World Cup — ${m.venue}, ${m.city}, ${mdate}.`;
 const jsonld = (ht && at) ? {
   '@context': 'https://schema.org', '@type': 'SportsEvent',
   name: `${nm(ht)} vs ${nm(at)}`, sport: 'Football', startDate: mdate,
@@ -91,13 +102,20 @@ const jsonld = (ht && at) ? {
     </div>
     <div class="ms-vs">
       <div class="ms-stage">{stageName(m.stage, lang)}</div>
-      {pred ? (
+      {played ? (
+        <div class="ms-result">
+          <span class="ms-ft">{t(lang, 'm.ft')}</span>
+          <b class="ms-ft-score">{res.hs} <i>–</i> {res.as}</b>
+          {res.note && <span class="ms-ft-note">{res.note}</span>}
+          {pred && <span class={`ms-aipred ${aiCorrect ? 'ok' : 'miss'}`}>{t(lang, 'm.aipred', { score: pred.ha + '–' + pred.aa })} {aiExact ? '✓' : aiCorrect ? '✓' : '✗'}</span>}
+        </div>
+      ) : pred ? (
         <div class="ms-pred" title={t(lang, 'm.predlab')}>
           <span class="ms-pred-lab">{t(lang, 'm.predlab')}</span>
           <b class="ms-pred-score">{pred.ha} <i>–</i> {pred.aa}</b>
         </div>
       ) : <div class="ms-vstxt">VS</div>}
-      {kick && <div class="ms-cd" id="mcd" data-kick={kick}>—</div>}
+      {!played && kick && <div class="ms-cd" id="mcd" data-kick={kick}>—</div>}
       <div class="ms-when">{m.venue} · {m.city}{city?.capacity ? ` · ${(city.capacity / 1000).toFixed(0)}k` : ''}{city?.altitude_m >= 1000 ? ` · ◆ ${(city.altitude_m / 1000).toFixed(1)}km` : ''}</div>
       <div class="ms-when ms-date">{mdate}</div>
     </div>
