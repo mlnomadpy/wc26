@@ -5,69 +5,134 @@ import DB from '../../public/data.json';
 import { BTREE, STAGE_R, decodeSlot, groupColor, simulateTournament } from '@shared/lib/wc.js';
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const byNum = {}; DB.matches.forEach(m => byNum[m.match_number] = m);
-// AI-predicted bracket fill (group sim -> qualifiers -> knockout sim)
-const sim = simulateTournament(DB);
 const teamByCode = {}; DB.teams.forEach(t => teamByCode[t.fifa_code] = t);
 const nmCode = c => teamByCode[c] ? teamByCode[c].team_name : c;
-const nodeTeams = n => BTREE[n] ? [sim.result[BTREE[n][0]], sim.result[BTREE[n][1]]] : [sim.leafTeams[n] && sim.leafTeams[n].a, sim.leafTeams[n] && sim.leafTeams[n].b];
+
+// ---- layout (shared by both trees) ----
 const roundOf = n => { const m = byNum[n]; return m ? (STAGE_R[m.stage] || 0) : 0; };
 const leaves = []; (function dfs(n) { const ch = BTREE[n]; if (!ch) { leaves.push(n); return; } ch.forEach(dfs); })(104);
 const Y = {}; leaves.forEach((n, i) => Y[n] = i);
 Object.keys(BTREE).map(Number).sort((a, b) => roundOf(a) - roundOf(b)).forEach(n => { const ch = BTREE[n]; Y[n] = ch.reduce((s, c) => s + Y[c], 0) / ch.length; });
-const cardW = 164, cardH = 60, colGap = 78, rowUnit = 74, padT = 44;
+const cardW = 164, cardH = 62, colGap = 78, rowUnit = 74, padT = 44;
 const headers = ['Round of 32', 'Round of 16', 'Quarterfinals', 'Semifinals', 'Final'];
 const colX = r => r * (cardW + colGap);
 const H = leaves.length * rowUnit + padT + 18, W = colX(5) + 186;
 const yc = n => Y[n] * rowUnit + padT + cardH / 2;
 const lines = [];
-Object.entries(BTREE).forEach(([p, ch]) => { const px = colX(roundOf(+p)), pyc = yc(+p); ch.forEach(c => { const cr = colX(roundOf(c)) + cardW, cy = yc(c), mid = (cr + px) / 2; lines.push({ d: `M${cr} ${cy} H${mid} V${pyc} H${px}`, cls: 'bcon' }); }); });
-lines.push({ d: `M${colX(4) + cardW} ${yc(104)} H${colX(5)}`, cls: 'bcon win' });
-const allNodes = [...leaves, ...Object.keys(BTREE).map(Number)].map(n => {
+Object.entries(BTREE).forEach(([p, ch]) => { const px = colX(roundOf(+p)), pyc = yc(+p); ch.forEach(c => { const cr = colX(roundOf(c)) + cardW, cy = yc(c), mid = (cr + px) / 2; lines.push(`M${cr} ${cy} H${mid} V${pyc} H${px}`); }); });
+const winLine = `M${colX(4) + cardW} ${yc(104)} H${colX(5)}`;
+const parentOf = {}; Object.entries(BTREE).forEach(([p, ch]) => ch.forEach(c => parentOf[c] = +p));
+
+// ---- REAL fill (actual results) ----
+const realWinner = (n, t1, t2, s1, s2, played) => {
+  if (!played || t1 == null || t2 == null) return null;
+  if (s1 > s2) return t1; if (s2 > s1) return t2;
+  const p = parentOf[n]; if (p) { const pm = byNum[p]; if (pm.home_code === t1 || pm.away_code === t1) return t1; if (pm.home_code === t2 || pm.away_code === t2) return t2; }
+  const note = byNum[n].result_note || ''; if (note.includes(nmCode(t1))) return t1; if (note.includes(nmCode(t2))) return t2;
+  return null;
+};
+const realFill = n => {
+  const m = byNum[n], t1 = m.home_code || null, t2 = m.away_code || null;
+  const played = m.status === 'final' && m.home_score != null;
+  return { t1, t2, s1: m.home_score, s2: m.away_score, played, note: m.result_note, win: realWinner(n, t1, t2, m.home_score, m.away_score, played) };
+};
+// ---- PREDICTED fill (AI simulation) ----
+const sim = simulateTournament(DB);
+const nodeTeams = n => BTREE[n] ? [sim.result[BTREE[n][0]], sim.result[BTREE[n][1]]] : [sim.leafTeams[n] && sim.leafTeams[n].a, sim.leafTeams[n] && sim.leafTeams[n].b];
+const predFill = n => { const [t1, t2] = nodeTeams(n); return { t1, t2, s1: null, s2: null, played: false, win: sim.result[n] }; };
+
+const base = [...leaves, ...Object.keys(BTREE).map(Number)].map(n => {
   const m = byNum[n], r = roundOf(n); const [a, b] = (m.match_label || '').split(/\s+vs\s+/);
-  const [t1, t2] = nodeTeams(n);
-  return { n, r, x: colX(r), y: Y[n] * rowUnit + padT, a: decodeSlot(a), b: decodeSlot(b), t1, t2, win: sim.result[n], city: (m.city || '').split('/')[0] };
+  return { n, r, x: colX(r), y: Y[n] * rowUnit + padT, a: decodeSlot(a), b: decodeSlot(b), city: (m.city || '').split('/')[0] };
 });
+
+// real champion / progress
+const realChamp = (() => { const f = realFill(104); return f.win || null; })();
+const played = DB.matches.filter(m => m.match_number >= 73 && m.status === 'final').length;
+const total = 32;
 const tp = byNum[103];
-const legend = [['A', groupColor('A'), 'Group A winner / runner-up'], ['3rd', '#3b3320', 'Best third-placed team'], ['W', '#26406b', 'Winner of an earlier match'], ['RU', '#5a2740', 'Runner-up (third-place playoff)']];
+const legend = [['A', groupColor('A'), 'Group winner / runner-up'], ['3rd', '#3b3320', 'Best third-placed team'], ['W', '#26406b', 'Winner of an earlier match'], ['RU', '#5a2740', 'Runner-up → third-place playoff']];
 ---
-<Base title={`World Cup 2026 Predicted Bracket — ${nmCode(sim.champion)} to Win | Road to the Final`} description={`The AI-predicted 2026 FIFA World Cup knockout bracket, Round of 32 to the Final: every tie simulated from the group stage, with ${nmCode(sim.champion)} predicted to lift the trophy. The first 48-team World Cup knockout tree.`}>
+<Base
+  title={`World Cup 2026 Bracket — live knockout results & road to the final`}
+  description={`The 2026 FIFA World Cup knockout bracket with real results: Round of 32 to the Final, updated as each tie is played (${played}/${total} knockout matches so far). Flip to the AI-predicted bracket to compare.`}
+  ogImage={B + 'og/bracket.png'}>
   <div class="app-page">
-  <div class="brkhead"><h2 class="sec" style="margin:0">Road to the final</h2><span class="tag">48 → 1 · AI-predicted bracket</span><a class="btn primary" href={B + 'predict/'} style="margin-left:auto">⚡ Predict your own →</a></div>
+  <div class="brkhead">
+    <h2 class="sec" style="margin:0">Road to the final</h2>
+    <div class="brk-toggle" id="brkToggle">
+      <button class="brkt on" data-m="real">Results <span class="brkt-c">{played}/{total}</span></button>
+      <button class="brkt" data-m="pred">AI prediction</button>
+    </div>
+    <a class="btn primary" href={B + 'predict/'} style="margin-left:auto">⚡ Predict your own →</a>
+  </div>
   <div class="app-grow scroll">
   <div class="bktwrap">
-    <div class="bktree" style={`width:${W}px;height:${H}px`}>
-      <svg class="bcons" width={W} height={H} aria-hidden="true">{lines.map(l => <path d={l.d} class={l.cls} />)}</svg>
-      {headers.map((h, r) => <div class="bhead" style={`left:${colX(r)}px;width:${cardW}px`}>{h}</div>)}
-      <div class="bhead" style={`left:${colX(5)}px;width:170px`}>Champion</div>
-      {allNodes.map(nd => (
-        <a class={`bnode r${nd.r}`} style={`left:${nd.x}px;top:${nd.y}px;width:${cardW}px;height:${cardH}px`} href={`${B}matches/${nd.n}/`} aria-label={`Match ${nd.n}`}>
-          <div class={`brow ${nd.win && nd.win === nd.t1 ? 'bwin' : ''}`}>{nd.t1 ? <><Flag code={nd.t1} cls="sm" /><span class="blabel">{nmCode(nd.t1)}</span></> : <><span class="bchip" style={`background:${nd.a.color}`}>{nd.a.code}</span><span class="blabel">{nd.a.label}</span></>}</div>
-          <div class="bvs"><span>vs</span></div>
-          <div class={`brow ${nd.win && nd.win === nd.t2 ? 'bwin' : ''}`}>{nd.t2 ? <><Flag code={nd.t2} cls="sm" /><span class="blabel">{nmCode(nd.t2)}</span></> : <><span class="bchip" style={`background:${nd.b.color}`}>{nd.b.code}</span><span class="blabel">{nd.b.label}</span></>}</div>
-          <div class="bnum">#{nd.n} · {nd.city}</div>
-        </a>
-      ))}
-      <a class="bchamp bchamp-on" href={`${B}teams/${(teamByCode[sim.champion]?.fifa_code || '').toLowerCase()}/`} style={`left:${colX(5)}px;top:${Y[104] * rowUnit + padT - 6}px`}>
-        <div class="trophy"><svg width="34" height="34" viewBox="0 0 24 24" fill="var(--gold)" aria-hidden="true"><path d="M18 2H6v2H2v3a4 4 0 0 0 4 4 6 6 0 0 0 5 4.9V19H8v3h8v-3h-3v-3.1A6 6 0 0 0 18 11a4 4 0 0 0 4-4V4h-4V2zM6 9a2 2 0 0 1-2-2V6h2v3zm14-2a2 2 0 0 1-2 2V6h2v1z"/></svg></div>
-        <div class="bchamp-flag"><Flag code={sim.champion} cls="lg" /></div>
-        <div class="ct">{nmCode(sim.champion)}</div><div class="faint cs">Predicted champions<br>Jul 19 · New York</div>
-      </a>
-    </div>
+    {[{ id: 'brk-real', mode: 'real', fill: realFill, champ: realChamp, hidden: false },
+      { id: 'brk-pred', mode: 'pred', fill: predFill, champ: sim.champion, hidden: true }].map(view => (
+      <div class="bktree" id={view.id} style={`width:${W}px;height:${H}px`} hidden={view.hidden}>
+        <svg class="bcons" width={W} height={H} aria-hidden="true">
+          {lines.map(d => <path d={d} class="bcon" />)}
+          <path d={winLine} class={`bcon ${view.champ ? 'win' : ''}`} />
+        </svg>
+        {headers.map((h, r) => <div class="bhead" style={`left:${colX(r)}px;width:${cardW}px`}>{h}</div>)}
+        <div class="bhead" style={`left:${colX(5)}px;width:170px`}>Champion</div>
+        {base.map(nd => { const f = view.fill(nd.n); return (
+          <a class={`bnode r${nd.r} ${f.played ? 'bplayed' : ''}`} style={`left:${nd.x}px;top:${nd.y}px;width:${cardW}px;height:${cardH}px`} href={`${B}matches/${nd.n}/`} aria-label={`Match ${nd.n}`}>
+            <div class={`brow ${f.win && f.win === f.t1 ? 'bwin' : ''} ${f.win && f.win !== f.t1 && f.played ? 'blost' : ''}`}>
+              {f.t1 ? <><Flag code={f.t1} cls="sm" /><span class="blabel">{nmCode(f.t1)}</span></> : <><span class="bchip" style={`background:${nd.a.color}`}>{nd.a.code}</span><span class="blabel">{nd.a.label}</span></>}
+              {f.played && <span class="bsc">{f.s1}</span>}
+            </div>
+            <div class="bvs"><span>{f.played ? '' : 'vs'}</span></div>
+            <div class={`brow ${f.win && f.win === f.t2 ? 'bwin' : ''} ${f.win && f.win !== f.t2 && f.played ? 'blost' : ''}`}>
+              {f.t2 ? <><Flag code={f.t2} cls="sm" /><span class="blabel">{nmCode(f.t2)}</span></> : <><span class="bchip" style={`background:${nd.b.color}`}>{nd.b.code}</span><span class="blabel">{nd.b.label}</span></>}
+              {f.played && <span class="bsc">{f.s2}</span>}
+            </div>
+            <div class="bnum">#{nd.n} · {nd.city}</div>
+          </a>
+        ); })}
+        {view.champ ? (
+          <a class="bchamp bchamp-on" href={`${B}teams/${(teamByCode[view.champ]?.fifa_code || '').toLowerCase()}/`} style={`left:${colX(5)}px;top:${Y[104] * rowUnit + padT - 6}px`}>
+            <div class="trophy"><svg width="34" height="34" viewBox="0 0 24 24" fill="var(--gold)" aria-hidden="true"><path d="M18 2H6v2H2v3a4 4 0 0 0 4 4 6 6 0 0 0 5 4.9V19H8v3h8v-3h-3v-3.1A6 6 0 0 0 18 11a4 4 0 0 0 4-4V4h-4V2zM6 9a2 2 0 0 1-2-2V6h2v3zm14-2a2 2 0 0 1-2 2V6h2v1z"/></svg></div>
+            <div class="bchamp-flag"><Flag code={view.champ} cls="lg" /></div>
+            <div class="ct">{nmCode(view.champ)}</div><div class="faint cs">{view.mode === 'real' ? 'World champions' : 'Predicted champions'}<br>Jul 19 · New York</div>
+          </a>
+        ) : (
+          <div class="bchamp bchamp-tbd" style={`left:${colX(5)}px;top:${Y[104] * rowUnit + padT - 6}px`}>
+            <div class="trophy trophy-tbd"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.6" aria-hidden="true"><path d="M18 2H6v2H2v3a4 4 0 0 0 4 4 6 6 0 0 0 5 4.9V19H8v3h8v-3h-3v-3.1A6 6 0 0 0 18 11a4 4 0 0 0 4-4V4h-4V2z"/></svg></div>
+            <div class="ct faint">To be decided</div><div class="faint cs">Final · Jul 19<br>New York</div>
+          </div>
+        )}
+      </div>
+    ))}
   </div>
   <div class="grid2">
     {tp && (
       <div class="panel">
         <h3>Third-place playoff</h3>
-        {(tp.match_label || '').split(/\s+vs\s+/).map(s => { const d = decodeSlot(s); return <div class="brow"><span class="bchip" style={`background:${d.color}`}>{d.code}</span><span class="blabel">{d.label}</span></div>; })}
+        {(() => { const f = realFill(103); return (f.t1 || f.t2)
+          ? [[f.t1, f.s1], [f.t2, f.s2]].map(([c, s]) => c ? <div class="brow"><Flag code={c} cls="sm" /><span class="blabel">{nmCode(c)}</span>{f.played && <span class="bsc">{s}</span>}</div> : null)
+          : (tp.match_label || '').split(/\s+vs\s+/).map(sl => { const d = decodeSlot(sl); return <div class="brow"><span class="bchip" style={`background:${d.color}`}>{d.code}</span><span class="blabel">{d.label}</span></div>; });
+        })()}
         <div class="faint" style="margin-top:8px">Match #103 · {tp.venue}, {tp.city}</div>
       </div>
     )}
     <div class="panel">
-      <h3>How to read the slots</h3>
+      <h3>How to read the bracket</h3>
       <div class="kv">{legend.map(([c, col, t]) => [<span class="bchip" style={`background:${col}`}>{c}</span>, <span>{t}</span>])}</div>
-      <div class="faint" style="margin-top:10px">Teams are filled by the AI model — group tables simulated, then every knockout tie. The winner of each tie is highlighted. <a class="dh-glink" href={B + 'predictions/'}>See all predictions →</a></div>
+      <div class="faint" style="margin-top:10px"><b>Results</b> fills each tie with the real score as it is played; the winner is highlighted and losers dim out. <b>AI prediction</b> shows the model's simulated bracket from the group stage. <a class="dh-glink" href={B + 'predictions/'}>See all predictions →</a></div>
     </div>
   </div>
   </div>
   </div>
+  <script>
+    (function () {
+      const btns = [...document.querySelectorAll('.brkt')];
+      const trees = { real: document.getElementById('brk-real'), pred: document.getElementById('brk-pred') };
+      btns.forEach(b => b.addEventListener('click', () => {
+        btns.forEach(x => x.classList.toggle('on', x === b));
+        Object.entries(trees).forEach(([m, el]) => { if (el) el.hidden = (m !== b.dataset.m); });
+      }));
+    })();
+  </script>
 </Base>

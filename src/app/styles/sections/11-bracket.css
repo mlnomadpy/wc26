@@ -16,6 +16,23 @@
 .bvs{ display:flex; align-items:center; gap:6px; font-size:8.5px; color:var(--fg-mute); text-transform:uppercase; letter-spacing:.1em; }
 .bvs::before,.bvs::after{ content:""; flex:1; height:1px; background:var(--line); }
 .bnum{ font-family:var(--fmono); font-size:9.5px; color:var(--fg-mute); margin-top:1px; }
+/* real-result states */
+.bsc{ margin-left:auto; font-family:var(--fdisp2); font-weight:800; font-size:14px; color:#eaf4ff; font-variant-numeric:tabular-nums; }
+.brow.bwin .bsc{ color:#8fe9b6; }
+.brow.bwin .blabel{ color:var(--fg); font-weight:700; }
+.brow.blost{ opacity:.5; }
+.brow.blost .bsc{ color:var(--fg-mute); }
+.bnode.bplayed{ border-left-color:#33e08a; }
+.bnode.bplayed .bvs::before,.bnode.bplayed .bvs::after{ background:transparent; }
+/* results / prediction toggle */
+.brk-toggle{ display:inline-flex; gap:2px; padding:3px; border-radius:9px; background:color-mix(in srgb,var(--panel) 80%,transparent); border:1px solid var(--line); }
+.brkt{ display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border:0; border-radius:7px; background:transparent; color:var(--muted); font:700 11px var(--fbody); letter-spacing:.01em; cursor:pointer; transition:var(--t); }
+.brkt:hover{ color:var(--fg); }
+.brkt.on{ background:color-mix(in srgb,var(--accent2) 20%,transparent); color:var(--accent2); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent2) 40%,transparent); }
+.brkt-c{ font-family:var(--fmono); font-size:9px; padding:1px 5px; border-radius:999px; background:color-mix(in srgb,#33e08a 16%,transparent); color:#8fe9b6; }
+/* TBD champion */
+.bchamp-tbd{ border-style:dashed !important; opacity:.72; }
+.bchamp-tbd .trophy-tbd{ filter:none; opacity:.7; }
 .bchamp{ position:absolute; z-index:1; width:170px; text-align:center; padding:14px 12px; border-radius:12px;
   background:linear-gradient(160deg,color-mix(in srgb,var(--gold) 18%,var(--bg1)),var(--bg1)); border:1px solid var(--gold); box-shadow:0 0 30px -10px var(--gold); animation:champpulse 3s ease-in-out infinite; }
 @keyframes champpulse{ 0%,100%{ box-shadow:0 0 30px -12px var(--gold); } 50%{ box-shadow:0 0 46px -6px var(--gold),0 0 0 1px color-mix(in srgb,var(--gold) 40%,transparent); } }
