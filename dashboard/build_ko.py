@@ -49,11 +49,15 @@ R16 = [
  ("PAR","FRA",0,1,"final",None),
  ("BRA","NOR",1,2,"final",None),
  ("MEX","ENG",2,3,"final",None),
- ("POR","ESP",None,None,"scheduled",None),
- ("USA","BEL",None,None,"scheduled",None),
- ("ARG","EGY",None,None,"scheduled",None),
- ("SUI","COL",None,None,"scheduled",None),
+ ("POR","ESP",0,1,"final",None),
+ ("USA","BEL",1,4,"final",None),
+ ("ARG","EGY",3,2,"final",None),
+ ("SUI","COL",0,0,"final","Switzerland won 4–3 on penalties"),
 ]
+
+# --- Quarterfinals: feeders (BTREE) + verified real pairings (scheduled Jul 9–11, unplayed) ---
+QF_FEEDERS = {97: (89, 90), 98: (93, 94), 99: (91, 92), 100: (95, 96)}
+QF_REAL = [{"MAR", "FRA"}, {"ESP", "BEL"}, {"NOR", "ENG"}, {"ARG", "SUI"}]
 
 # R32 match_numbers 73-88; R16 89-96 with their two feeder slots (from matches.csv tree)
 R16_FEEDERS = {89:(73,75), 90:(74,77), 91:(76,78), 92:(79,80), 93:(83,84), 94:(81,82), 95:(86,88), 96:(85,87)}
@@ -65,7 +69,7 @@ LABELS = {
  79:"1A vs 3CEFHI", 80:"1L vs 3EHIJK", 81:"1G vs 3AEHIJ", 82:"1D vs 3BEFIJ", 83:"1H vs 2J", 84:"2K vs 2L",
  85:"1B vs 3EFGIJ", 86:"2D vs 2G", 87:"1J vs 2H", 88:"1K vs 3DEIJL",
  89:"W73 vs W75", 90:"W74 vs W77", 91:"W76 vs W78", 92:"W79 vs W80", 93:"W83 vs W84", 94:"W81 vs W82",
- 95:"W86 vs W88", 96:"W85 vs W87", 97:"W89 vs W90", 98:"W93 vs W94", 99:"W91 vs W92", 100:"W95 vs W100",
+ 95:"W86 vs W88", 96:"W85 vs W87", 97:"W89 vs W90", 98:"W93 vs W94", 99:"W91 vs W92", 100:"W95 vs W96",
  101:"W97 vs W98", 102:"W99 vs W100", 103:"RU101 vs RU102", 104:"W101 vs W102",
 }
 
@@ -78,6 +82,7 @@ def main():
     teams = list(csv.DictReader(open(os.path.join(DATA, "teams.csv"), encoding="utf-8")))
     tid = {t["id"]: t for t in teams}
     grp = {t["fifa_code"]: t["group_letter"] for t in teams}
+    name = {t["fifa_code"]: t["team_name"] for t in teams}
     mrows = list(csv.DictReader(open(os.path.join(DATA, "matches.csv"), encoding="utf-8")))
     codes = {}
     for m in mrows:
@@ -127,7 +132,28 @@ def main():
 
     if len(ko) != 24: die(f"expected 24 knockout rows, got {len(ko)}")
 
-    out = {"as_of": "2026-07-06",
+    # --- Round-of-16 winners -> Quarterfinal matchups (teams known, unplayed) ---
+    r16win = {}
+    for mn in range(89, 97):
+        k = ko[str(mn)]
+        if k["hs"] is None: continue
+        if k["hs"] > k["as"]: r16win[mn] = k["home"]
+        elif k["as"] > k["hs"]: r16win[mn] = k["away"]
+        else:  # decided on penalties — winner named in the note
+            note = k.get("note") or ""
+            r16win[mn] = k["home"] if name.get(k["home"], "") in note else k["away"]
+    qf_placed = 0
+    for qn, (f1, f2) in QF_FEEDERS.items():
+        if f1 not in r16win or f2 not in r16win: continue
+        h, a = r16win[f1], r16win[f2]
+        if {h, a} not in QF_REAL:
+            die(f"QF {qn}: computed {h} vs {a} is not one of the verified real QF pairings {QF_REAL}")
+        ko[str(qn)] = {"home": h, "away": a, "hs": None, "as": None, "status": "scheduled", "note": None}
+        qf_placed += 1
+    if qf_placed and qf_placed != 4:
+        die(f"expected 4 quarterfinal matchups once R16 complete, placed {qf_placed}")
+
+    out = {"as_of": "2026-07-07",
            "group": {str(k): v for k, v in GROUP.items()},
            "ko": ko,
            "labels": {str(k): v for k, v in LABELS.items()}}
@@ -147,7 +173,12 @@ def main():
     print("\n  Round of 16:")
     for n in range(89, 97):
         k = ko[str(n)]; sc = f"{k['hs']}-{k['as']}" if k['hs'] is not None else "vs"
-        print(f"   {n}: {k['home']} {sc} {k['away']}  [{k['status']}]")
+        print(f"   {n}: {k['home']} {sc} {k['away']}  [{k['status']}]" + (f"  ({k['note']})" if k['note'] else ""))
+    if any(str(n) in ko for n in range(97, 101)):
+        print("\n  Quarterfinals (verified matchups, unplayed):")
+        for n in range(97, 101):
+            if str(n) in ko:
+                k = ko[str(n)]; print(f"   {n}: {k['home']} vs {k['away']}  [{k['status']}]")
 
 
 if __name__ == "__main__":

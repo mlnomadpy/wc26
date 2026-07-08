@@ -1,5 +1,5 @@
 {
- "as_of": "2026-07-06",
+ "as_of": "2026-07-07",
  "group": {
   "1": [
    2,
@@ -406,9 +406,9 @@
   "93": {
    "home": "POR",
    "away": "ESP",
-   "hs": null,
-   "as": null,
-   "status": "scheduled",
+   "hs": 0,
+   "as": 1,
+   "status": "final",
    "note": null
   },
   "81": {
@@ -430,9 +430,9 @@
   "94": {
    "home": "USA",
    "away": "BEL",
-   "hs": null,
-   "as": null,
-   "status": "scheduled",
+   "hs": 1,
+   "as": 4,
+   "status": "final",
    "note": null
   },
   "86": {
@@ -454,9 +454,9 @@
   "95": {
    "home": "ARG",
    "away": "EGY",
-   "hs": null,
-   "as": null,
-   "status": "scheduled",
+   "hs": 3,
+   "as": 2,
+   "status": "final",
    "note": null
   },
   "85": {
@@ -478,6 +478,38 @@
   "96": {
    "home": "SUI",
    "away": "COL",
+   "hs": 0,
+   "as": 0,
+   "status": "final",
+   "note": "Switzerland won 4–3 on penalties"
+  },
+  "97": {
+   "home": "MAR",
+   "away": "FRA",
+   "hs": null,
+   "as": null,
+   "status": "scheduled",
+   "note": null
+  },
+  "98": {
+   "home": "ESP",
+   "away": "BEL",
+   "hs": null,
+   "as": null,
+   "status": "scheduled",
+   "note": null
+  },
+  "99": {
+   "home": "NOR",
+   "away": "ENG",
+   "hs": null,
+   "as": null,
+   "status": "scheduled",
+   "note": null
+  },
+  "100": {
+   "home": "ARG",
+   "away": "SUI",
    "hs": null,
    "as": null,
    "status": "scheduled",
@@ -512,7 +544,7 @@
   "97": "W89 vs W90",
   "98": "W93 vs W94",
   "99": "W91 vs W92",
-  "100": "W95 vs W100",
+  "100": "W95 vs W96",
   "101": "W97 vs W98",
   "102": "W99 vs W100",
   "103": "RU101 vs RU102",
