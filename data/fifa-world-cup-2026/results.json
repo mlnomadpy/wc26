@@ -1,5 +1,5 @@
 {
- "as_of": "2026-07-07",
+ "as_of": "2026-07-14",
  "group": {
   "1": [
    2,
@@ -486,30 +486,46 @@
   "97": {
    "home": "MAR",
    "away": "FRA",
-   "hs": null,
-   "as": null,
-   "status": "scheduled",
+   "hs": 0,
+   "as": 2,
+   "status": "final",
    "note": null
   },
   "98": {
    "home": "ESP",
    "away": "BEL",
-   "hs": null,
-   "as": null,
-   "status": "scheduled",
+   "hs": 2,
+   "as": 1,
+   "status": "final",
    "note": null
   },
   "99": {
    "home": "NOR",
    "away": "ENG",
+   "hs": 1,
+   "as": 2,
+   "status": "final",
+   "note": "after extra time"
+  },
+  "100": {
+   "home": "ARG",
+   "away": "SUI",
+   "hs": 3,
+   "as": 1,
+   "status": "final",
+   "note": "after extra time"
+  },
+  "101": {
+   "home": "FRA",
+   "away": "ESP",
    "hs": null,
    "as": null,
    "status": "scheduled",
    "note": null
   },
-  "100": {
-   "home": "ARG",
-   "away": "SUI",
+  "102": {
+   "home": "ENG",
+   "away": "ARG",
    "hs": null,
    "as": null,
    "status": "scheduled",

@@ -55,9 +55,19 @@ R16 = [
  ("SUI","COL",0,0,"final","Switzerland won 4–3 on penalties"),
 ]
 
-# --- Quarterfinals: feeders (BTREE) + verified real pairings (scheduled Jul 9–11, unplayed) ---
+# --- Quarterfinals: feeders (BTREE) + verified real pairings + results (played Jul 9–11) ---
 QF_FEEDERS = {97: (89, 90), 98: (93, 94), 99: (91, 92), 100: (95, 96)}
 QF_REAL = [{"MAR", "FRA"}, {"ESP", "BEL"}, {"NOR", "ENG"}, {"ARG", "SUI"}]
+QF_RESULTS = [   # bracket orientation (home first), scores, status, note
+ ("MAR", "FRA", 0, 2, "final", None),
+ ("ESP", "BEL", 2, 1, "final", None),
+ ("NOR", "ENG", 1, 2, "final", "after extra time"),
+ ("ARG", "SUI", 3, 1, "final", "after extra time"),
+]
+# --- Semifinals: feeders (BTREE) + verified real pairings (scheduled Jul 14–15, unplayed) ---
+SF_FEEDERS = {101: (97, 98), 102: (99, 100)}
+SF_REAL = [{"FRA", "ESP"}, {"ENG", "ARG"}]
+SF_RESULTS = []   # none played yet
 
 # R32 match_numbers 73-88; R16 89-96 with their two feeder slots (from matches.csv tree)
 R16_FEEDERS = {89:(73,75), 90:(74,77), 91:(76,78), 92:(79,80), 93:(83,84), 94:(81,82), 95:(86,88), 96:(85,87)}
@@ -153,7 +163,44 @@ def main():
     if qf_placed and qf_placed != 4:
         die(f"expected 4 quarterfinal matchups once R16 complete, placed {qf_placed}")
 
-    out = {"as_of": "2026-07-07",
+    # generic: winner of a placed node (score, else penalty note)
+    def win_of(mn):
+        k = ko.get(str(mn))
+        if not k or k["hs"] is None: return None
+        if k["hs"] > k["as"]: return k["home"]
+        if k["as"] > k["hs"]: return k["away"]
+        note = k.get("note") or ""
+        return k["home"] if name.get(k["home"], "") in note else k["away"]
+
+    # attach a round's real scores onto already-placed nodes (orientation-aware)
+    def apply_scores(results, node_range, label):
+        for (a, b, hs, as_, st, note) in results:
+            hit = None
+            for mn in node_range:
+                k = ko.get(str(mn))
+                if k and {k["home"], k["away"]} == {a, b}: hit = k; break
+            if not hit: die(f"{label}: result {a} {hs}-{as_} {b} matches no placed node")
+            hit["hs"], hit["as"] = (hs, as_) if (hit["home"], hit["away"]) == (a, b) else (as_, hs)
+            hit["status"], hit["note"] = st, note
+
+    # place a round's matchups from the winners of its feeder nodes, verifying vs reality
+    def place_round(feeders, real, label):
+        placed = 0
+        for pn, (f1, f2) in feeders.items():
+            w1, w2 = win_of(f1), win_of(f2)
+            if not w1 or not w2: continue
+            if {w1, w2} not in real:
+                die(f"{label} {pn}: computed {w1} vs {w2} not in verified pairings {real}")
+            ko[str(pn)] = {"home": w1, "away": w2, "hs": None, "as": None, "status": "scheduled", "note": None}
+            placed += 1
+        return placed
+
+    if qf_placed:
+        apply_scores(QF_RESULTS, range(97, 101), "QF")
+        place_round(SF_FEEDERS, SF_REAL, "SF")      # semifinal matchups from QF winners
+        apply_scores(SF_RESULTS, range(101, 103), "SF")
+
+    out = {"as_of": "2026-07-14",
            "group": {str(k): v for k, v in GROUP.items()},
            "ko": ko,
            "labels": {str(k): v for k, v in LABELS.items()}}
@@ -174,11 +221,13 @@ def main():
     for n in range(89, 97):
         k = ko[str(n)]; sc = f"{k['hs']}-{k['as']}" if k['hs'] is not None else "vs"
         print(f"   {n}: {k['home']} {sc} {k['away']}  [{k['status']}]" + (f"  ({k['note']})" if k['note'] else ""))
-    if any(str(n) in ko for n in range(97, 101)):
-        print("\n  Quarterfinals (verified matchups, unplayed):")
-        for n in range(97, 101):
-            if str(n) in ko:
-                k = ko[str(n)]; print(f"   {n}: {k['home']} vs {k['away']}  [{k['status']}]")
+    for rng, title in ((range(97, 101), "Quarterfinals"), (range(101, 103), "Semifinals"), (range(103, 105), "Final / third place")):
+        if any(str(n) in ko for n in rng):
+            print(f"\n  {title}:")
+            for n in rng:
+                if str(n) in ko:
+                    k = ko[str(n)]; sc = f"{k['hs']}-{k['as']}" if k["hs"] is not None else "vs"
+                    print(f"   {n}: {k['home']} {sc} {k['away']}  [{k['status']}]" + (f"  ({k['note']})" if k["note"] else ""))
 
 
 if __name__ == "__main__":
