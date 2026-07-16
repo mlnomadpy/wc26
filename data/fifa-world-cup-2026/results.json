@@ -1,5 +1,5 @@
 {
- "as_of": "2026-07-14",
+ "as_of": "2026-07-16",
  "group": {
   "1": [
    2,
@@ -518,14 +518,30 @@
   "101": {
    "home": "FRA",
    "away": "ESP",
-   "hs": null,
-   "as": null,
-   "status": "scheduled",
+   "hs": 0,
+   "as": 2,
+   "status": "final",
    "note": null
   },
   "102": {
    "home": "ENG",
    "away": "ARG",
+   "hs": 1,
+   "as": 2,
+   "status": "final",
+   "note": null
+  },
+  "104": {
+   "home": "ESP",
+   "away": "ARG",
+   "hs": null,
+   "as": null,
+   "status": "scheduled",
+   "note": null
+  },
+  "103": {
+   "home": "FRA",
+   "away": "ENG",
    "hs": null,
    "as": null,
    "status": "scheduled",

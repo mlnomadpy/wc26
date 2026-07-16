@@ -64,10 +64,20 @@ QF_RESULTS = [   # bracket orientation (home first), scores, status, note
  ("NOR", "ENG", 1, 2, "final", "after extra time"),
  ("ARG", "SUI", 3, 1, "final", "after extra time"),
 ]
-# --- Semifinals: feeders (BTREE) + verified real pairings (scheduled Jul 14–15, unplayed) ---
+# --- Semifinals: feeders (BTREE) + verified real pairings + results (played Jul 14–15) ---
 SF_FEEDERS = {101: (97, 98), 102: (99, 100)}
 SF_REAL = [{"FRA", "ESP"}, {"ENG", "ARG"}]
-SF_RESULTS = []   # none played yet
+SF_RESULTS = [
+ ("FRA", "ESP", 0, 2, "final", None),
+ ("ENG", "ARG", 1, 2, "final", None),
+]
+# --- Final (104=W101 vs W102) + Third-place playoff (103 = the two SF losers) ---
+FINAL_FEEDERS = {104: (101, 102)}
+FINAL_REAL = [{"ESP", "ARG"}]
+FINAL_RESULTS = []   # not played yet (Jul 19)
+THIRD_FEEDERS = {103: (101, 102)}
+THIRD_REAL = [{"FRA", "ENG"}]
+THIRD_RESULTS = []   # not played yet (Jul 18)
 
 # R32 match_numbers 73-88; R16 89-96 with their two feeder slots (from matches.csv tree)
 R16_FEEDERS = {89:(73,75), 90:(74,77), 91:(76,78), 92:(79,80), 93:(83,84), 94:(81,82), 95:(86,88), 96:(85,87)}
@@ -183,11 +193,16 @@ def main():
             hit["hs"], hit["as"] = (hs, as_) if (hit["home"], hit["away"]) == (a, b) else (as_, hs)
             hit["status"], hit["note"] = st, note
 
-    # place a round's matchups from the winners of its feeder nodes, verifying vs reality
-    def place_round(feeders, real, label):
+    def lose_of(mn):
+        w = win_of(mn); k = ko.get(str(mn))
+        if not w or not k: return None
+        return k["away"] if w == k["home"] else k["home"]
+
+    # place a round's matchups from a resolver (winner/loser) of its feeder nodes, verifying vs reality
+    def place_round(feeders, real, label, resolver=win_of):
         placed = 0
         for pn, (f1, f2) in feeders.items():
-            w1, w2 = win_of(f1), win_of(f2)
+            w1, w2 = resolver(f1), resolver(f2)
             if not w1 or not w2: continue
             if {w1, w2} not in real:
                 die(f"{label} {pn}: computed {w1} vs {w2} not in verified pairings {real}")
@@ -197,10 +212,14 @@ def main():
 
     if qf_placed:
         apply_scores(QF_RESULTS, range(97, 101), "QF")
-        place_round(SF_FEEDERS, SF_REAL, "SF")      # semifinal matchups from QF winners
+        place_round(SF_FEEDERS, SF_REAL, "SF")            # semifinal matchups from QF winners
         apply_scores(SF_RESULTS, range(101, 103), "SF")
+        place_round(FINAL_FEEDERS, FINAL_REAL, "Final")   # final = the two SF winners
+        apply_scores(FINAL_RESULTS, [104], "Final")
+        place_round(THIRD_FEEDERS, THIRD_REAL, "3rd", lose_of)  # third place = the two SF losers
+        apply_scores(THIRD_RESULTS, [103], "3rd")
 
-    out = {"as_of": "2026-07-14",
+    out = {"as_of": "2026-07-16",
            "group": {str(k): v for k, v in GROUP.items()},
            "ko": ko,
            "labels": {str(k): v for k, v in LABELS.items()}}
