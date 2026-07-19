@@ -26,7 +26,7 @@ const localePrefix = (L) => L === 'en' ? '' : L + '/';
 const urlFor = (L) => SITE + B + localePrefix(L) + (i18n ? i18n.path : '');
 const canonical = i18n ? urlFor(lang) : new URL(Astro.url.pathname, SITE).href;
 const altLocales = i18n ? i18n.locales : [];
-const NAV = [['', 'nav.home'], ['footle/', 'nav.footle'], ['teams/', 'nav.teams'], ['players/', 'nav.players'], ['clubs/', 'nav.clubs'], ['groups/', 'nav.groups'], ['bracket/', 'nav.bracket'], ['predictions/', 'nav.predictions'], ['matches/', 'nav.matches'], ['map/', 'nav.map'], ['compare/', 'nav.compare'], ['insights/', 'nav.insights'], ['data/', 'nav.data']];
+const NAV = [['', 'nav.home'], ['news/', 'nav.news'], ['footle/', 'nav.footle'], ['teams/', 'nav.teams'], ['players/', 'nav.players'], ['clubs/', 'nav.clubs'], ['groups/', 'nav.groups'], ['bracket/', 'nav.bracket'], ['predictions/', 'nav.predictions'], ['matches/', 'nav.matches'], ['map/', 'nav.map'], ['compare/', 'nav.compare'], ['insights/', 'nav.insights'], ['data/', 'nav.data']];
 const here = Astro.url.pathname.replace(/\/$/, '') + '/';
 const isOn = (p) => { const full = (B + p).replace(/\/$/, '') + '/'; return p === '' ? here === B : here.startsWith(full); };
 ---

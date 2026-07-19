@@ -1,0 +1,74 @@
+---
+import Base from '@app/layouts/Base.astro';
+import Flag from '@shared/ui/Flag.astro';
+import DB from '../../../public/data.json';
+import { ARTICLES, bySlug } from '@shared/content/articles.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+export function getStaticPaths() { return ARTICLES.map(a => ({ params: { slug: a.slug } })); }
+const { slug } = Astro.params;
+const a = bySlug[slug];
+const nameByCode = {}; DB.teams.forEach(t => nameByCode[t.fifa_code] = t.team_name);
+const fmt = d => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+const related = (a.related || []).map(s => bySlug[s]).filter(Boolean);
+const jsonld = {
+  '@context': 'https://schema.org', '@type': 'NewsArticle',
+  headline: a.title, description: a.dek, datePublished: a.date, dateModified: a.date,
+  author: { '@type': 'Organization', name: a.author },
+  publisher: { '@type': 'Organization', name: 'WC26 Matchday' },
+  articleSection: a.tag,
+};
+---
+<Base title={`${a.title} — WC26 Matchday`} description={a.dek} jsonld={jsonld} ogImage={B + 'og/bracket.png'}>
+  <div class="app-page article-page">
+    <a class="btn back" href={B + 'news/'}>← Stories</a>
+    <div class="app-grow scroll">
+      <article class="article" style={`--ac:${a.accent}`}>
+        <header class="art-head">
+          <span class="art-kicker">{a.kicker}</span>
+          <h1>{a.title}</h1>
+          <p class="art-dek">{a.dek}</p>
+          <div class="art-byline">{a.author} · {fmt(a.date)} · {a.read} min read</div>
+        </header>
+
+        <p class="art-lede">{a.lede}</p>
+
+        {a.body.map(b => {
+          if (b.t === 'p') return <p class="art-p" set:html={b.x}></p>;
+          if (b.t === 'h') return <h2 class="art-h">{b.x}</h2>;
+          if (b.t === 'q') return <blockquote class="art-q"><p set:html={b.x}></p>{b.by && <cite>{b.by}</cite>}</blockquote>;
+          if (b.t === 'stat') return <div class="art-stat"><b>{b.v}</b><span>{b.l}</span></div>;
+          if (b.t === 'ul') return <ul class="art-ul">{b.items.map(it => <li set:html={it}></li>)}</ul>;
+          if (b.t === 'score') return (
+            <div class="art-score">
+              <span class="as-team"><Flag code={b.h} cls="sm" /> <b>{nameByCode[b.h] || b.h}</b></span>
+              <span class="as-sc">{b.hs}<i>–</i>{b.as}</span>
+              <span class="as-team as-away"><b>{nameByCode[b.a] || b.a}</b> <Flag code={b.a} cls="sm" /></span>
+              <span class="as-meta">{b.stage}{b.note ? ' · ' + b.note : ''}</span>
+            </div>
+          );
+          return null;
+        })}
+
+        <div class="art-foot">
+          <a class="btn" href={B + 'bracket/'}>The full bracket →</a>
+          <a class="btn" href={B + 'news/'}>More stories →</a>
+        </div>
+      </article>
+
+      {related.length > 0 && (
+        <section class="art-related">
+          <h3>Keep reading</h3>
+          <div class="news-grid">
+            {related.map(r => (
+              <a class="news-card" href={`${B}news/${r.slug}/`} style={`--ac:${r.accent}`}>
+                <div class="nc-top"><span class="nc-emoji">{r.emoji}</span><span class="nc-tag">{r.tag}</span></div>
+                <h3>{r.title}</h3>
+                <p>{r.dek}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  </div>
+</Base>

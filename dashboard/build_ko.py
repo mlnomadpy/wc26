@@ -74,10 +74,10 @@ SF_RESULTS = [
 # --- Final (104=W101 vs W102) + Third-place playoff (103 = the two SF losers) ---
 FINAL_FEEDERS = {104: (101, 102)}
 FINAL_REAL = [{"ESP", "ARG"}]
-FINAL_RESULTS = []   # not played yet (Jul 19)
+FINAL_RESULTS = [("ESP", "ARG", 1, 0, "final", "after extra time — Ferran Torres 106'")]  # Jul 19
 THIRD_FEEDERS = {103: (101, 102)}
 THIRD_REAL = [{"FRA", "ENG"}]
-THIRD_RESULTS = []   # not played yet (Jul 18)
+THIRD_RESULTS = [("FRA", "ENG", 4, 6, "final", None)]  # Jul 18 — Saka hat-trick
 
 # R32 match_numbers 73-88; R16 89-96 with their two feeder slots (from matches.csv tree)
 R16_FEEDERS = {89:(73,75), 90:(74,77), 91:(76,78), 92:(79,80), 93:(83,84), 94:(81,82), 95:(86,88), 96:(85,87)}
@@ -219,7 +219,7 @@ def main():
         place_round(THIRD_FEEDERS, THIRD_REAL, "3rd", lose_of)  # third place = the two SF losers
         apply_scores(THIRD_RESULTS, [103], "3rd")
 
-    out = {"as_of": "2026-07-16",
+    out = {"as_of": "2026-07-19",
            "group": {str(k): v for k, v in GROUP.items()},
            "ko": ko,
            "labels": {str(k): v for k, v in LABELS.items()}}

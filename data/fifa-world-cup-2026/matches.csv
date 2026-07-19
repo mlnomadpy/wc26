@@ -101,5 +101,5 @@ id,match_number,home_team_id,away_team_id,city_id,stage_id,kickoff_at,match_labe
 100,100,37,8,5,4,2026-07-11 21:00:00-05,W95 vs W96,3,1,final,after extra time
 101,101,33,29,3,5,2026-07-14 15:00:00-05,W97 vs W98,0,2,final,
 102,102,45,37,1,5,2026-07-15 15:00:00-04,W99 vs W100,1,2,final,
-103,103,33,45,7,6,2026-07-18 17:00:00-04,RU101 vs RU102,,,scheduled,
-104,104,29,37,8,7,2026-07-19 15:00:00-04,W101 vs W102,,,scheduled,
+103,103,33,45,7,6,2026-07-18 17:00:00-04,RU101 vs RU102,4,6,final,
+104,104,29,37,8,7,2026-07-19 15:00:00-04,W101 vs W102,1,0,final,after extra time — Ferran Torres 106'

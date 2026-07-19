@@ -3,6 +3,7 @@ import Base from '@app/layouts/Base.astro';
 import DB from '../../public/data.json';
 import { indexes, flagImg, money, num } from '@shared/lib/wc.js';
 import { t, teamName, stageName } from '@shared/lib/i18n.js';
+import { ARTICLES } from '@shared/content/articles.js';
 const { lang = 'en' } = Astro.props;
 const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
 const LB = lang === 'en' ? B : B + lang + '/';   // locale base for pages that have translations
@@ -25,6 +26,16 @@ const upcoming = DB.matches
   }));
 const nextDef = upcoming.find(u => u.hn && u.an) || upcoming[0] || null;
 
+// champion — set once the Final (match 104) is played
+const finalM = DB.matches.find(m => m.match_number === 104);
+const champ = finalM && finalM.status === 'final' && finalM.home_score != null
+  ? (finalM.home_score > finalM.away_score ? finalM.home_code : finalM.away_code) : null;
+const runnerUp = champ ? (champ === finalM.home_code ? finalM.away_code : finalM.home_code) : null;
+const champScore = champ ? `${Math.max(finalM.home_score, finalM.away_score)}–${Math.min(finalM.home_score, finalM.away_score)}` : '';
+const champArticle = B + 'news/baby-goat-vs-the-goat/';
+const featArt = ARTICLES.find(x => x.feature) || ARTICLES[0];
+const newsCards = ARTICLES.filter(x => x.slug !== featArt.slug).slice(0, 4);
+
 const oldest = [...P].filter(p => p.age).sort((a, b) => b.age - a.age)[0];
 const youngest = [...P].filter(p => p.age).sort((a, b) => a.age - b.age)[0];
 const topVal = [...P].filter(p => p.market_value_eur).sort((a, b) => b.market_value_eur - a.market_value_eur)[0];
@@ -36,7 +47,15 @@ const face = id => `${B}faces/${id}.jpg`;
 const avatar = name => `https://api.dicebear.com/9.x/micah/svg?seed=${encodeURIComponent(name)}&radius=0&backgroundColor=transparent`;
 const onFace = name => `this.onerror=null;this.src='${avatar(name)}'`;
 const find = n => P.find(p => p.player_name.includes(n));
-const messi = find('Messi'), ronaldo = find('Cristiano Ronaldo');
+const messi = find('Messi'), ronaldo = find('Cristiano Ronaldo'), yamal = find('Lamine Yamal');
+// hero faceoff — once the Cup is won it becomes the final's generational duel (Yamal vs Messi)
+const faceoff = champ
+  ? { head: t(lang, 'h.babygoat'), href: champArticle, foot: t(lang, 'h.babygoat.foot'),
+      L: { flag: 'ESP', name: 'Yamal', team: nm(IDX.teamByCode['ESP']), g: yamal?.international_goals ?? 0, c: yamal?.caps ?? 0, a: yamal?.age ?? 18 },
+      R: { flag: 'ARG', name: 'Messi', team: nm(IDX.teamByCode['ARG']), g: messi?.international_goals ?? 116, c: messi?.caps ?? 198, a: messi?.age ?? 38 } }
+  : { head: t(lang, 'h.lastdance'), href: B + 'compare/', foot: t(lang, 'h.lastdance.foot'),
+      L: { flag: 'ARG', name: 'Messi', team: nm(IDX.teamByCode['ARG']), g: messi?.international_goals ?? 116, c: messi?.caps ?? 198, a: messi?.age ?? 38 },
+      R: { flag: 'POR', name: 'Ronaldo', team: nm(IDX.teamByCode['POR']), g: ronaldo?.international_goals ?? 143, c: ronaldo?.caps ?? 227, a: ronaldo?.age ?? 41 } };
 
 const tiles = [
   { big: youngest?.age, pid: youngest?.player_id, name: youngest?.player_name, img: flagImg(youngest?.fifa_code), lab: t(lang, 'h.tile.youngest'), sub: youngest?.player_name + ' · ' + youngest?.club, href: pUrl(youngest) },
@@ -99,7 +118,17 @@ const tx = { following: t(lang, 'h.following', { team: '{team}' }), group: t(lan
           <a class="btn primary" href={B + 'teams/'}>{t(lang, 'h.cta.teams')}</a>
           <a class="btn" href={LB + 'predictions/'}>{t(lang, 'h.cta.predictions')}</a>
         </div>
-        {nextDef ? (
+        {champ ? (
+          <a class="lh-cd hh-cd hh-champ" href={LB + 'matches/104/'}>
+            <i class="cardbeam" aria-hidden="true"></i>
+            <div class="cd-lab hh-champ-lab">🏆 {t(lang, 'h.champ.lab')}</div>
+            <div class="hh-champ-team"><img class="flagi" src={flagImg(champ, 80)} alt="" /><b>{nm(IDX.teamByCode[champ])}</b></div>
+            <div class="cd-match hh-champ-final">
+              <span>{nm(IDX.teamByCode[champ])}</span><em>{champScore}</em><span>{nm(IDX.teamByCode[runnerUp])}</span>
+            </div>
+            <div class="cd-meta" id="cd-meta">{t(lang, 'h.champ.meta')}</div>
+          </a>
+        ) : nextDef ? (
           <a class="lh-cd hh-cd" href={LB + 'matches/' + nextDef.n + '/'} id="cd" data-target={nextDef.k} data-n={nextDef.n}>
             <i class="cardbeam" aria-hidden="true"></i>
             <div class="cd-lab" id="cd-lab">{t(lang, 'h.nx.next')}</div>
@@ -119,16 +148,16 @@ const tx = { following: t(lang, 'h.following', { team: '{team}' }), group: t(lan
         ) : (
           <div class="lh-cd hh-cd"><div class="cd-lab">{t(lang, 'h.nx.done')}</div></div>
         )}
-        <a class="hh-today" href={LB + 'today/'}>📅 {t(lang, 'h.live.btn')} <span class="hh-today-ar">→</span></a>
+        <a class="hh-today" href={champ ? champArticle : LB + 'today/'}>{champ ? '📖 ' + t(lang, 'h.champ.read') : '📅 ' + t(lang, 'h.live.btn')} <span class="hh-today-ar">→</span></a>
       </div>
 
-      <a class="bl-faceoff" href={B + 'compare/'} aria-label="The Last Dance — compare Messi and Ronaldo">
+      <a class="bl-faceoff" href={faceoff.href} aria-label={faceoff.head}>
         <i class="cardbeam" aria-hidden="true"></i>
-        <div class="bl-fo-head"><span class="bl-spark"></span> {t(lang, 'h.lastdance')} <span class="bl-spark"></span></div>
+        <div class="bl-fo-head"><span class="bl-spark"></span> {faceoff.head} <span class="bl-spark"></span></div>
         <div class="bl-duel">
           <div class="bl-player left">
-            <img class="bl-flag" src={flagImg('ARG')} alt="" /><b class="bl-name">Messi</b><span class="bl-club">{nm(IDX.teamByCode['ARG'])}</span>
-            <div class="bl-st"><span>{messi?.international_goals ?? 116}<i>{t(lang, 'h.goals')}</i></span><span>{messi?.caps ?? 198}<i>{t(lang, 'h.caps')}</i></span><span>{messi?.age ?? 38}<i>{t(lang, 'h.age')}</i></span></div>
+            <img class="bl-flag" src={flagImg(faceoff.L.flag)} alt="" /><b class="bl-name">{faceoff.L.name}</b><span class="bl-club">{faceoff.L.team}</span>
+            <div class="bl-st"><span>{faceoff.L.g}<i>{t(lang, 'h.goals')}</i></span><span>{faceoff.L.c}<i>{t(lang, 'h.caps')}</i></span><span>{faceoff.L.a}<i>{t(lang, 'h.age')}</i></span></div>
           </div>
           <div class="bl-vs" aria-hidden="true">
             <svg class="bl-vs-svg" viewBox="0 0 180 112" role="img">
@@ -144,11 +173,11 @@ const tx = { following: t(lang, 'h.following', { team: '{team}' }), group: t(lan
             </svg>
           </div>
           <div class="bl-player right">
-            <img class="bl-flag" src={flagImg('POR')} alt="" /><b class="bl-name">Ronaldo</b><span class="bl-club">{nm(IDX.teamByCode['POR'])}</span>
-            <div class="bl-st"><span>{ronaldo?.international_goals ?? 143}<i>{t(lang, 'h.goals')}</i></span><span>{ronaldo?.caps ?? 227}<i>{t(lang, 'h.caps')}</i></span><span>{ronaldo?.age ?? 41}<i>{t(lang, 'h.age')}</i></span></div>
+            <img class="bl-flag" src={flagImg(faceoff.R.flag)} alt="" /><b class="bl-name">{faceoff.R.name}</b><span class="bl-club">{faceoff.R.team}</span>
+            <div class="bl-st"><span>{faceoff.R.g}<i>{t(lang, 'h.goals')}</i></span><span>{faceoff.R.c}<i>{t(lang, 'h.caps')}</i></span><span>{faceoff.R.a}<i>{t(lang, 'h.age')}</i></span></div>
           </div>
         </div>
-        <div class="bl-fo-foot">{t(lang, 'h.lastdance.foot')}</div>
+        <div class="bl-fo-foot">{faceoff.foot}</div>
       </a>
     </div>
 
@@ -171,6 +200,29 @@ const tx = { following: t(lang, 'h.following', { team: '{team}' }), group: t(lan
   </div>
 
   <a class="myband" id="myband" hidden></a>
+
+  <section class="home-sec reveal d1">
+    <div class="sec-head"><h2 class="sec">{t(lang, 'h.readtitle')}</h2><a class="sec-link" href={B + 'news/'}>{t(lang, 'h.readlink')}</a></div>
+    <div class="home-news">
+      <a class="hn-feat" href={B + 'news/' + featArt.slug + '/'} style={`--ac:${featArt.accent}`}>
+        <div class="hn-art" aria-hidden="true"><span>{featArt.emoji}</span></div>
+        <div class="hn-body">
+          <span class="nf-kicker">{featArt.kicker}</span>
+          <h3>{featArt.title}</h3>
+          <p>{featArt.dek}</p>
+          <span class="nf-go">{t(lang, 'h.readcta')} →</span>
+        </div>
+      </a>
+      <div class="hn-side">
+        {newsCards.map(aa => (
+          <a class="hn-card" href={B + 'news/' + aa.slug + '/'} style={`--ac:${aa.accent}`}>
+            <span class="hn-emoji">{aa.emoji}</span>
+            <span class="hn-tx"><b>{aa.title}</b><i>{aa.tag}</i></span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
 
   <section class="home-sec reveal d2">
     <div class="sec-head"><h2 class="sec">{t(lang, 'h.play')}</h2><a class="sec-link" href={B + 'footle/'}>{t(lang, 'h.footlelink')}</a></div>

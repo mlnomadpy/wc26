@@ -1,0 +1,49 @@
+---
+import Base from '@app/layouts/Base.astro';
+import { ARTICLES } from '@shared/content/articles.js';
+const B = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
+const feat = ARTICLES.find(a => a.feature) || ARTICLES[0];
+const rest = ARTICLES.filter(a => a.slug !== feat.slug);
+const fmt = d => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const jsonld = {
+  '@context': 'https://schema.org', '@type': 'CollectionPage',
+  name: '2026 World Cup — Stories & Analysis',
+  hasPart: ARTICLES.map(a => ({ '@type': 'NewsArticle', headline: a.title, datePublished: a.date, author: { '@type': 'Organization', name: a.author } })),
+};
+---
+<Base title="2026 World Cup — Stories, Recaps & Analysis | WC26 Matchday" description="The story of the first 48-team World Cup: Spain's coronation, the Yamal–Messi final, Mbappé's Golden Boot, Africa's historic run, the biggest upsets and the verdict on the expanded format." jsonld={jsonld} ogImage={B + 'og/bracket.png'}>
+  <div class="app-page news-page">
+    <header class="phead">
+      <div>
+        <div class="pe">The read</div>
+        <h1>Stories &amp; analysis</h1>
+        <p class="psub">The first 48-team World Cup, told: the champions, the farewells, the shocks and the verdict on football's biggest experiment.</p>
+      </div>
+      <div class="pstat"><div class="s"><b>{ARTICLES.length}</b><span>Articles</span></div></div>
+    </header>
+
+    <div class="app-grow scroll">
+      <a class="news-feat" href={`${B}news/${feat.slug}/`} style={`--ac:${feat.accent}`}>
+        <div class="nf-art" aria-hidden="true"><span>{feat.emoji}</span></div>
+        <div class="nf-body">
+          <span class="nf-kicker">{feat.kicker}</span>
+          <h2>{feat.title}</h2>
+          <p class="nf-dek">{feat.dek}</p>
+          <div class="nf-meta">{feat.author} · {fmt(feat.date)} · {feat.read} min read</div>
+          <span class="nf-go">Read the story →</span>
+        </div>
+      </a>
+
+      <div class="news-grid">
+        {rest.map(a => (
+          <a class="news-card" href={`${B}news/${a.slug}/`} style={`--ac:${a.accent}`}>
+            <div class="nc-top"><span class="nc-emoji">{a.emoji}</span><span class="nc-tag">{a.tag}</span></div>
+            <h3>{a.title}</h3>
+            <p>{a.dek}</p>
+            <div class="nc-meta">{fmt(a.date)} · {a.read} min</div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</Base>
